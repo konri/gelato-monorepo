@@ -1,0 +1,5 @@
+.github
+.env.example
+yarn-error.log
+.env*
+dist

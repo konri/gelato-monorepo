@@ -1,0 +1,16 @@
+---
+description: Wymiary NativeWind/Tailwind — tokeny zamiast nawiasów; przybliżenia; piksel idealny w theme
+globs: app/**/*.tsx,components/**/*.tsx
+alwaysApply: false
+---
+
+# Wymiary w `className` (NativeWind / Tailwind)
+
+- **Unikaj** arbitralnych wartości w klasach w rodzaju `min-w-[140px]`, `max-h-[80%]`, `basis-[148px]` — zamiast tego używaj **tokenów ze skali** (`theme.extend.spacing`, `width`, `height`, `minHeight`, `maxHeight` itd.) oraz **ułamków** Tailwinda (`min-w-2/5`, `max-w-1/2`, `max-h-4/5`, …), o ile sens layoutu na to pozwala.
+
+- **Świadome przybliżenia** do najbliższego tokena / ułamka są akceptowalne, np.:
+  - `min-w-35.5` (142px z `spacing`) zamiast dokładnie 140px;
+  - `min-w-1/4` (25%) zamiast 28%;
+  - `max-w-2/5` (40%) zamiast 45%.
+
+- Gdy wymiar **musi być pikselowo (lub procentowo) idealny** względem designu i nie da się go sensownie wyrazić istniejącym tokenem ani standardowym ułamkiem — **dodaj jawny klucz** w `tailwind.config.js` (`theme.extend.spacing`, `width`, `minWidth`, …) i używaj klasy z tej skali zamiast wartości w nawiasach `[]` w klasach.

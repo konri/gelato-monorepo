@@ -1,0 +1,16 @@
+{
+  "title1": "Kontaktieren Sie uns",
+  "subtitle1": "Fragen, Fehlermeldungen, Feedback.",
+  "emailField1": "Ihre E-Mail-Adresse",
+  "emailField1Placeholder": "E-Mail eingeben",
+  "emailField2": "Geben Sie ein Thema ein, z. B. 'Fehlermeldung ...'",
+  "emailField2Placeholder": "Thema eingeben",
+  "emailButtonText": "Jetzt senden",
+  "firstSection": {
+    "figures2Alt": "Kontaktillustration",
+    "phoneAlt": "Telefonbild",
+    "speachbubbleLeftAlt": "Sprechblase links",
+    "speachbubbleRightAlt": "Sprechblase rechts",
+    "abstractAlt": "Abstrakte Dekoration"
+  }
+}

@@ -1,0 +1,1 @@
+export { supportedLanguages, isLanguageSupported } from './supportedLanguages';

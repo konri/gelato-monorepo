@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Referral" ADD COLUMN IF NOT EXISTS "isCompleted" BOOLEAN NOT NULL DEFAULT false;

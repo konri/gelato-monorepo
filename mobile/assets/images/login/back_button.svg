@@ -1,0 +1,19 @@
+<svg width="45" height="45" viewBox="0 0 45 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+<foreignObject x="9.77516e-05" y="-1.00002" width="44.2" height="45.2"><div xmlns="http://www.w3.org/1999/xhtml" style="backdrop-filter:blur(0.55px);clip-path:url(#bgblur_0_15_452_clip_path);height:100%;width:100%"></div></foreignObject><g filter="url(#filter0_d_15_452)" data-figma-bg-blur-radius="1.1">
+<circle cx="22.1001" cy="18.1" r="18" fill="black" fill-opacity="0.04" shape-rendering="crispEdges"/>
+</g>
+<path d="M23.3877 12.2681C23.6057 12.1521 23.8792 12.1702 24.082 12.3198L24.1768 12.4058L24.1855 12.4155L24.2549 12.52C24.3897 12.7743 24.3416 13.1032 24.1162 13.3081L24.1133 13.312L18.5186 18.1978C18.5063 18.2093 18.5006 18.2187 18.498 18.2241C18.4955 18.2295 18.4951 18.2325 18.4951 18.2339C18.4951 18.2352 18.4955 18.2383 18.498 18.2437C18.5008 18.2493 18.5069 18.2597 18.5205 18.272L18.5215 18.2729L24.1162 23.3325V23.3335C24.375 23.5687 24.4017 23.9722 24.1621 24.2358C23.9269 24.4943 23.5233 24.5211 23.2598 24.2817V24.2808L17.665 19.2222V19.2212C17.062 18.6713 17.0811 17.7754 17.6826 17.2446V17.2437L23.2773 12.3423L23.2842 12.3374L23.3877 12.2681Z" fill="black" stroke="black" stroke-width="0.5"/>
+<defs>
+<filter id="filter0_d_15_452" x="9.77516e-05" y="-1.00002" width="44.2" height="45.2" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="4"/>
+<feGaussianBlur stdDeviation="2.05"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_15_452"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_15_452" result="shape"/>
+</filter>
+<clipPath id="bgblur_0_15_452_clip_path" transform="translate(-9.77516e-05 1.00002)"><circle cx="22.1001" cy="18.1" r="18"/>
+</clipPath></defs>
+</svg>

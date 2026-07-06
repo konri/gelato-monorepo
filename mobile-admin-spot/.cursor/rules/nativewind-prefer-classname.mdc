@@ -1,0 +1,19 @@
+---
+description: NativeWind — preferuj className (Tailwind) zamiast inline style tam, gdzie się da
+globs: app/**/*.tsx,components/**/*.tsx
+alwaysApply: false
+---
+
+# `className` zamiast `style`
+
+- **Preferuj** `className` (NativeWind / Tailwind) zamiast obiektu `style` dla layoutu i wyglądu, jeśli da się to wyrazić utility klasami (flex, padding, kolory tekstu/tła, obramowania, itd.).
+
+- **`style` zostaw** tylko tam, gdzie utility nie wystarczają, np.:
+  - wymiary **zależne od runtime** (wartość z hooka, `Dimensions`, animacja),
+  - API bibliotek wymagających propsów numerycznych,
+  - transformacje / `opacity` sterowane animacją,
+  - rzadkie przypadki bez odpowiednika w skali Tailwinda w tym projekcie.
+
+- Przy **mieszaniu**: dawaj statyczne rzeczy w `className`, a w `style` tylko to, co musi być dynamiczne — np. `className="items-center justify-center"` oraz `style={{ width: size, height: size }}`.
+
+- Przy sklejaniu wielu fragmentów `className` (bazowe + warunkowe / z propsów) używaj **`twMerge`** z `tailwind-merge`, żeby unikać konfliktów klas.

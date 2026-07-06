@@ -1,0 +1,285 @@
+{
+  "info": {
+    "_postman_id": "profile-setup-system-2024-v2",
+    "name": "Profile Setup System - Auto Clear Drafts",
+    "description": "System Profile Setup z automatycznym czyszczeniem drafts po zapisaniu danych",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1️⃣ Sprawdź początkowy status (ANY ROLE) - no params",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"query\": \"query { myProfileSetupStatus { currentStep completedSteps isCompleted hasCompany hasMerchant hasStore hasSubscription companyDraft merchantDraft storeDraft } }\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/graphql",
+          "host": ["{{base_url}}"],
+          "path": ["graphql"]
+        },
+        "description": "Oczekiwany wynik: currentStep: COMPANY_INFO, wszystkie flagi false, drafty null"
+      },
+      "response": []
+    },
+    {
+      "name": "2️⃣ Zapisz draft Company - częściowo wypełniony (ANY ROLE)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"query\": \"mutation SaveDraft($input: SaveFormDraftInput!) { saveFormDraft(input: $input) }\",\n    \"variables\": {\n        \"input\": {\n            \"formType\": \"COMPANY\",\n            \"formData\": {\n                \"name\": \"Cofnij Cafe\",\n                \"cityOperate\": [\"Warszawa\", \"Kraków\"]\n            },\n            \"step\": \"COMPANY_INFO\"\n        }\n    }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/graphql",
+          "host": ["{{base_url}}"],
+          "path": ["graphql"]
+        },
+        "description": "Zapisuje częściowo wypełniony formularz Company"
+      },
+      "response": []
+    },
+    {
+      "name": "3️⃣ Sprawdź status - draft zapisany (ANY ROLE)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"query\": \"query { myProfileSetupStatus { currentStep companyDraft } }\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/graphql",
+          "host": ["{{base_url}}"],
+          "path": ["graphql"]
+        },
+        "description": "Oczekiwany wynik: companyDraft zawiera zapisane dane"
+      },
+      "response": []
+    },
+    {
+      "name": "4️⃣ Zaktualizuj draft - dodaj więcej danych (ANY ROLE)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"query\": \"mutation SaveDraft($input: SaveFormDraftInput!) { saveFormDraft(input: $input) }\",\n    \"variables\": {\n        \"input\": {\n            \"formType\": \"COMPANY\",\n            \"formData\": {\n                \"name\": \"Cofnij Cafe\",\n                \"description\": \"Najlepsza kawiarnia w mieście\",\n                \"cityOperate\": [\"Warszawa\", \"Kraków\", \"Wrocław\"],\n                \"phone\": \"+48123456789\"\n            },\n            \"step\": \"COMPANY_INFO\"\n        }\n    }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/graphql",
+          "host": ["{{base_url}}"],
+          "path": ["graphql"]
+        },
+        "description": "Nadpisuje draft nowymi danymi"
+      },
+      "response": []
+    },
+    {
+      "name": "5️⃣ Utwórz Company - draft AUTO CLEAR (OWNER/COOPERATOR)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"query\": \"mutation CreateCompany($data: CompanyInput!) { createCompanyAndMakeUserOwner(data: $data) { role } }\",\n    \"variables\": {\n        \"data\": {\n            \"name\": \"Cofnij Cafe\",\n            \"description\": \"Najlepsza kawiarnia w mieście\",\n            \"address\": \"ul. Marszałkowska 1\",\n            \"city\": \"Warszawa\",\n            \"country\": \"Poland\",\n            \"cityOperate\": [\"Warszawa\", \"Kraków\", \"Wrocław\"]\n        }\n    }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/graphql",
+          "host": ["{{base_url}}"],
+          "path": ["graphql"]
+        },
+        "description": "Tworzy Company i AUTOMATYCZNIE czyści draft COMPANY"
+      },
+      "response": []
+    },
+    {
+      "name": "6️⃣ Sprawdź status - draft AUTO CLEARED (ANY ROLE)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"query\": \"query { myProfileSetupStatus { currentStep completedSteps hasCompany companyDraft } }\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/graphql",
+          "host": ["{{base_url}}"],
+          "path": ["graphql"]
+        },
+        "description": "Oczekiwany wynik: currentStep: COMPANY_PHOTO, companyDraft: null (automatycznie wyczyszczony)"
+      },
+      "response": []
+    },
+    {
+      "name": "7️⃣ Zapisz draft Merchant (ANY ROLE)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"query\": \"mutation SaveDraft($input: SaveFormDraftInput!) { saveFormDraft(input: $input) }\",\n    \"variables\": {\n        \"input\": {\n            \"formType\": \"MERCHANT\",\n            \"formData\": {\n                \"name\": \"Cofnij Cafe - Merchant\",\n                \"description\": \"Krótki opis naszej kawiarni\",\n                \"categoryId\": \"category-uuid-tutaj\"\n            },\n            \"step\": \"MERCHANT_INFO\"\n        }\n    }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/graphql",
+          "host": ["{{base_url}}"],
+          "path": ["graphql"]
+        },
+        "description": "Zapisuje draft formularza Merchant"
+      },
+      "response": []
+    },
+    {
+      "name": "8️⃣ Zapisz draft Store (ANY ROLE)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"query\": \"mutation SaveDraft($input: SaveFormDraftInput!) { saveFormDraft(input: $input) }\",\n    \"variables\": {\n        \"input\": {\n            \"formType\": \"MERCHANT_STORE\",\n            \"formData\": {\n                \"name\": \"Cofnij - Centrum\",\n                \"address\": \"ul. Marszałkowska 1\",\n                \"city\": \"Warszawa\",\n                \"postalCode\": \"00-001\",\n                \"phone\": \"+48123456789\",\n                \"latitude\": 52.2297,\n                \"longitude\": 21.0122\n            },\n            \"step\": \"MERCHANT_LOCATION\"\n        }\n    }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/graphql",
+          "host": ["{{base_url}}"],
+          "path": ["graphql"]
+        },
+        "description": "Zapisuje draft formularza Store"
+      },
+      "response": []
+    },
+    {
+      "name": "9️⃣ Sprawdź wszystkie drafty naraz (ANY ROLE)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"query\": \"query { myProfileSetupStatus { currentStep completedSteps hasCompany hasMerchant hasStore companyDraft merchantDraft storeDraft } }\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/graphql",
+          "host": ["{{base_url}}"],
+          "path": ["graphql"]
+        },
+        "description": "Pokazuje wszystkie zapisane drafty i aktualny status"
+      },
+      "response": []
+    },
+    {
+      "name": "🔄 Scenariusz: Zapisz i przywróć draft (ANY ROLE)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"query\": \"mutation { saveFormDraft(input: { formType: \\\"COMPANY\\\", formData: { name: \\\"Test Przerwanego Wypełniania\\\" }, step: COMPANY_INFO }) }\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/graphql",
+          "host": ["{{base_url}}"],
+          "path": ["graphql"]
+        },
+        "description": "Symulacja: użytkownik zaczyna wypełniać i zamyka aplikację. Draft zostanie automatycznie wyczyszczony po zapisaniu prawdziwych danych."
+      },
+      "response": []
+    },
+    {
+      "name": "🗑️ [OPCJONALNE] Ręczne czyszczenie draft (ANY ROLE)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"query\": \"mutation { clearFormDraft(formType: \\\"COMPANY\\\") }\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/graphql",
+          "host": ["{{base_url}}"],
+          "path": ["graphql"]
+        },
+        "description": "UWAGA: Nie musisz tego używać! Drafty są automatycznie czyszczone po zapisaniu prawdziwych danych. Ta mutacja jest tylko na wypadek gdybyś chciał ręcznie wyczyścić draft."
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "YOUR_JWT_TOKEN_HERE",
+      "type": "string"
+    }
+  ]
+}

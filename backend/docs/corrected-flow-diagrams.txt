@@ -1,0 +1,272 @@
+flowchart TD
+    START([User wants to register])
+    
+    subgraph Method[Registration Method]
+        EMAIL[Email Registration]
+        OAUTH[OAuth - Google/Facebook/Apple]
+    end
+    
+    subgraph Source[Source Detection]
+        WM[Web Merchant - WEB_MERCHANT]
+        MC[Mobile Client - MOBILE_CLIENT]
+    end
+    
+    subgraph EmailCheck[Email Check]
+        CHECK{Email exists?}
+        EXISTING[User already exists]
+        NEW[New User]
+    end
+    
+    subgraph ExistingFlow[Existing User Response]
+        SHOW_LOGIN[Show: Account exists - Please login instead]
+    end
+    
+    subgraph NewFlow[New User Flow]
+        CREATE[Create Account - role NEW_USER + registrationSource]
+        SEND_EMAIL[Send email verification]
+        SUCCESS[Registration successful - Check your email]
+    end
+    
+    START --> EMAIL
+    START --> OAUTH
+    
+    EMAIL --> WM
+    EMAIL --> MC
+    OAUTH --> WM
+    OAUTH --> MC
+    
+    WM --> CHECK
+    MC --> CHECK
+    
+    CHECK -->|Yes| EXISTING
+    CHECK -->|No| NEW
+    
+    EXISTING --> SHOW_LOGIN
+    
+    NEW --> CREATE
+    CREATE --> SEND_EMAIL
+    SEND_EMAIL --> SUCCESS
+
+---DIAGRAM-2---
+
+flowchart TD
+    LOGIN_START([User attempts login])
+    
+    subgraph LoginMethod[Login Method]
+        EMAIL_LOGIN[Email + Password]
+        OAUTH_LOGIN[OAuth - Google/Facebook/Apple]
+    end
+    
+    subgraph AppContext[Application Context]
+        WEB_MERCHANT[Web Merchant App]
+        MOBILE_CLIENT[Mobile Client App]
+    end
+    
+    subgraph UserCheck[User Account Check]
+        USER_EXISTS{User exists?}
+        NO_USER[Show: User not found]
+        YES_USER[User found]
+    end
+    
+    subgraph PasswordCheck[Password Validation]
+        PASSWORD_OK{Password correct?}
+        WRONG_PASSWORD[Show: Wrong password]
+        PASSWORD_VALID[Password valid]
+    end
+    
+    subgraph EmailVerification[Email Verification Check - PRIORITY 1]
+        EMAIL_VERIFIED{Email verified?}
+        NEED_VERIFICATION[Show: Please verify your email first]
+        EMAIL_OK[Email verified]
+    end
+    
+    subgraph RoleCheck[Role Analysis - PRIORITY 2]
+        CHECK_ROLE{What is current role?}
+        
+        NEW_USER_ROLE[Role: NEW_USER]
+        CLIENT_ROLE[Role: CLIENT]
+        OWNER_ROLE[Role: OWNER]
+        COOPERATOR_ROLE[Role: COOPERATOR]
+    end
+    
+    subgraph NewUserFlow[NEW_USER Role Flow]
+        CHECK_SOURCE{Check registrationSource + loginContext}
+        
+        WEB_TO_WEB[WEB_MERCHANT source → WEB_MERCHANT login]
+        WEB_TO_MOBILE[WEB_MERCHANT source → MOBILE_CLIENT login]
+        MOBILE_TO_WEB[MOBILE_CLIENT source → WEB_MERCHANT login]
+        MOBILE_TO_MOBILE[MOBILE_CLIENT source → MOBILE_CLIENT login]
+        
+        SHOW_COMPANY_FORM[Show: Complete company registration form]
+        SHOW_BUSINESS_UPGRADE[Show: Want to become business partner?]
+        GRANT_CLIENT[Grant CLIENT role + login success]
+    end
+    
+    subgraph ClientFlow[CLIENT Role Flow]
+        CLIENT_CONTEXT{Login context?}
+        CLIENT_TO_WEB_APP[CLIENT → WEB_MERCHANT]
+        CLIENT_TO_MOBILE_APP[CLIENT → MOBILE_CLIENT]
+        
+        SHOW_UPGRADE[Show: Upgrade to business account]
+        CLIENT_SUCCESS[Login success as CLIENT]
+    end
+    
+    subgraph OwnerFlow[OWNER Role Flow]
+        OWNER_CONTEXT{Login context?}
+        OWNER_TO_WEB_APP[OWNER → WEB_MERCHANT]
+        OWNER_TO_MOBILE_APP[OWNER → MOBILE_CLIENT]
+        
+        OWNER_SUCCESS[Login success as OWNER]
+        AUTO_ADD_CLIENT[Auto add CLIENT role + login success]
+    end
+    
+    subgraph CooperatorFlow[COOPERATOR Role Flow]
+        COOP_CONTEXT{Login context?}
+        COOP_TO_WEB_APP[COOPERATOR → WEB_MERCHANT]
+        COOP_TO_MOBILE_APP[COOPERATOR → MOBILE_CLIENT]
+        
+        COOP_SUCCESS[Login success as COOPERATOR]
+        AUTO_ADD_CLIENT_COOP[Auto add CLIENT role + login success]
+    end
+    
+    LOGIN_START --> EMAIL_LOGIN
+    LOGIN_START --> OAUTH_LOGIN
+    
+    EMAIL_LOGIN --> WEB_MERCHANT
+    EMAIL_LOGIN --> MOBILE_CLIENT
+    OAUTH_LOGIN --> WEB_MERCHANT
+    OAUTH_LOGIN --> MOBILE_CLIENT
+    
+    WEB_MERCHANT --> USER_EXISTS
+    MOBILE_CLIENT --> USER_EXISTS
+    
+    USER_EXISTS -->|No| NO_USER
+    USER_EXISTS -->|Yes| YES_USER
+    
+    YES_USER --> PASSWORD_OK
+    PASSWORD_OK -->|No| WRONG_PASSWORD
+    PASSWORD_OK -->|Yes| PASSWORD_VALID
+    
+    PASSWORD_VALID --> EMAIL_VERIFIED
+    EMAIL_VERIFIED -->|No| NEED_VERIFICATION
+    EMAIL_VERIFIED -->|Yes| EMAIL_OK
+    
+    EMAIL_OK --> CHECK_ROLE
+    
+    CHECK_ROLE --> NEW_USER_ROLE
+    CHECK_ROLE --> CLIENT_ROLE
+    CHECK_ROLE --> OWNER_ROLE
+    CHECK_ROLE --> COOPERATOR_ROLE
+    
+    NEW_USER_ROLE --> CHECK_SOURCE
+    CHECK_SOURCE --> WEB_TO_WEB
+    CHECK_SOURCE --> WEB_TO_MOBILE
+    CHECK_SOURCE --> MOBILE_TO_WEB
+    CHECK_SOURCE --> MOBILE_TO_MOBILE
+    
+    WEB_TO_WEB --> SHOW_COMPANY_FORM
+    WEB_TO_MOBILE --> GRANT_CLIENT
+    MOBILE_TO_WEB --> SHOW_BUSINESS_UPGRADE
+    MOBILE_TO_MOBILE --> GRANT_CLIENT
+    
+    CLIENT_ROLE --> CLIENT_CONTEXT
+    CLIENT_CONTEXT --> CLIENT_TO_WEB_APP
+    CLIENT_CONTEXT --> CLIENT_TO_MOBILE_APP
+    
+    CLIENT_TO_WEB_APP --> SHOW_UPGRADE
+    CLIENT_TO_MOBILE_APP --> CLIENT_SUCCESS
+    
+    OWNER_ROLE --> OWNER_CONTEXT
+    OWNER_CONTEXT --> OWNER_TO_WEB_APP
+    OWNER_CONTEXT --> OWNER_TO_MOBILE_APP
+    
+    OWNER_TO_WEB_APP --> OWNER_SUCCESS
+    OWNER_TO_MOBILE_APP --> AUTO_ADD_CLIENT
+    
+    COOPERATOR_ROLE --> COOP_CONTEXT
+    COOP_CONTEXT --> COOP_TO_WEB_APP
+    COOP_CONTEXT --> COOP_TO_MOBILE_APP
+    
+    COOP_TO_WEB_APP --> COOP_SUCCESS
+    COOP_TO_MOBILE_APP --> AUTO_ADD_CLIENT_COOP
+
+---DIAGRAM-3---
+
+graph TB
+    subgraph Priority[Login Check Priority]
+        P1[1. EMAIL VERIFICATION - Highest Priority]
+        P2[2. ROLE-BASED ACTIONS - Medium Priority]
+        P3[3. SUCCESSFUL LOGIN - Lowest Priority]
+    end
+    
+    subgraph EmailFirst[Email Verification Always First]
+        LOCAL_USER{Local account?}
+        EMAIL_CHECK{Email verified?}
+        BLOCK_LOGIN[Block login - Verify email first]
+        PROCEED[Proceed to role checks]
+    end
+    
+    subgraph RoleActions[Role-Based Actions After Email OK]
+        NEW_USER_ACTION[NEW_USER → Show completion forms]
+        CLIENT_ACTION[CLIENT → Show upgrade or allow access]
+        OWNER_ACTION[OWNER → Direct access or auto-add CLIENT]
+        COOP_ACTION[COOPERATOR → Direct access or auto-add CLIENT]
+    end
+    
+    subgraph FinalResult[Final Login Result]
+        SUCCESS_LOGIN[Successful login with JWT]
+        FORM_REQUIRED[Form completion required]
+        UPGRADE_REQUIRED[Business upgrade required]
+    end
+    
+    P1 --> P2
+    P2 --> P3
+    
+    LOCAL_USER -->|Yes| EMAIL_CHECK
+    LOCAL_USER -->|No OAuth| PROCEED
+    
+    EMAIL_CHECK -->|No| BLOCK_LOGIN
+    EMAIL_CHECK -->|Yes| PROCEED
+    
+    PROCEED --> NEW_USER_ACTION
+    PROCEED --> CLIENT_ACTION
+    PROCEED --> OWNER_ACTION
+    PROCEED --> COOP_ACTION
+    
+    NEW_USER_ACTION --> FORM_REQUIRED
+    CLIENT_ACTION --> SUCCESS_LOGIN
+    CLIENT_ACTION --> UPGRADE_REQUIRED
+    OWNER_ACTION --> SUCCESS_LOGIN
+    COOP_ACTION --> SUCCESS_LOGIN
+
+---DIAGRAM-4---
+
+graph LR
+    subgraph RegistrationFlow[Registration Flow - Simplified]
+        REG_START[User registers]
+        EMAIL_EXISTS{Email exists?}
+        CREATE_ACCOUNT[Create NEW_USER account]
+        SEND_VERIFICATION[Send email verification]
+        TELL_LOGIN[Tell user to login instead]
+    end
+    
+    subgraph LoginFlow[Login Flow - All Logic Here]
+        LOGIN_START[User logs in]
+        EMAIL_PRIORITY[Check email verification FIRST]
+        ROLE_LOGIC[Apply role-based logic]
+        SHOW_FORMS[Show required forms]
+        LOGIN_SUCCESS[Login successful]
+    end
+    
+    REG_START --> EMAIL_EXISTS
+    EMAIL_EXISTS -->|No| CREATE_ACCOUNT
+    EMAIL_EXISTS -->|Yes| TELL_LOGIN
+    CREATE_ACCOUNT --> SEND_VERIFICATION
+    
+    TELL_LOGIN --> LOGIN_START
+    SEND_VERIFICATION --> LOGIN_START
+    
+    LOGIN_START --> EMAIL_PRIORITY
+    EMAIL_PRIORITY --> ROLE_LOGIC
+    ROLE_LOGIC --> SHOW_FORMS
+    ROLE_LOGIC --> LOGIN_SUCCESS

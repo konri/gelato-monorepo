@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>OAuth Test</title>
+  </head>
+  <body>
+    <h1>OAuth Test Page</h1>
+
+    <h2>Login Options:</h2>
+    <a href="http://localhost:4000/authorization/login/google?redirect=dashboard">
+      <button>Login with Google</button>
+    </a>
+    <br /><br />
+    <!-- Facebook tymczasowo wyłączony - nie działa z localhost -->
+    <button disabled>Facebook OAuth (wymaga ngrok)</button>
+
+    <h2>User Data (from JWT token):</h2>
+    <div id="userData"></div>
+
+    <a href="http://localhost:4000/authorization/login/google?redirect=dashboard">
+      <button>Login with Google → Dashboard</button>
+    </a>
+
+    <a href="http://localhost:4000/authorization/login/google?redirect=profile/settings">
+      <button>Login with Google → Profile Settings</button>
+    </a>
+
+    <a href="http://localhost:4000/authorization/login/facebook?redirect=admin/panel">
+      <button>Login with Facebook → Admin Panel</button>
+    </a>
+
+    <script>
+      // Sprawdź JWT token w URL
+      const urlParams = new URLSearchParams(window.location.search)
+      const token = urlParams.get('token')
+      const type = urlParams.get('type')
+
+      if (type === 'SUCCESS' && token) {
+        try {
+          // Dekoduj JWT token
+          const payload = JSON.parse(atob(token.split('.')[1]))
+          const userData = payload.user
+
+          document.getElementById('userData').innerHTML = `
+                    <h3>OAuth Success!</h3>
+                    <pre>${JSON.stringify(userData, null, 2)}</pre>
+                    <button onclick="clearAuth()">Clear Auth</button>
+                `
+
+          // Zapisz dane
+          localStorage.setItem('authToken', token)
+          localStorage.setItem('user', JSON.stringify(userData))
+        } catch (e) {
+          document.getElementById('userData').innerHTML = 'Error parsing JWT token: ' + e.message
+        }
+      } else {
+        // Sprawdź czy są zapisane dane
+        const savedUser = localStorage.getItem('user')
+        if (savedUser) {
+          document.getElementById('userData').innerHTML = `
+                    <h3>Saved User Data:</h3>
+                    <pre>${JSON.stringify(JSON.parse(savedUser), null, 2)}</pre>
+                    <button onclick="clearAuth()">Clear Auth</button>
+                `
+        } else {
+          document.getElementById('userData').innerHTML = 'No user data found'
+        }
+      }
+
+      function clearAuth() {
+        localStorage.removeItem('authToken')
+        localStorage.removeItem('user')
+        window.history.replaceState({}, document.title, window.location.pathname)
+        location.reload()
+      }
+    </script>
+  </body>
+</html>

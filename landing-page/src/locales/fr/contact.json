@@ -1,0 +1,16 @@
+{
+  "title1": "Contactez-nous",
+  "subtitle1": "Questions, signalements de bugs, avis.",
+  "emailField1": "Votre adresse e-mail",
+  "emailField1Placeholder": "Saisissez votre e-mail",
+  "emailField2": "Saisissez un sujet, par ex. 'signalement de bug ...'",
+  "emailField2Placeholder": "Saisissez le sujet",
+  "emailButtonText": "Envoyer maintenant",
+  "firstSection": {
+    "figures2Alt": "Illustration de contact",
+    "phoneAlt": "Image de téléphone",
+    "speachbubbleLeftAlt": "Bulle de dialogue gauche",
+    "speachbubbleRightAlt": "Bulle de dialogue droite",
+    "abstractAlt": "Décoration abstraite"
+  }
+}

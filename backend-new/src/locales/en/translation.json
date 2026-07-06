@@ -1,0 +1,87 @@
+{
+  "auth": {
+    "login_success": "Successfully logged in",
+    "login_failed": "Invalid email or password",
+    "register_success": "Registration successful",
+    "email_already_exists": "Email already exists",
+    "phone_already_exists": "Phone number already exists",
+    "invalid_otp": "Invalid OTP code",
+    "otp_sent": "OTP code sent to {{phone}}",
+    "otp_expired": "OTP code expired",
+    "email_verification_sent": "Verification email sent",
+    "email_verified": "Email verified successfully",
+    "password_reset_sent": "Password reset link sent",
+    "password_reset_success": "Password reset successfully",
+    "unauthorized": "You are not authorized",
+    "token_expired": "Token expired",
+    "invalid_token": "Invalid token"
+  },
+  "order": {
+    "created": "Order has been placed",
+    "accepted": "Order accepted by spot",
+    "preparing": "Order is being prepared",
+    "ready": "Order ready for pickup",
+    "courier_assigned": "Courier assigned",
+    "picked_up": "Order picked up by courier",
+    "in_transit": "Order in transit",
+    "delivered": "Order delivered",
+    "cancelled": "Order cancelled",
+    "failed": "Delivery failed",
+    "outside_delivery_radius": "Delivery address outside radius",
+    "spot_closed": "Spot is closed",
+    "payment_failed": "Payment failed",
+    "payment_success": "Payment successful"
+  },
+  "points": {
+    "earned": "Earned {{points}} points",
+    "spent": "Spent {{points}} points",
+    "insufficient": "Insufficient points",
+    "balance": "Points balance: {{balance}}",
+    "transaction_created": "Point transaction created"
+  },
+  "referral": {
+    "code_generated": "Your referral code: {{code}}",
+    "code_applied": "Referral code applied",
+    "invalid_code": "Invalid referral code",
+    "reward_earned": "Referral reward: {{points}} points",
+    "already_used": "Referral code already used"
+  },
+  "prize": {
+    "claimed": "Prize claimed successfully",
+    "redeemed": "Prize redeemed",
+    "not_enough_points": "Not enough points",
+    "out_of_stock": "Prize out of stock",
+    "expired": "Prize expired"
+  },
+  "quest": {
+    "completed": "Quest completed! Received {{points}} points",
+    "already_completed": "Quest already completed",
+    "not_eligible": "Not eligible for this quest"
+  },
+  "spot": {
+    "not_found": "Spot not found",
+    "closed": "Spot is closed",
+    "delivery_unavailable": "Delivery unavailable from this spot"
+  },
+  "courier": {
+    "application_sent": "Application sent",
+    "application_approved": "Application approved",
+    "application_rejected": "Application rejected",
+    "order_assigned": "New order assigned",
+    "delivery_started": "Delivery started",
+    "delivery_completed": "Delivery completed"
+  },
+  "validation": {
+    "required_field": "Field {{field}} is required",
+    "invalid_email": "Invalid email address",
+    "invalid_phone": "Invalid phone number",
+    "password_too_short": "Password must be at least 8 characters",
+    "passwords_not_match": "Passwords do not match"
+  },
+  "error": {
+    "server_error": "Server error",
+    "not_found": "Not found",
+    "forbidden": "Access forbidden",
+    "bad_request": "Bad request"
+  }
+}

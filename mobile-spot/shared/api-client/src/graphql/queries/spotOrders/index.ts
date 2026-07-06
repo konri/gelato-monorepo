@@ -1,0 +1,49 @@
+import { executeGraphQLQuery, createGraphQLFunction } from '../../client';
+import { ApolloServerConfig, GraphQLResult } from '../../types';
+import {
+  CLAIM_ORDER_MUTATION,
+  SPOT_ORDERS_QUERY,
+  UPDATE_ORDER_STATUS_MUTATION,
+} from './query';
+import {
+  ClaimOrderResponse,
+  SpotOrder,
+  SpotOrdersResponse,
+  UpdateOrderStatusResponse,
+} from './types';
+
+export * from './types';
+
+export const getSpotOrders = async (
+  spotId: string,
+  status: string | null,
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<SpotOrder[]>> =>
+  createGraphQLFunction<SpotOrdersResponse, SpotOrder[]>(
+    SPOT_ORDERS_QUERY,
+    (data) => data.spotOrders,
+    'Failed to load orders',
+  )({ ...options, variables: { spotId, status: status || undefined } });
+
+export const claimOrder = async (
+  orderId: string,
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<SpotOrder>> => {
+  const res = await executeGraphQLQuery<ClaimOrderResponse>(CLAIM_ORDER_MUTATION, {
+    ...options,
+    variables: { orderId },
+  });
+  return { ...res, data: res.data ? res.data.claimOrder : null };
+};
+
+export const updateOrderStatus = async (
+  id: string,
+  status: string,
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<boolean>> => {
+  const res = await executeGraphQLQuery<UpdateOrderStatusResponse>(
+    UPDATE_ORDER_STATUS_MUTATION,
+    { ...options, variables: { id, status } },
+  );
+  return { ...res, data: res.data ? res.data.updateOrderStatus : null };
+};

@@ -1,0 +1,87 @@
+{
+  "auth": {
+    "login_success": "Zalogowano pomyślnie",
+    "login_failed": "Nieprawidłowy email lub hasło",
+    "register_success": "Rejestracja pomyślna",
+    "email_already_exists": "Email już istnieje",
+    "phone_already_exists": "Numer telefonu już istnieje",
+    "invalid_otp": "Nieprawidłowy kod OTP",
+    "otp_sent": "Kod OTP wysłany na {{phone}}",
+    "otp_expired": "Kod OTP wygasł",
+    "email_verification_sent": "Email weryfikacyjny wysłany",
+    "email_verified": "Email zweryfikowany pomyślnie",
+    "password_reset_sent": "Link do resetowania hasła wysłany",
+    "password_reset_success": "Hasło zresetowane pomyślnie",
+    "unauthorized": "Nie jesteś autoryzowany",
+    "token_expired": "Token wygasł",
+    "invalid_token": "Nieprawidłowy token"
+  },
+  "order": {
+    "created": "Zamówienie zostało złożone",
+    "accepted": "Zamówienie zaakceptowane przez punkt",
+    "preparing": "Zamówienie jest przygotowywane",
+    "ready": "Zamówienie gotowe do odbioru",
+    "courier_assigned": "Kurier przydzielony",
+    "picked_up": "Zamówienie odebrane przez kuriera",
+    "in_transit": "Zamówienie w drodze",
+    "delivered": "Zamówienie dostarczone",
+    "cancelled": "Zamówienie anulowane",
+    "failed": "Dostawa nie powiodła się",
+    "outside_delivery_radius": "Adres dostawy poza zasięgiem",
+    "spot_closed": "Punkt zamknięty",
+    "payment_failed": "Płatność nie powiodła się",
+    "payment_success": "Płatność zakończona pomyślnie"
+  },
+  "points": {
+    "earned": "Zdobyto {{points}} punktów",
+    "spent": "Wydano {{points}} punktów",
+    "insufficient": "Niewystarczająca liczba punktów",
+    "balance": "Saldo punktów: {{balance}}",
+    "transaction_created": "Transakcja punktowa utworzona"
+  },
+  "referral": {
+    "code_generated": "Twój kod polecający: {{code}}",
+    "code_applied": "Kod polecający zastosowany",
+    "invalid_code": "Nieprawidłowy kod polecający",
+    "reward_earned": "Nagroda za polecenie: {{points}} punktów",
+    "already_used": "Już użyto kod polecający"
+  },
+  "prize": {
+    "claimed": "Nagroda odebrana pomyślnie",
+    "redeemed": "Nagroda zrealizowana",
+    "not_enough_points": "Za mało punktów",
+    "out_of_stock": "Nagroda niedostępna",
+    "expired": "Nagroda wygasła"
+  },
+  "quest": {
+    "completed": "Zadanie ukończone! Otrzymano {{points}} punktów",
+    "already_completed": "Zadanie już ukończone",
+    "not_eligible": "Nie spełniasz wymagań zadania"
+  },
+  "spot": {
+    "not_found": "Nie znaleziono punktu",
+    "closed": "Punkt zamknięty",
+    "delivery_unavailable": "Dostawa niedostępna z tego punktu"
+  },
+  "courier": {
+    "application_sent": "Aplikacja wysłana",
+    "application_approved": "Aplikacja zatwierdzona",
+    "application_rejected": "Aplikacja odrzucona",
+    "order_assigned": "Nowe zamówienie przydzielone",
+    "delivery_started": "Dostawa rozpoczęta",
+    "delivery_completed": "Dostawa ukończona"
+  },
+  "validation": {
+    "required_field": "Pole {{field}} jest wymagane",
+    "invalid_email": "Nieprawidłowy adres email",
+    "invalid_phone": "Nieprawidłowy numer telefonu",
+    "password_too_short": "Hasło musi mieć co najmniej 8 znaków",
+    "passwords_not_match": "Hasła nie pasują"
+  },
+  "error": {
+    "server_error": "Błąd serwera",
+    "not_found": "Nie znaleziono",
+    "forbidden": "Brak dostępu",
+    "bad_request": "Nieprawidłowe żądanie"
+  }
+}

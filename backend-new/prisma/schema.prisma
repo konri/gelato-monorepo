@@ -1,0 +1,875 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("DATABASE_URL_SHADOW")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum Role {
+  SUPER_ADMIN    // Can create Spots Admins
+  SPOTS_ADMIN    // Can create Spot Admins and manage multiple spots
+  SPOT_ADMIN     // Can create Employees, manage one spot
+  EMPLOYEE       // Can view orders, scan QR codes
+  COURIER        // Delivery drivers
+  CLIENT         // Regular users ordering ice cream
+}
+
+enum Language {
+  PL // Polish
+  EN // English
+  UA // Ukrainian
+}
+
+enum RegistrationSource {
+  WEB_CLIENT
+  MOBILE_CLIENT
+  MOBILE_COURIER
+  MOBILE_ADMIN
+  ADMIN_WEB
+}
+
+// Which app "namespace" an account belongs to. The same email/phone can exist
+// once per account type, and those accounts are fully independent (separate
+// password, profile, tokens). Client & courier apps stamp their own type.
+enum AccountType {
+  CLIENT
+  COURIER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING        // Order placed, waiting for spot to accept
+  PREPARING      // Spot is preparing the order
+  READY          // Order is ready for pickup by courier
+  COURIER_ASSIGNED // Courier has been assigned
+  PICKED_UP      // Courier picked up the package
+  IN_TRANSIT     // Courier is delivering
+  DELIVERED      // Successfully delivered
+  CANCELLED      // Order was cancelled
+  FAILED         // Delivery failed
+}
+
+enum TasteType {
+  SORBET         // Fruit-based, no dairy
+  MILK           // Milk-based ice cream
+  GELATO         // Italian-style
+  VEGAN          // Plant-based
+  OTHER
+}
+
+enum ProductType {
+  TASTE          // Ice cream taste/flavor
+  COFFEE         // Coffee drinks
+  BEVERAGE       // Other beverages
+  DESSERT        // Other desserts
+  MERCHANDISE    // Branded items
+  OTHER
+}
+
+enum TransactionType {
+  EARNED         // Points earned from purchase
+  SPENT          // Points spent on prizes
+  REFUND         // Refunded points
+  BONUS          // Bonus/promo points
+  REFERRAL       // Referral reward
+  BIRTHDAY       // Birthday reward
+  QUEST          // Quest completion
+}
+
+enum QuestType {
+  REFERRAL       // Invite friends
+  BIRTHDAY       // Enter birthday
+  PURCHASE       // Buy X products
+  VISIT          // Visit spot X times
+  CUSTOM         // Admin-defined
+}
+
+// ============================================================================
+// USER & AUTHENTICATION
+// ============================================================================
+
+model User {
+  id                     String               @id @default(uuid())
+  email                  String
+  phone                  String?
+  accountType            AccountType          @default(CLIENT) // app namespace
+  password               String // Hashed
+  name                   String?
+  firstName              String?
+  surname                String?
+  birthDate              DateTime?
+  birthdayCompleted      Boolean              @default(false) // True = birthday is immutable
+  profilePicture         String?
+  language               Language             @default(PL)
+  roles                  Role[]
+  registrationSource     RegistrationSource?
+  emailVerified          Boolean              @default(false)
+  emailVerificationCode  String?              // 6-digit OTP for email verification
+  emailVerificationExpires DateTime?
+  phoneVerified          Boolean              @default(false)
+
+  // Location preferences
+  preferredCityId        String?
+  preferredCity          City?                @relation(fields: [preferredCityId], references: [id])
+  locationPermission     Boolean              @default(false)
+  notificationPermission Boolean              @default(false)
+
+  // Auth tokens
+  tokenVersion           Int                  @default(0) // For JWT refresh invalidation
+
+  // Google OAuth
+  googleId               String?
+  googleAccessToken      String?
+
+  // Apple OAuth
+  appleId                String?
+
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+
+  // Relations
+  deviceTokens           DeviceToken[]
+  orders                 Order[]
+  reviews                Review[]
+  pointBalance           PointBalance?
+  pointTransactions      PointTransaction[]
+  referralCode           ReferralCode?
+  referralsGiven         Referral[]           @relation("Referrer")
+  referralReceived       Referral?            @relation("Referred")
+  claimedPrizes          UserPrize[]
+  questCompletions       QuestCompletion[]
+  favoriteSpots          FavoriteSpot[]
+  notifications          Notification[]
+  courierProfile         CourierProfile?
+  spotAdminProfile       SpotAdminProfile?
+  employeeProfile        EmployeeProfile[]
+  spotsAdminProfile      SpotsAdminProfile?
+  newsLikes              NewsLike[]
+  newsComments           NewsComment[]
+  tasteLikes             TasteLike[]
+  tasteComments          TasteComment[]
+
+  // Identity is unique per account type, not globally — so the same email/phone
+  // can register once in the client app and once in the courier app.
+  @@unique([email, accountType])
+  @@unique([phone, accountType])
+  @@unique([googleId, accountType])
+  @@unique([appleId, accountType])
+}
+
+model DeviceToken {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  token     String   // FCM token
+  platform  String   // ios, android, web
+  deviceId  String   // Unique device identifier
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, deviceId])
+  @@index([token])
+}
+
+model ReferralCode {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @unique
+  code      String   @unique // e.g., "USER123ABC"
+  createdAt DateTime @default(now())
+}
+
+model Referral {
+  id             String   @id @default(uuid())
+  referrer       User     @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referrerId     String
+  referredUser   User     @relation("Referred", fields: [referredUserId], references: [id], onDelete: Cascade)
+  referredUserId String   @unique
+  code           String   // The referral code used
+  pointsAwarded  Boolean  @default(false) // True when referrer gets 500pts (after referee's first purchase)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// ============================================================================
+// CITIES & SPOTS
+// ============================================================================
+
+model City {
+  id          String   @id @default(uuid())
+  name        String   @unique // e.g., "Warsaw", "Krakow", "Lviv"
+  nameLocal   Json     // { pl: "Warszawa", en: "Warsaw", ua: "Варшава" }
+  country     String   @default("Poland")
+  latitude    Float
+  longitude   Float
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  spots       Spot[]
+  users       User[]
+}
+
+model Spot {
+  id                  String   @id @default(uuid())
+  name                String
+  description         String?
+  address             String
+  city                City     @relation(fields: [cityId], references: [id])
+  cityId              String
+  latitude            Float
+  longitude           Float
+  phone               String?
+  email               String?
+
+  // Opening hours (JSON: { monday: "09:00-21:00", ... })
+  openingHours        Json
+
+  // Photos
+  logoUrl             String?
+  coverUrl            String?
+  photos              String[] // Array of image URLs
+
+  // Delivery settings
+  deliveryEnabled     Boolean  @default(true)
+  deliveryRadiusKm    Float    @default(5.0)
+  freeDeliveryThreshold Float? // Minimum order value for free delivery
+  deliveryFee         Float    @default(0)
+
+  // Spot features
+  hasSeating          Boolean  @default(false)
+  seatingCapacity     Int?
+  accessibilityFeatures String?
+
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  tastes              Taste[]
+  products            Product[]
+  orders              Order[]
+  spotAdmins          SpotAdminProfile[]
+  employees           EmployeeProfile[]
+  courierApplications CourierApplication[]
+  approvedCouriers    CourierSpot[]
+  favoriteByUsers     FavoriteSpot[]
+  pointTemplates      PointTemplate[]
+  reviews             Review[]
+}
+
+model FavoriteSpot {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  spot      Spot     @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  spotId    String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, spotId])
+  @@index([userId])
+}
+
+// ============================================================================
+// PRODUCTS & TASTES
+// ============================================================================
+
+model Taste {
+  id                 String     @id @default(uuid())
+  spot               Spot       @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  spotId             String
+
+  title              String
+  titleLocal         Json       // { pl: "", en: "", ua: "" }
+  subtitle           String?    // e.g., "Sorbet", "Milk-based"
+  description        String?
+  descriptionLocal   Json?
+
+  type               TasteType  @default(OTHER)
+  imageUrl           String?
+  price              Float      @default(0) // Price per portion (PLN)
+
+  // Nutritional info
+  kcalPerPortion     Float?
+  kcalPer100g        Float?
+  portionSizeGrams   Float?     @default(100)
+
+  // Ingredients (rich text HTML)
+  ingredients        String?    @db.Text
+  ingredientsLocal   Json?
+
+  // Allergens
+  allergens          String[]   // e.g., ["milk", "nuts", "gluten"]
+
+  isAvailable        Boolean    @default(true)
+  isActive           Boolean    @default(true)
+
+  // Social
+  likesCount         Int        @default(0)
+  commentsCount      Int        @default(0)
+
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  orderItems         OrderItem[]
+  likes              TasteLike[]
+  comments           TasteComment[]
+}
+
+model TasteLike {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  taste     Taste    @relation(fields: [tasteId], references: [id], onDelete: Cascade)
+  tasteId   String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, tasteId])
+}
+
+model TasteComment {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  taste     Taste    @relation(fields: [tasteId], references: [id], onDelete: Cascade)
+  tasteId   String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([tasteId, createdAt])
+}
+
+model Product {
+  id                String      @id @default(uuid())
+  spot              Spot        @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  spotId            String
+
+  name              String
+  nameLocal         Json
+  description       String?
+  descriptionLocal  Json?
+  type              ProductType @default(OTHER)
+  imageUrl          String?
+  price             Float
+
+  // Box products: a "box" lets the customer pick up to `maxTastes` scoops.
+  isBox             Boolean     @default(false)
+  maxTastes         Int?        // required when isBox; how many tastes fit
+  weightGrams       Int?        // total box weight
+
+  // Nutritional info (optional for non-taste products)
+  kcalPerPortion    Float?
+  kcalPer100g       Float?
+  allergens         String[]
+
+  isAvailable       Boolean     @default(true)
+  isActive          Boolean     @default(true)
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  orderItems        OrderItem[]
+}
+
+// ============================================================================
+// ORDERS & DELIVERY
+// ============================================================================
+
+model Order {
+  id                String      @id @default(uuid())
+  orderNumber       String      @unique // Sequential per day, e.g., "20260528-001"
+
+  user              User        @relation(fields: [userId], references: [id])
+  userId            String
+  spot              Spot        @relation(fields: [spotId], references: [id])
+  spotId            String
+
+  status            OrderStatus @default(PENDING)
+
+  // Address
+  deliveryAddress   String
+  deliveryLatitude  Float
+  deliveryLongitude Float
+  buildingType      String?     // "house" or "apartment"
+  apartmentNumber   String?
+  floor             String?
+
+  // Pricing
+  subtotal          Float
+  deliveryFee       Float
+  discount          Float       @default(0)
+  total             Float
+
+  // Payment
+  paymentIntentId   String?     // Stripe payment intent ID
+  paymentMethod     String?     // "card", "apple_pay", "google_pay", "blik"
+  paymentStatus     String      @default("pending")
+
+  // Invoice (optional)
+  invoiceRequested  Boolean     @default(false)
+  invoiceNIP        String?
+  invoiceCompanyName String?
+  invoiceAddress    String?
+
+  // Notes
+  noteForCourier    String?
+  noteForSpot       String?
+
+  // Delivery timing
+  scheduledFor      DateTime?   // null = ASAP
+
+  // Spot staff who claimed the order for preparation (first-to-claim).
+  preparedById      String?
+  preparedByName    String?
+  claimedAt         DateTime?
+
+  // Courier assignment
+  courierId         String?
+  courier           CourierProfile? @relation(fields: [courierId], references: [id])
+  courierAssignedAt DateTime?
+
+  // Status timestamps
+  acceptedAt        DateTime?
+  readyAt           DateTime?
+  pickedUpAt        DateTime?
+  deliveredAt       DateTime?
+  cancelledAt       DateTime?
+
+  // Tracking
+  statusHistory     Json        @default("[]") // Array of {status, timestamp, by}
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  items             OrderItem[]
+  review            Review?
+  courierLocations  CourierLocation[]
+
+  @@index([userId, createdAt])
+  @@index([spotId, status])
+  @@index([courierId, status])
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId    String
+
+  taste      Taste?   @relation(fields: [tasteId], references: [id])
+  tasteId    String?
+
+  product    Product? @relation(fields: [productId], references: [id])
+  productId  String?
+
+  // For box products: the taste ids the customer chose (repeats allowed).
+  boxTasteIds String[]
+
+  quantity   Int
+  pricePerUnit Float
+  total      Float
+
+  createdAt  DateTime @default(now())
+
+  @@index([orderId])
+}
+
+model Review {
+  id              String   @id @default(uuid())
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId         String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  spot            Spot     @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  spotId          String
+
+  spotRating      Int      // 1-5 stars
+  courierRating   Int?     // 1-5 stars
+  overallRating   Int      // 1-5 stars
+
+  comment         String?  @db.Text
+
+  createdAt       DateTime @default(now())
+
+  @@index([spotId, createdAt])
+  @@index([userId, createdAt])
+}
+
+// ============================================================================
+// COURIER SYSTEM
+// ============================================================================
+
+model CourierProfile {
+  id              String   @id @default(uuid())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String   @unique
+
+  // Work status
+  isOnline        Boolean  @default(false)
+  isAvailable     Boolean  @default(false) // Available to receive orders
+  currentSpotId   String?  // Spot they're currently working for
+
+  // Stats
+  totalDeliveries Int      @default(0)
+  averageRating   Float?
+  totalEarnings   Float    @default(0)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  applications    CourierApplication[]
+  approvedSpots   CourierSpot[]
+  orders          Order[]
+  locations       CourierLocation[]
+  earnings        CourierEarning[]
+  workSessions    WorkSession[]
+}
+
+// A courier "on the job" period. Created when the courier goes online and
+// picks which approved spots to receive deliveries from; closed when they
+// stop working. Stores working-time info + the selected spots for that shift.
+model WorkSession {
+  id              String   @id @default(uuid())
+  courier         CourierProfile @relation(fields: [courierId], references: [id], onDelete: Cascade)
+  courierId       String
+
+  selectedSpotIds String[] // spots this courier accepts deliveries from this shift
+  startedAt       DateTime @default(now())
+  endedAt         DateTime? // null = currently active
+
+  @@index([courierId, startedAt])
+}
+
+model CourierApplication {
+  id         String   @id @default(uuid())
+  courier    CourierProfile @relation(fields: [courierId], references: [id], onDelete: Cascade)
+  courierId  String
+  spot       Spot     @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  spotId     String
+
+  status     String   @default("pending") // pending, approved, rejected
+  appliedAt  DateTime @default(now())
+  reviewedAt DateTime?
+  reviewedBy String?  // User ID of admin who reviewed
+
+  @@unique([courierId, spotId])
+  @@index([spotId, status])
+}
+
+model CourierSpot {
+  id        String   @id @default(uuid())
+  courier   CourierProfile @relation(fields: [courierId], references: [id], onDelete: Cascade)
+  courierId String
+  spot      Spot     @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  spotId    String
+  isActive  Boolean  @default(true)
+  approvedAt DateTime @default(now())
+
+  @@unique([courierId, spotId])
+  @@index([spotId, isActive])
+}
+
+model CourierLocation {
+  id        String   @id @default(uuid())
+  courier   CourierProfile @relation(fields: [courierId], references: [id], onDelete: Cascade)
+  courierId String
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String?
+
+  latitude  Float
+  longitude Float
+  accuracy  Float?
+  timestamp DateTime @default(now())
+
+  @@index([courierId, timestamp])
+  @@index([orderId, timestamp])
+}
+
+model CourierEarning {
+  id          String   @id @default(uuid())
+  courier     CourierProfile @relation(fields: [courierId], references: [id], onDelete: Cascade)
+  courierId   String
+  amount      Float
+  description String
+  date        DateTime @default(now())
+
+  @@index([courierId, date])
+}
+
+// ============================================================================
+// ADMIN PROFILES
+// ============================================================================
+
+model SpotsAdminProfile {
+  id             String   @id @default(uuid())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String   @unique
+  managedSpotIds String[] // Array of Spot IDs they manage
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model SpotAdminProfile {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @unique
+  spot      Spot     @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  spotId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([spotId])
+}
+
+model EmployeeProfile {
+  id               String   @id @default(uuid())
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           String
+  spot             Spot     @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  spotId           String
+  isFirstLogin     Boolean  @default(true) // Force password change on first login
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([userId, spotId])
+  @@index([spotId])
+}
+
+// ============================================================================
+// LOYALTY & POINTS SYSTEM
+// ============================================================================
+
+model PointBalance {
+  id              String   @id @default(uuid())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String   @unique
+  totalPoints     Int      @default(0)
+  availablePoints Int      @default(0)
+  lockedPoints    Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model PointTransaction {
+  id            String          @id @default(uuid())
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  type          TransactionType
+  amount        Int
+  description   String
+  referenceId   String?         // ID of related object (order, quest, etc.)
+  referenceType String?         // "order", "quest", "referral", etc.
+  balanceBefore Int
+  balanceAfter  Int
+  createdAt     DateTime        @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model PointTemplate {
+  id          String   @id @default(uuid())
+  spot        Spot     @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  spotId      String
+  name        String   // e.g., "1 Ice Cream Portion"
+  nameLocal   Json
+  points      Int      // Base points
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([spotId, isActive])
+}
+
+// ============================================================================
+// PRIZES & QUESTS
+// ============================================================================
+
+model Prize {
+  id          String   @id @default(uuid())
+  title       String
+  titleLocal  Json
+  description String?
+  descriptionLocal Json?
+  imageUrl    String?
+  pointsCost  Int
+
+  quantity    Int?     // null = unlimited
+  claimed     Int      @default(0)
+
+  isActive    Boolean  @default(true)
+  validFrom   DateTime?
+  validUntil  DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userPrizes  UserPrize[]
+}
+
+model UserPrize {
+  id         String    @id @default(uuid())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  prize      Prize     @relation(fields: [prizeId], references: [id], onDelete: Cascade)
+  prizeId    String
+
+  qrCode     String    @unique // Unique QR code for redemption
+  isRedeemed Boolean   @default(false)
+  redeemedAt DateTime?
+  claimedAt  DateTime  @default(now())
+  validUntil DateTime
+
+  @@index([userId, isRedeemed])
+}
+
+model Quest {
+  id               String    @id @default(uuid())
+  type             QuestType
+  title            String
+  titleLocal       Json
+  description      String?
+  descriptionLocal Json?
+  pointsReward     Int
+
+  // Conditions (JSON with quest-specific criteria)
+  conditions       Json?     // e.g., { minPurchases: 2, productType: "taste" }
+
+  isActive         Boolean   @default(true)
+  isRepeatable     Boolean   @default(false)
+
+  // City/Spot targeting
+  targetCityIds    String[]  // Empty = all cities
+  targetSpotIds    String[]  // Empty = all spots
+
+  validFrom        DateTime?
+  validUntil       DateTime?
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  completions      QuestCompletion[]
+}
+
+model QuestCompletion {
+  id          String   @id @default(uuid())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  quest       Quest    @relation(fields: [questId], references: [id], onDelete: Cascade)
+  questId     String
+
+  completedAt DateTime @default(now())
+
+  @@unique([userId, questId]) // Unless quest is repeatable
+  @@index([questId, completedAt])
+}
+
+// ============================================================================
+// NEWS & CONTENT
+// ============================================================================
+
+model News {
+  id               String   @id @default(uuid())
+  title            String
+  titleLocal       Json
+  description      String   @db.Text
+  descriptionLocal Json
+
+  images           String[] // Array of image URLs for carousel
+
+  // Targeting
+  targetCityIds    String[] // Empty = all cities
+
+  isPublished      Boolean  @default(false)
+  publishedAt      DateTime?
+
+  // Social
+  likesCount       Int      @default(0)
+  commentsCount    Int      @default(0)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  likes            NewsLike[]
+  comments         NewsComment[]
+}
+
+model NewsLike {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  news      News     @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  newsId    String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, newsId])
+}
+
+model NewsComment {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  news      News     @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  newsId    String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([newsId, createdAt])
+}
+
+// ============================================================================
+// NOTIFICATIONS
+// ============================================================================
+
+model Notification {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+
+  title     String
+  titleLocal Json?
+  body      String
+  bodyLocal Json?
+  imageUrl  String?
+
+  type      String   // "order", "promo", "system", etc.
+  data      Json?    // Additional payload
+
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead, createdAt])
+}
+
+enum DiscountType {
+  PERCENTAGE // value = percent off the subtotal (e.g. 10 = 10%)
+  FIXED      // value = fixed PLN off the subtotal
+}
+
+// Promo / influencer discount codes applied at checkout.
+model PromoCode {
+  id            String       @id @default(uuid())
+  code          String       @unique // stored uppercased, e.g. "SUMMER10"
+  description   String?
+  discountType  DiscountType @default(PERCENTAGE)
+  value         Float        // percent or PLN depending on discountType
+  minOrderValue Float?       // minimum subtotal required to apply
+  maxDiscount   Float?       // cap for percentage discounts (PLN)
+
+  isInfluencer  Boolean      @default(false)
+  isActive      Boolean      @default(true)
+  validFrom     DateTime?
+  validUntil    DateTime?
+  usageLimit    Int?         // total redemptions allowed (null = unlimited)
+  usedCount     Int          @default(0)
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}

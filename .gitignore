@@ -1,0 +1,65 @@
+# ---------------------------------------------------------------------------
+# Monorepo-wide safety net.
+# Each subproject may also have its own .gitignore; this file is a catch-all
+# so a missing rule in a subproject can't leak secrets or bloat.
+# ---------------------------------------------------------------------------
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+.next/
+out/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ---------------------------------------------------------------------------
+# Environment / secret files
+# Any file that starts with `.env` is ignored EVERYWHERE.
+# If you need a sanitized template committed, name it `.env.example` and
+# force-add it (`git add -f path/.env.example`) AFTER scrubbing real values.
+# ---------------------------------------------------------------------------
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Prisma local envs
+**/prisma/.env
+**/prisma/.env.*
+
+# SQL dumps / DB exports (often large and contain PII/secrets).
+# Prisma migration.sql files are intentionally excluded from this rule
+# by being tracked in `**/prisma/migrations/**` and named explicitly.
+*.sql.gz
+*.dump
+backend/sqlfile.sql
+backend/migration.sql
+**/*.dump.sql
+**/*-dump.sql
+
+# Common credential / key files
+*.pem
+*.key
+*.p8
+*.p12
+*.jks
+*.mobileprovision
+**/GoogleService-Info.plist
+**/google-services.json
+**/*firebase-adminsdk*.json
+**/service-account*.json

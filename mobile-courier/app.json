@@ -1,0 +1,86 @@
+{
+  "expo": {
+    "name": "Gelato Courier",
+    "slug": "gelato-courier",
+    "version": "1.0.0",
+    "sdkVersion": "54.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/logo_new_courier.png",
+    "scheme": "gelatocourier",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.konradhopek.gelato.courier",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Ta aplikacja potrzebuje dost\u0119pu do lokalizacji, aby pokazywa\u0107 odpowiednie oferty w Twojej okolicy.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Ta aplikacja potrzebuje dost\u0119pu do lokalizacji, aby pokazywa\u0107 odpowiednie oferty w Twojej okolicy.",
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "gelato",
+              "com.googleusercontent.apps.549326700978-qqbvmfajruhfjsepgkj09hamme92r82q"
+            ]
+          }
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/logo_full_courier.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.konradhopek.gelato.courier",
+      "googleServicesFile": "./google-services.json",
+      "useNextNotificationsApi": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/logo.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "@react-native-google-signin/google-signin",
+      "expo-location",
+      "expo-notifications",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/logo_full_courier.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsImpl": "mapbox"
+        }
+      ],
+      "expo-localization",
+      "expo-web-browser",
+      "@react-native-community/datetimepicker",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.konradhopek.gelato.client",
+          "enableGooglePay": true
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {}
+    },
+    "owner": "konradns"
+  }
+}

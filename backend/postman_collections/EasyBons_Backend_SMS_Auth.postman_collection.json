@@ -1,0 +1,350 @@
+{
+  "info": {
+    "_postman_id": "backend-sms-auth-2024",
+    "name": "EasyBons - Backend SMS Phone Auth",
+    "description": "Backend SMS authentication endpoints - wysyłanie i weryfikacja kodów SMS z backendu",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "📱 Send SMS Code",
+      "item": [
+        {
+          "name": "Send SMS Code - Valid Phone (ANY ROLE) - no params",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"phoneNumber\": \"+48123456789\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/authorization/phone/send-code",
+              "host": ["{{base_url}}"],
+              "path": ["authorization", "phone", "send-code"]
+            },
+            "description": "Wysyła 6-cyfrowy kod weryfikacyjny SMS na podany numer telefonu. W trybie development kod jest logowany w konsoli backendu."
+          },
+          "response": []
+        },
+        {
+          "name": "Send SMS Code - Missing Phone Number (Error)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/authorization/phone/send-code",
+              "host": ["{{base_url}}"],
+              "path": ["authorization", "phone", "send-code"]
+            },
+            "description": "Test błędu - brak numeru telefonu"
+          },
+          "response": []
+        },
+        {
+          "name": "Send SMS Code - Invalid Format (Error)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"phoneNumber\": \"123456789\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/authorization/phone/send-code",
+              "host": ["{{base_url}}"],
+              "path": ["authorization", "phone", "send-code"]
+            },
+            "description": "Test błędu - numer bez country code (musi zaczynać się od +)"
+          },
+          "response": []
+        },
+        {
+          "name": "Send SMS Code - Rate Limit Test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"phoneNumber\": \"+48555666777\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/authorization/phone/send-code",
+              "host": ["{{base_url}}"],
+              "path": ["authorization", "phone", "send-code"]
+            },
+            "description": "Wyślij dwa razy z rzędu - drugi request powinien zwrócić błąd rate limit (max 1 SMS na 4 minuty)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpointy do wysyłania kodów weryfikacyjnych SMS"
+    },
+    {
+      "name": "✅ Verify SMS Code",
+      "item": [
+        {
+          "name": "Verify SMS Code - Valid Code (ANY ROLE) - no params",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"phoneNumber\": \"+48123456789\",\n    \"code\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/authorization/phone/verify-code",
+              "host": ["{{base_url}}"],
+              "path": ["authorization", "phone", "verify-code"]
+            },
+            "description": "Weryfikuje kod SMS i loguje/rejestruje użytkownika. Zwraca JWT token.\n\nKROKI:\n1. Wyślij kod przez /send-code\n2. Sprawdź konsole backendu: 📱 SMS Code for +48123456789: 123456\n3. Użyj tego kodu tutaj\n4. Dostaniesz JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify SMS Code - Invalid Code (Error)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"phoneNumber\": \"+48123456789\",\n    \"code\": \"000000\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/authorization/phone/verify-code",
+              "host": ["{{base_url}}"],
+              "path": ["authorization", "phone", "verify-code"]
+            },
+            "description": "Test błędu - nieprawidłowy kod weryfikacyjny"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify SMS Code - Missing Fields (Error)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"phoneNumber\": \"+48123456789\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/authorization/phone/verify-code",
+              "host": ["{{base_url}}"],
+              "path": ["authorization", "phone", "verify-code"]
+            },
+            "description": "Test błędu - brak kodu weryfikacyjnego"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpointy do weryfikacji kodów SMS i logowania/rejestracji"
+    },
+    {
+      "name": "🔄 Complete Flow Test",
+      "item": [
+        {
+          "name": "Step 1: Send Code to New User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"phoneNumber\": \"+48111222333\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/authorization/phone/send-code",
+              "host": ["{{base_url}}"],
+              "path": ["authorization", "phone", "send-code"]
+            },
+            "description": "Krok 1: Wyślij kod SMS\n\nPo wysłaniu sprawdź konsole backendu:\n📱 SMS Code for +48111222333: 123456"
+          },
+          "response": []
+        },
+        {
+          "name": "Step 2: Verify Code (New User Registration)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"phoneNumber\": \"+48111222333\",\n    \"code\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/authorization/phone/verify-code",
+              "host": ["{{base_url}}"],
+              "path": ["authorization", "phone", "verify-code"]
+            },
+            "description": "Krok 2: Zweryfikuj kod (użyj kodu z konsoli backendu)\n\nOczekiwany response:\n- isNewUser: true\n- token: JWT token\n- user: nowy użytkownik z rolą CLIENT"
+          },
+          "response": []
+        },
+        {
+          "name": "Step 3: Send Code to Existing User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"phoneNumber\": \"+48111222333\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/authorization/phone/send-code",
+              "host": ["{{base_url}}"],
+              "path": ["authorization", "phone", "send-code"]
+            },
+            "description": "Krok 3: Wyślij kod do istniejącego użytkownika (tego samego co w Step 1)\n\nUWAGA: Musisz poczekać 4 minuty od Step 1 (rate limiting)"
+          },
+          "response": []
+        },
+        {
+          "name": "Step 4: Verify Code (Existing User Login)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"phoneNumber\": \"+48111222333\",\n    \"code\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/authorization/phone/verify-code",
+              "host": ["{{base_url}}"],
+              "path": ["authorization", "phone", "verify-code"]
+            },
+            "description": "Krok 4: Zweryfikuj kod (użyj kodu z konsoli backendu)\n\nOczekiwany response:\n- isNewUser: false\n- token: JWT token\n- user: istniejący użytkownik"
+          },
+          "response": []
+        }
+      ],
+      "description": "Pełny flow: wysłanie kodu → weryfikacja → rejestracja → ponowne logowanie"
+    },
+    {
+      "name": "📋 Example Responses",
+      "item": [
+        {
+          "name": "Example: Send Code Success",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/example",
+              "host": ["{{base_url}}"],
+              "path": ["example"]
+            },
+            "description": "Example response:\n\n```json\n{\n  \"success\": true,\n  \"message\": \"Verification code sent successfully\"\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Example: Verify Code Success (New User)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/example",
+              "host": ["{{base_url}}"],
+              "path": ["example"]
+            },
+            "description": "Example response:\n\n```json\n{\n  \"success\": true,\n  \"isNewUser\": true,\n  \"token\": {\n    \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"type\": \"Bearer\"\n  },\n  \"user\": {\n    \"id\": \"uuid\",\n    \"phone\": \"+48123456789\",\n    \"name\": \"+48123456789\",\n    \"firstName\": \"\",\n    \"surname\": \"\",\n    \"roles\": [\"CLIENT\"],\n    \"profileType\": \"phone\",\n    \"registrationSource\": \"MOBILE_CLIENT\"\n  }\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Example: Rate Limit Error",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/example",
+              "host": ["{{base_url}}"],
+              "path": ["example"]
+            },
+            "description": "Example response:\n\n```json\n{\n  \"success\": false,\n  \"message\": \"Please wait 240 seconds before requesting a new code\"\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Example: Invalid Code Error",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/example",
+              "host": ["{{base_url}}"],
+              "path": ["example"]
+            },
+            "description": "Example response:\n\n```json\n{\n  \"success\": false,\n  \"error\": \"Invalid verification code\",\n  \"message\": \"Invalid verification code\"\n}\n```"
+          },
+          "response": []
+        }
+      ],
+      "description": "Przykładowe odpowiedzi z API (tylko do dokumentacji)"
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api-dev.easybons.com:4000",
+      "type": "string"
+    }
+  ]
+}

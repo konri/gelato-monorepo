@@ -1,0 +1,41 @@
+{
+  "firstSection": {
+    "readyToUseEasy": "¿Listo para Bonapka?",
+    "downloadEasy": "Descargar la app",
+    "downloadingEasyTerms1": "Al descargar la app, aceptas los",
+    "downloadingEasyTerms2": "Términos de uso",
+    "downloadingEasyTerms3": "y la",
+    "downloadingEasyTerms4": "Política de privacidad.",
+    "downloadEasyButton": "Descargar en App Store"
+  },
+  "secondSection": {
+    "lookingForDevice": "Plataformas disponibles",
+    "lookingDeviceIconText1": "Bonapka para iOS",
+    "lookingDeviceIconText2": "BonApka Merchant iOS",
+    "lookingDeviceIconText3": "Bonapka para Android",
+    "lookingDeviceIconText4": "BonApka Merchant Android",
+    "lookingDeviceIconText5": "",
+    "lookingDeviceIconText1Description": "App para clientes",
+    "lookingDeviceIconText2Description": "Panel para negocios",
+    "lookingDeviceIconText3Description": "App para clientes",
+    "lookingDeviceIconText4Description": "Panel para negocios",
+    "lookingDeviceIconText5Description": "",
+    "iosAlt": "Icono de iOS",
+    "appleAlt": "Icono de Apple",
+    "androidAlt": "Icono de Android",
+    "webAlt": "",
+    "windowsAlt": ""
+  },
+  "thirdSection": {
+    "whatPeopleAreSaying": "Lo que dicen nuestros usuarios",
+    "comment1": "¡Gracias a Bonapka, mis clientes vuelven más a menudo! Acumulan puntos y sellos por reparaciones de bicicletas y los canjean por revisiones gratuitas.",
+    "comment2": "Antes repartía tarjetas de fidelización de papel que los clientes perdían. Ahora todo es digital en Bonapka — ¡más clientes recurrentes!",
+    "comment3": "Los cupones de descuento y las tarjetas de sellos atraen clientes nuevos, y las rachas de visitas retienen a los habituales. ¡Gran solución!",
+    "name1": "Konrad Hopek",
+    "role1": "Propietario de taller de bicicletas",
+    "name2": "Anna Kot",
+    "role2": "Propietaria de cafetería",
+    "name3": "Marta Nowicka",
+    "role3": "Propietaria de salón de belleza"
+  }
+}

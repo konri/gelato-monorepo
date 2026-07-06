@@ -1,0 +1,16 @@
+{
+  "title1": "Contact Us",
+  "subtitle1": "Questions, bug reports, feedback.",
+  "emailField1": "Your email address",
+  "emailField1Placeholder": "Enter your email",
+  "emailField2": "Enter a topic, like 'bug report ...'",
+  "emailField2Placeholder": "Enter your topic",
+  "emailButtonText": "Send now",
+  "firstSection": {
+    "figures2Alt": "Contact illustration",
+    "phoneAlt": "Phone image",
+    "speachbubbleLeftAlt": "Speech bubble left",
+    "speachbubbleRightAlt": "Speech bubble right",
+    "abstractAlt": "Abstract decoration"
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "auth": {
+    "login_success": "Успішний вхід",
+    "login_failed": "Невірний email або пароль",
+    "register_success": "Реєстрація успішна",
+    "email_already_exists": "Email вже існує",
+    "phone_already_exists": "Номер телефону вже існує",
+    "invalid_otp": "Невірний OTP код",
+    "otp_sent": "OTP код надіслано на {{phone}}",
+    "otp_expired": "OTP код прострочений",
+    "email_verification_sent": "Електронний лист для верифікації надіслано",
+    "email_verified": "Email успішно верифіковано",
+    "password_reset_sent": "Посилання для скидання пароля надіслано",
+    "password_reset_success": "Пароль успішно скинуто",
+    "unauthorized": "Ви не авторизовані",
+    "token_expired": "Токен прострочений",
+    "invalid_token": "Невірний токен"
+  },
+  "order": {
+    "created": "Замовлення створено",
+    "accepted": "Замовлення прийнято точкою",
+    "preparing": "Замовлення готується",
+    "ready": "Замовлення готове до отримання",
+    "courier_assigned": "Кур'єра призначено",
+    "picked_up": "Замовлення отримано кур'єром",
+    "in_transit": "Замовлення в дорозі",
+    "delivered": "Замовлення доставлено",
+    "cancelled": "Замовлення скасовано",
+    "failed": "Доставка не вдалася",
+    "outside_delivery_radius": "Адреса доставки поза радіусом",
+    "spot_closed": "Точка зачинена",
+    "payment_failed": "Платіж не вдався",
+    "payment_success": "Платіж успішний"
+  },
+  "points": {
+    "earned": "Отримано {{points}} балів",
+    "spent": "Витрачено {{points}} балів",
+    "insufficient": "Недостатньо балів",
+    "balance": "Баланс балів: {{balance}}",
+    "transaction_created": "Транзакцію балів створено"
+  },
+  "referral": {
+    "code_generated": "Ваш реферальний код: {{code}}",
+    "code_applied": "Реферальний код застосовано",
+    "invalid_code": "Невірний реферальний код",
+    "reward_earned": "Нагорода за реферал: {{points}} балів",
+    "already_used": "Реферальний код вже використано"
+  },
+  "prize": {
+    "claimed": "Приз отримано успішно",
+    "redeemed": "Приз використано",
+    "not_enough_points": "Недостатньо балів",
+    "out_of_stock": "Приз недоступний",
+    "expired": "Приз прострочений"
+  },
+  "quest": {
+    "completed": "Завдання виконано! Отримано {{points}} балів",
+    "already_completed": "Завдання вже виконано",
+    "not_eligible": "Ви не відповідаєте вимогам завдання"
+  },
+  "spot": {
+    "not_found": "Точку не знайдено",
+    "closed": "Точка зачинена",
+    "delivery_unavailable": "Доставка недоступна з цієї точки"
+  },
+  "courier": {
+    "application_sent": "Заяву надіслано",
+    "application_approved": "Заяву схвалено",
+    "application_rejected": "Заяву відхилено",
+    "order_assigned": "Нове замовлення призначено",
+    "delivery_started": "Доставка розпочата",
+    "delivery_completed": "Доставка завершена"
+  },
+  "validation": {
+    "required_field": "Поле {{field}} обов'язкове",
+    "invalid_email": "Невірна адреса email",
+    "invalid_phone": "Невірний номер телефону",
+    "password_too_short": "Пароль повинен бути не менше 8 символів",
+    "passwords_not_match": "Паролі не співпадають"
+  },
+  "error": {
+    "server_error": "Помилка сервера",
+    "not_found": "Не знайдено",
+    "forbidden": "Доступ заборонено",
+    "bad_request": "Невірний запит"
+  }
+}

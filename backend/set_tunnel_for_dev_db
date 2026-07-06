@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Kopiowanie pliku .env.dev do .env
+cp .env.dev .env
+
+# Usuwanie pliku prisma/.env, aby uniknąć konfliktów
+rm -f prisma/.env
+
+# Modyfikacja zmiennych DATABASE_URL i DATABASE_URL_SHADOW, aby używały lokalnego portu 5433
+sed -i '' 's/DATABASE_URL=.*/DATABASE_URL=postgres:\/\/p13675_easybons:EasyBons1!@localhost:5433\/p13675_easybons/g' .env
+sed -i '' 's/DATABASE_URL_SHADOW=.*/DATABASE_URL_SHADOW=postgres:\/\/p13675_easybons:EasyBons1!@localhost:5433\/p13675_e_shadow/g' .env
+
+# Uruchomienie tunelu SSH w tle
+ssh -N -L 5433:pgsql5.mydevil.net:5432 kraczo@s5.mydevil.net &
+TUNNEL_PID=$!
+
+# Funkcja do zamknięcia tunelu SSH przy wyjściu
+cleanup() {
+  echo "Zamykanie tunelu SSH (PID: $TUNNEL_PID)..."
+  kill $TUNNEL_PID
+  exit 0
+}
+
+# Przechwytywanie sygnałów zakończenia
+trap cleanup SIGINT SIGTERM
+
+# Uruchomienie aplikacji
+ts-node-dev --respawn --no-notify --transpileOnly src/index.ts
+
+# Zamknięcie tunelu SSH po zakończeniu aplikacji
+cleanup

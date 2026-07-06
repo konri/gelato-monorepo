@@ -1,0 +1,32 @@
+{
+  "name": "@repo/api-client",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "test": "echo \"No tests defined for api-client package\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.8.0",
+    "@reduxjs/toolkit": "^2.6.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-redux": "^9.2.0"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "*",
+    "@repo/types": "*",
+    "@repo/typescript-config": "*",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.2",
+    "typescript": "5.5.4"
+  }
+}

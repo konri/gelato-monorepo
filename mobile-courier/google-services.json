@@ -1,0 +1,30 @@
+{
+  "_comment": "PLACEHOLDER — replace with the real google-services.json downloaded from the Firebase console after adding an Android app (package com.konradhopek.gelato.courier) to the existing 'gelato-d6d03' project.",
+  "project_info": {
+    "project_number": "225210197516",
+    "project_id": "gelato-d6d03",
+    "storage_bucket": "gelato-d6d03.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:225210197516:android:PLACEHOLDER_COURIER_APP_ID",
+        "android_client_info": {
+          "package_name": "com.konradhopek.gelato.courier"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "PLACEHOLDER_ANDROID_API_KEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

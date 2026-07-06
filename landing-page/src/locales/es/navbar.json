@@ -1,0 +1,25 @@
+{
+  "navbar": {
+    "home": "Inicio",
+    "download": "Descargar",
+    "subscription": "Suscripción",
+    "features": "Características",
+    "about": "Sobre nosotros",
+    "contact": "Contacto",
+    "logoAlt": "Logotipo de Bonapka",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "selectLanguage": "Seleccionar idioma",
+    "dropdownArrow": "Flecha desplegable",
+    "register": "Registrarse",
+    "language": {
+      "pl": { "label": "Polaco", "short": "PL", "flagAlt": "Bandera polaca" },
+      "en": { "label": "Inglés", "short": "EN", "flagAlt": "Bandera inglesa" },
+      "es": { "label": "Español", "short": "ES", "flagAlt": "Bandera española" },
+      "fr": { "label": "Francés", "short": "FR", "flagAlt": "Bandera francesa" },
+      "de": { "label": "Alemán", "short": "DE", "flagAlt": "Bandera alemana" },
+      "it": { "label": "Italiano", "short": "IT", "flagAlt": "Bandera italiana" },
+      "ru": { "label": "Ruso", "short": "RU", "flagAlt": "Bandera rusa" }
+    }
+  }
+}

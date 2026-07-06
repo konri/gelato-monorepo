@@ -1,0 +1,41 @@
+{
+  "firstSection": {
+    "readyToUseEasy": "Pronto per Bonapka?",
+    "downloadEasy": "Scarica l'app",
+    "downloadingEasyTerms1": "Scaricando l'app, accetti i",
+    "downloadingEasyTerms2": "Termini di utilizzo",
+    "downloadingEasyTerms3": "e l'",
+    "downloadingEasyTerms4": "Informativa sulla privacy.",
+    "downloadEasyButton": "Scarica su App Store"
+  },
+  "secondSection": {
+    "lookingForDevice": "Piattaforme disponibili",
+    "lookingDeviceIconText1": "Bonapka per iOS",
+    "lookingDeviceIconText2": "BonApka Merchant iOS",
+    "lookingDeviceIconText3": "Bonapka per Android",
+    "lookingDeviceIconText4": "BonApka Merchant Android",
+    "lookingDeviceIconText5": "",
+    "lookingDeviceIconText1Description": "App per clienti",
+    "lookingDeviceIconText2Description": "Pannello business",
+    "lookingDeviceIconText3Description": "App per clienti",
+    "lookingDeviceIconText4Description": "Pannello business",
+    "lookingDeviceIconText5Description": "",
+    "iosAlt": "Icona iOS",
+    "appleAlt": "Icona Apple",
+    "androidAlt": "Icona Android",
+    "webAlt": "",
+    "windowsAlt": ""
+  },
+  "thirdSection": {
+    "whatPeopleAreSaying": "Cosa dicono i nostri utenti",
+    "comment1": "Grazie a Bonapka i miei clienti tornano più spesso! Accumulano punti e timbri per le riparazioni di biciclette e li riscattano per controlli gratuiti.",
+    "comment2": "Prima distribuivo carte fedeltà di carta che i clienti perdevano. Ora tutto è digitale in Bonapka — più clienti abituali!",
+    "comment3": "Coupon sconto e carte timbro attirano nuovi clienti, le serie di visite fidelizzano i clienti abituali. Ottima soluzione!",
+    "name1": "Konrad Hopek",
+    "role1": "Proprietario officina biciclette",
+    "name2": "Anna Kot",
+    "role2": "Proprietaria caffetteria",
+    "name3": "Marta Nowicka",
+    "role3": "Proprietaria salone di bellezza"
+  }
+}

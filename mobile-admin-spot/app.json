@@ -1,0 +1,98 @@
+{
+  "expo": {
+    "name": "Bonapka Merchant",
+    "slug": "bonapkamerchant",
+    "version": "1.0.0",
+    "sdkVersion": "54.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/logo_new.png",
+    "scheme": "bonapka.merchant",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "bonapka.merchant",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Ta aplikacja potrzebuje dostępu do aparatu, aby skanować kody QR.",
+        "NSLocationWhenInUseUsageDescription": "Ta aplikacja potrzebuje dostępu do lokalizacji, aby pokazywać odpowiednie oferty w Twojej okolicy.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Ta aplikacja potrzebuje dostępu do lokalizacji, aby pokazywać odpowiednie oferty w Twojej okolicy.",
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "bonapka.merchant",
+              "com.googleusercontent.apps.549326700978-qqbvmfajruhfjsepgkj09hamme92r82q"
+            ]
+          }
+        ]
+      }
+    },
+    "android": {
+      "usesCleartextTraffic": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/logo_new.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.tomaszporeba.bonapka.merchant",
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "bonapka.merchant"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/logo.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "@react-native-google-signin/google-signin",
+      "expo-camera",
+      "expo-location",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/logo_full.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsImpl": "mapbox"
+        }
+      ],
+      "@react-native-community/datetimepicker"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4f8c4416-9541-446a-ba89-a7073e989e33"
+      }
+    },
+    "owner": "tomaszporeba"
+  }
+}

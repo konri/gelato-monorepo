@@ -1,0 +1,37 @@
+import { logger } from '@/utils/logger';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Alert } from 'react-native';
+
+export const useCitySelect = () => {
+  const { t } = useTranslation();
+  const [city, setCity] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleConfirm = async () => {
+    if (!city) {
+      Alert.alert(t('Common.error'), t('Common.selectCity'));
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await AsyncStorage.setItem('selectedCity', city);
+      Alert.alert(t('Common.success'), `${t('Common.citySelected')}: ${city}`);
+    } catch (error) {
+      logger.error('City save error:', error);
+    } finally {
+      setIsLoading(false);
+      router.push('/notifications');
+    }
+  };
+
+  return {
+    city,
+    setCity,
+    isLoading,
+    handleConfirm,
+  };
+};

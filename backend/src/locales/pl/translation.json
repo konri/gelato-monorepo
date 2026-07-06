@@ -1,0 +1,15 @@
+{
+  "hello": "Cześć!",
+  "welcome": "Witajcie w naszej aplikacji.",
+  "emails": {
+    "emailVerification": {
+      "subject": "Potwierdź swój adres email - EasyBons",
+      "header": "Witaj",
+      "body": "Dziękujemy za rejestrację w EasyBons! Aby dokończyć proces rejestracji i aktywować swoje konto, musisz potwierdzić swój adres email. Kliknij przycisk poniżej:",
+      "button": "Potwierdź adres email",
+      "linkValid": "Link jest ważny przez 24 godziny. Po tym czasie będziesz musiał/a ponownie się zarejestrować.",
+      "ignoreIfNotYou": "Jeżeli to nie Ty rejestrowałeś/aś się w EasyBons, prosimy o zignorowanie tej wiadomości.",
+      "footer": "Dziękujemy za dołączenie do EasyBons! Jeżeli masz pytania, skontaktuj się z nami:"
+    }
+  }
+}

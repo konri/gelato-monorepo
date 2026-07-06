@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "225210197516",
+    "project_id": "gelato-d6d03",
+    "storage_bucket": "gelato-d6d03.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:225210197516:android:1bb554ce86777d57037029",
+        "android_client_info": {
+          "package_name": "com.konradhopek.gelato.client"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAT7HPe_UFAMxyaP3WcUc5o9u47rEMzOio"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

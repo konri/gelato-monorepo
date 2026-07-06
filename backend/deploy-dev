@@ -1,0 +1,74 @@
+#!/bin/bash
+
+echo "🚀 Deploying EasyBons API to DEV environment (api-dev.easybons.com)..."
+
+# Konfiguracja
+REMOTE_USER="kraczo"
+REMOTE_HOST="s5.mydevil.net"
+REMOTE_PATH="/usr/home/kraczo/domains/easybons.com/public_nodejs/api-dev"
+LOCAL_PATH="."
+
+# Pliki do wykluczenia
+EXCLUDE_FILE="/tmp/rsync_exclude_$$"
+cat > "$EXCLUDE_FILE" << EOF
+node_modules/
+.git/
+.env
+.env.local
+prisma/.env
+dist/
+yarn-error.log
+.DS_Store
+*.log
+coverage/
+.nyc_output/
+.vscode/
+.idea/
+EOF
+
+echo "📦 Building application..."
+# Build aplikacji
+yarn install --production=false
+yarn postinstall
+
+echo "📤 Uploading files to server..."
+# Upload plików na serwer
+rsync -avz --delete \
+  --exclude-from="$EXCLUDE_FILE" \
+  --progress \
+  "$LOCAL_PATH/" \
+  "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH/"
+
+echo "🔧 Setting up environment on server..."
+# Konfiguracja na serwerze
+ssh "$REMOTE_USER@$REMOTE_HOST" << 'ENDSSH'
+cd /usr/home/kraczo/domains/easybons.com/public_nodejs/api-dev
+
+# Kopiowanie .env.dev do .env
+cp .env.dev .env
+
+# Usuwanie prisma/.env
+rm -f prisma/.env
+
+# Instalacja zależności produkcyjnych (pomijamy Puppeteer na FreeBSD)
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true yarn install --production
+
+# Budowanie aplikacji z ignorowaniem problemów Prisma na FreeBSD
+PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1 yarn postinstall
+
+# Zatrzymanie poprzedniej instancji (jeśli istnieje)
+pkill -f "node dist/index.js" || true
+
+# Uruchomienie aplikacji w tle
+nohup yarn start > app.log 2>&1 &
+
+echo "✅ DEV deployment completed!"
+echo "🌐 Application available at: https://api-dev.easybons.com"
+echo "📋 Logs: tail -f app.log"
+ENDSSH
+
+# Czyszczenie
+rm -f "$EXCLUDE_FILE"
+
+echo "🎉 Deployment to DEV environment completed successfully!"
+echo "🔗 Your API is now available at: https://api-dev.easybons.com"

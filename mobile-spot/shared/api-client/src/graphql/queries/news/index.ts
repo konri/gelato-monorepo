@@ -1,0 +1,59 @@
+import { createGraphQLFunction, executeGraphQLQuery } from '../../client';
+import { ApolloServerConfig, GraphQLResult } from '../../types';
+import {
+  COMMENT_NEWS_MUTATION,
+  LIKE_NEWS_MUTATION,
+  NEWS_COMMENTS_QUERY,
+  NEWS_FEED_QUERY,
+} from './query';
+import {
+  NewsComment,
+  NewsCommentsResponse,
+  NewsFeedResponse,
+  NewsItem,
+} from './types';
+
+export * from './types';
+
+export const getNewsFeed = async (
+  cityId: string | null,
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<NewsItem[]>> =>
+  createGraphQLFunction<NewsFeedResponse, NewsItem[]>(
+    NEWS_FEED_QUERY,
+    data => data.newsFeed,
+    'Failed to load news',
+  )({ ...options, variables: { cityId: cityId ?? null, limit: 20 } });
+
+export const getNewsComments = async (
+  newsId: string,
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<NewsComment[]>> =>
+  createGraphQLFunction<NewsCommentsResponse, NewsComment[]>(
+    NEWS_COMMENTS_QUERY,
+    data => data.newsComments,
+    'Failed to load comments',
+  )({ ...options, variables: { newsId, limit: 50 } });
+
+export const likeNews = async (
+  newsId: string,
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<boolean>> => {
+  const res = await executeGraphQLQuery<{ likeNews: boolean }>(LIKE_NEWS_MUTATION, {
+    ...options,
+    variables: { newsId },
+  });
+  return { ...res, data: res.data ? res.data.likeNews : null };
+};
+
+export const commentNews = async (
+  newsId: string,
+  content: string,
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<NewsComment>> => {
+  const res = await executeGraphQLQuery<{ commentNews: NewsComment }>(COMMENT_NEWS_MUTATION, {
+    ...options,
+    variables: { newsId, content },
+  });
+  return { ...res, data: res.data ? res.data.commentNews : null };
+};

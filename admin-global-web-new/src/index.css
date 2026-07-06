@@ -1,0 +1,4 @@
+@import 'tailwindcss';
+
+/* Keep using the JS config for custom brand colors (Tailwind v4 @config). */
+@config '../tailwind.config.js';
