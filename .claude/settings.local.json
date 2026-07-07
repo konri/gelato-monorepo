@@ -141,7 +141,13 @@
       "Bash(python3 -c \"import json;d=json.load\\(open\\('mobile-admin-spot/package.json'\\)\\);print\\('name:',d.get\\('name'\\)\\);print\\('has react-native-web:', 'react-native-web' in {**d.get\\('dependencies',{}\\),**d.get\\('devDependencies',{}\\)}\\);print\\('expo:', d.get\\('dependencies',{}\\).get\\('expo'\\)\\)\")",
       "Bash(python3 -c \"import json;d=json.load\\(open\\('mobile-admin-spot-new/package.json'\\)\\);print\\('name:',d.get\\('name'\\)\\)\")",
       "Bash(python3 -c \"import json;d=json.load\\(open\\('mobile-courier/package.json'\\)\\);all={**d.get\\('dependencies',{}\\),**d.get\\('devDependencies',{}\\)};print\\('react-native-web:', all.get\\('react-native-web'\\)\\);print\\('react-dom:', all.get\\('react-dom'\\)\\);print\\('@expo/metro-runtime:', all.get\\('@expo/metro-runtime'\\)\\)\")",
-      "Bash(python3 -c \"import json;d=json.load\\(open\\('mobile-courier/app.json'\\)\\)['expo'];print\\('web:',d.get\\('web'\\)\\)\")"
+      "Bash(python3 -c \"import json;d=json.load\\(open\\('mobile-courier/app.json'\\)\\)['expo'];print\\('web:',d.get\\('web'\\)\\)\")",
+      "Bash(python3 -c \"import json;d=json.load\\(open\\('app.json'\\)\\)['expo'];print\\('icon:',d.get\\('icon'\\)\\);print\\('splash plugin:',[p for p in d['plugins'] if 'splash' in str\\(p\\).lower\\(\\)]\\);print\\('android adaptiveIcon:',d.get\\('android',{}\\).get\\('adaptiveIcon'\\)\\)\")",
+      "Bash(ls assets/images/*courier*)",
+      "Bash(python3 -c \"from PIL import Image; print\\('Pillow ok'\\)\")",
+      "Bash(python3 -c \"import json;print\\(json.load\\(open\\('app.json'\\)\\)['expo'].get\\('web',{}\\).get\\('favicon'\\)\\)\")",
+      "Bash(python3 -c \"import json;d=json.load\\(open\\('app.json'\\)\\)['expo'];print\\('icon:',d.get\\('icon'\\)\\);print\\('adaptiveIcon:',d.get\\('android',{}\\).get\\('adaptiveIcon'\\)\\);print\\('splash:',[p[1].get\\('image'\\) for p in d['plugins'] if isinstance\\(p,list\\) and p[0]=='expo-splash-screen']\\)\")",
+      "Bash(awk '{print $NF, $5}')"
     ]
   }
 }
