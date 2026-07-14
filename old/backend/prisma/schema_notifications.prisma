@@ -1,0 +1,101 @@
+// Add these models to your existing schema.prisma file
+
+enum NotificationCategory {
+  GENERAL
+  PROMOTIONS
+  SECURITY
+}
+
+enum NotificationType {
+  // GENERAL - User activities & rewards
+  STAMP_ADDED
+  STAMP_CARD_COMPLETED
+  STAMP_MILESTONE_REACHED
+  POINTS_EARNED
+  POINTS_SPENT
+  COUPON_CLAIMED
+  VOUCHER_PURCHASED
+  BIRTHDAY_REWARD
+  REFERRAL_COMPLETED
+  REFERRAL_REWARD_EARNED
+  REWARD_UNLOCKED
+  ACHIEVEMENT_UNLOCKED
+  
+  // PROMOTIONS - Marketing & offers
+  COUPON_AVAILABLE
+  COUPON_EXPIRING
+  VOUCHER_EXPIRING
+  MERCHANT_PROMOTION
+  SPECIAL_OFFER
+  NEW_REWARD_AVAILABLE
+  FLASH_SALE
+  LIMITED_TIME_OFFER
+  
+  // SECURITY - Account & security alerts
+  NEW_LOGIN
+  NEW_DEVICE
+  PASSWORD_CHANGED
+  EMAIL_CHANGED
+  SUSPICIOUS_ACTIVITY
+  ACCOUNT_LOCKED
+  TWO_FACTOR_ENABLED
+  
+  // SYSTEM - App updates & reminders
+  APP_UPDATE_AVAILABLE
+  MAINTENANCE_SCHEDULED
+  SYSTEM_ANNOUNCEMENT
+  EVENT_REMINDER
+  SUBSCRIPTION_EXPIRING
+  PAYMENT_FAILED
+  TERMS_UPDATED
+}
+
+model Notification {
+  id        String               @id @default(uuid())
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  
+  category  NotificationCategory @default(GENERAL)
+  type      NotificationType
+  title     String
+  message   String
+  imageUrl  String?
+  
+  // Metadata for deep linking and additional data
+  metadata  Json?
+  
+  // Read status
+  isRead    Boolean              @default(false)
+  readAt    DateTime?
+  
+  // Push notification status
+  isSent    Boolean              @default(false)
+  sentAt    DateTime?
+  
+  createdAt DateTime             @default(now())
+  
+  @@index([userId, isRead])
+  @@index([userId, category])
+  @@index([userId, createdAt])
+}
+
+model UserDevice {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  
+  fcmToken   String   @unique
+  platform   String   // "ios" | "android"
+  deviceId   String
+  deviceName String?
+  
+  isActive   Boolean  @default(true)
+  lastUsedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  
+  @@unique([userId, deviceId])
+}
+
+// Add to User model:
+// notifications  Notification[]
+// devices        UserDevice[]

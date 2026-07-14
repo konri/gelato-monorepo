@@ -1,0 +1,383 @@
+{
+  "info": {
+    "_postman_id": "merchant-coupons-collection-final",
+    "name": "EasyBons - Merchant Coupons System (Final)",
+    "description": "Complete merchant coupon system with clear role indicators and parameter requirements",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "👑 MERCHANT ONLY - Points Management",
+      "item": [
+        {
+          "name": "Add Points to User (OWNER/COOPERATOR) - requires userId",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"query\": \"mutation AddMerchantPoints($userId: String!, $amount: Float!, $description: String!) { addMerchantPoints(userId: $userId, amount: $amount, description: $description) { id totalPoints availablePoints merchant { name } } }\",\n    \"variables\": {\n        \"userId\": \"72738ea3-a3c6-4e33-a23a-d95a6906ddc1\",\n        \"amount\": 100,\n        \"description\": \"Points for purchase\"\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          }
+        },
+        {
+          "name": "Get Own Point Balance (OWNER/COOPERATOR) - auto merchant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"query\": \"query MyOwnMerchantPointBalance { myOwnMerchantPointBalance { id totalPoints availablePoints lockedPoints merchant { name } } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          }
+        },
+        {
+          "name": "Get Own Point Transactions (OWNER/COOPERATOR) - auto merchant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"query\": \"query MyOwnMerchantPointTransactions { myOwnMerchantPointTransactions { id type amount description balanceBefore balanceAfter createdAt } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 CLIENT ONLY - Points Management",
+      "item": [
+        {
+          "name": "Get Point Balance (CLIENT) - requires merchantId",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"query\": \"query MyMerchantPointBalance($merchantId: String!) { myMerchantPointBalance(merchantId: $merchantId) { id totalPoints availablePoints lockedPoints merchant { name } } }\",\n    \"variables\": {\n        \"merchantId\": \"fd237576-f6f9-4990-b84a-30e8ab98ec9b\"\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          }
+        },
+        {
+          "name": "Get Point Transactions (CLIENT) - requires merchantId",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"query\": \"query MyMerchantPointTransactions($merchantId: String!) { myMerchantPointTransactions(merchantId: $merchantId) { id type amount description balanceBefore balanceAfter createdAt } }\",\n    \"variables\": {\n        \"merchantId\": \"fd237576-f6f9-4990-b84a-30e8ab98ec9b\"\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👑 MERCHANT ONLY - Coupon Creation",
+      "item": [
+        {
+          "name": "Create Multi-Buy Coupon (OWNER/COOPERATOR) - auto merchant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"query\": \"mutation CreateCoupon($data: CreateCouponInput!) { createCoupon(data: $data) { id code title couponType availability pointsCost buyQuantity getQuantity usesPerUserLimit globalUsageLimit isStackable } }\",\n    \"variables\": {\n        \"data\": {\n            \"code\": \"BUY1GET1\",\n            \"title\": \"Buy 1 Get 1 Free Coffee\",\n            \"description\": \"Purchase one coffee and get another one free\",\n            \"couponType\": \"MULTI_BUY\",\n            \"availability\": \"POINTS\",\n            \"pointsCost\": 50,\n            \"validFrom\": \"2025-01-01T00:00:00Z\",\n            \"validUntil\": \"2025-12-31T23:59:59Z\",\n            \"buyQuantity\": 1,\n            \"getQuantity\": 1,\n            \"usesPerUserLimit\": 3,\n            \"globalUsageLimit\": 100,\n            \"isStackable\": false\n        }\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          }
+        },
+        {
+          "name": "Create Birthday Coupon (OWNER/COOPERATOR) - auto merchant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"query\": \"mutation CreateCoupon($data: CreateCouponInput!) { createCoupon(data: $data) { id code title daysBeforeBirthday daysAfterBirthday } }\",\n    \"variables\": {\n        \"data\": {\n            \"code\": \"BIRTHDAY50\",\n            \"title\": \"Birthday Special - 50% Off\",\n            \"description\": \"Special birthday discount\",\n            \"couponType\": \"BIRTHDAY\",\n            \"availability\": \"FREE\",\n            \"validFrom\": \"2025-01-01T00:00:00Z\",\n            \"validUntil\": \"2025-12-31T23:59:59Z\",\n            \"discountType\": \"PERCENTAGE\",\n            \"discountValue\": 50,\n            \"daysBeforeBirthday\": 3,\n            \"daysAfterBirthday\": 3,\n            \"usesPerUserLimit\": 1\n        }\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          }
+        },
+        {
+          "name": "Get My Created Coupons (OWNER/COOPERATOR) - auto merchant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"query\": \"query MyMerchantCoupons { myMerchantCoupons { id code title couponType currentUses globalUsageLimit isActive createdAt } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🌍 PUBLIC - Browse Coupons",
+      "item": [
+        {
+          "name": "Get All Available Coupons (ANY ROLE) - no params",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"query\": \"query AvailableCoupons { availableCoupons { id code title description couponType availability pointsCost validUntil currentUses globalUsageLimit merchant { id name } } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          }
+        },
+        {
+          "name": "Get Coupons by Merchant (ANY ROLE) - requires merchantId",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"query\": \"query AvailableCoupons($merchantId: String) { availableCoupons(merchantId: $merchantId) { id code title description couponType availability pointsCost validUntil currentUses globalUsageLimit merchant { id name } } }\",\n    \"variables\": {\n        \"merchantId\": \"fd237576-f6f9-4990-b84a-30e8ab98ec9b\"\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 CLIENT ONLY - Coupon Usage",
+      "item": [
+        {
+          "name": "Claim Coupon (CLIENT) - requires couponId",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"query\": \"mutation ClaimCoupon($couponId: String!) { claimCoupon(couponId: $couponId) { id code title merchant { name } } }\",\n    \"variables\": {\n        \"couponId\": \"f5261ab4-d5fe-42dd-8c9d-34573ef87ec1\"\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          }
+        },
+        {
+          "name": "Get My Claimed Coupons (CLIENT) - no params",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"query\": \"query MyCoupons { myCoupons { id code title description couponType discountType discountValue validUntil merchant { name } } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          }
+        },
+        {
+          "name": "Use Coupon (CLIENT) - requires couponId",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"query\": \"mutation UseCoupon($couponId: String!) { useCoupon(couponId: $couponId) }\",\n    \"variables\": {\n        \"couponId\": \"f5261ab4-d5fe-42dd-8c9d-34573ef87ec1\"\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          }
+        },
+        {
+          "name": "Get Coupon Usage History (CLIENT) - no params",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"query\": \"query MyCouponUsageHistory { myCouponUsageHistory { id usedAt remainingUses coupon { code title merchant { name } } } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎯 LOYALTY STAMPS",
+      "item": [
+        {
+          "name": "Activate Stamp Card (CLIENT) - requires merchantId",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"query\": \"mutation ActivateStampCard($merchantId: String!, $templateId: String) { activateStampCard(merchantId: $merchantId, templateId: $templateId) { id stampsRequired stampsCollected merchant { name } } }\",\n    \"variables\": {\n        \"merchantId\": \"fd237576-f6f9-4990-b84a-30e8ab98ec9b\",\n        \"templateId\": null\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          }
+        },
+        {
+          "name": "Activate Own Stamp Card (OWNER/COOPERATOR) - auto merchant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"query\": \"mutation ActivateOwnMerchantStampCard($templateId: String) { activateOwnMerchantStampCard(templateId: $templateId) { id stampsRequired stampsCollected merchant { name } } }\",\n    \"variables\": {\n        \"templateId\": null\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api-dev.easybons.com:4000",
+      "type": "string"
+    }
+  ]
+}

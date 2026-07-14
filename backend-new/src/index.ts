@@ -24,6 +24,7 @@ import { PointsResolver } from './resolvers/PointsResolver';
 import { NewsResolver, NewsCommentResolver } from './resolvers/NewsResolver';
 import { PaymentResolver } from './resolvers/PaymentResolver';
 import { PrizeResolver } from './resolvers/PrizeResolver';
+import { QuestResolver } from './resolvers/QuestResolver';
 import { ReviewResolver } from './resolvers/ReviewResolver';
 import { AdminResolver } from './resolvers/AdminResolver';
 import { authMiddleware, authChecker } from './middleware/authMiddleware';
@@ -89,6 +90,7 @@ async function startServer() {
       NewsCommentResolver,
       PaymentResolver,
       PrizeResolver,
+      QuestResolver,
       ReviewResolver,
       AdminResolver,
     ],

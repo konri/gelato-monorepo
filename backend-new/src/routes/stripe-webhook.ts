@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import Stripe from 'stripe';
 import { StripeService } from '../services/StripeService';
-// import { WebSocketService } from '../services/WebSocketService'; // TODO: Create WebSocketService
+import { PubSubService } from '../services/PubSubService';
 import { EmailService } from '../services/EmailService';
 
 const router = Router();
@@ -98,6 +98,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
       items: {
         include: {
           taste: true,
+          product: true,
         },
       },
     },
@@ -105,30 +106,18 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
 
   console.log(`✅ Payment succeeded for order ${order.orderNumber}`);
 
-  // Send WebSocket notification to user
-  WebSocketService.sendToUser(order.userId, {
-    type: 'PAYMENT_SUCCESS',
-    orderId: order.id,
-    orderNumber: order.orderNumber,
-    message: 'Payment confirmed! Your order is being prepared.',
-  });
+  // Notify the user and the spot (client subscribes to order status; spot to new orders).
+  await PubSubService.publishOrderStatusChanged(order);
+  await PubSubService.publishNewOrderNotification(order.spotId, order);
 
-  // Send notification to spot
-  WebSocketService.sendToSpot(order.spotId, {
-    type: 'NEW_ORDER',
-    orderId: order.id,
-    orderNumber: order.orderNumber,
-    message: `New order ${order.orderNumber} received!`,
-  });
-
-  // Send order confirmation email
+  // Send order confirmation email. An item is either a taste or a product.
   await EmailService.sendOrderConfirmation({
     email: order.user.email,
     name: order.user.firstName || order.user.name || 'Customer',
     orderNumber: order.orderNumber,
     orderId: order.id,
     items: order.items.map((item) => ({
-      name: item.taste.title,
+      name: item.taste?.title || item.product?.name || 'Item',
       quantity: item.quantity,
       price: item.pricePerUnit,
     })),
@@ -170,13 +159,8 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
 
   console.log(`❌ Payment failed for order ${order.orderNumber}`);
 
-  // Send WebSocket notification to user
-  WebSocketService.sendToUser(order.userId, {
-    type: 'PAYMENT_FAILED',
-    orderId: order.id,
-    orderNumber: order.orderNumber,
-    message: 'Payment failed. Please try again or use a different payment method.',
-  });
+  // Notify the user their payment failed (client listens on order status).
+  await PubSubService.publishOrderStatusChanged(order);
 
   // Send payment failed email
   await EmailService.sendPaymentFailed({
@@ -214,13 +198,8 @@ async function handlePaymentIntentCanceled(paymentIntent: Stripe.PaymentIntent) 
 
   console.log(`⚠️ Payment canceled for order ${order.orderNumber}`);
 
-  // Send WebSocket notification
-  WebSocketService.sendToUser(order.userId, {
-    type: 'PAYMENT_CANCELED',
-    orderId: order.id,
-    orderNumber: order.orderNumber,
-    message: 'Payment was canceled.',
-  });
+  // Notify the user (client listens on order status).
+  await PubSubService.publishOrderStatusChanged(order);
 }
 
 /**
@@ -255,13 +234,9 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
 
   console.log(`💰 Refund processed for order ${order.orderNumber}`);
 
-  // Send notification
-  WebSocketService.sendToUser(order.userId, {
-    type: 'PAYMENT_REFUNDED',
-    orderId: order.id,
-    orderNumber: order.orderNumber,
-    message: 'Your payment has been refunded.',
-  });
+  // Notify the user (client listens on order status).
+  const refreshed = await prisma.order.findUnique({ where: { id: order.id } });
+  if (refreshed) await PubSubService.publishOrderStatusChanged(refreshed);
 
   // TODO: Send FCM push notification
 }

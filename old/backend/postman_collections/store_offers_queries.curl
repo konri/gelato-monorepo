@@ -1,0 +1,51 @@
+# Get Store Promotions - All Available Promotions for Store (ANY ROLE) - requires storeId
+curl --location '{{base_url}}/graphql' \
+--header 'Content-Type: application/json' \
+--data '{
+    "query": "query GetStorePromotions($storeId: String!) { getStorePromotions(storeId: $storeId) { vouchers { id title description value pointsCost imageUrl displayType priority validFrom validUntil } stampTemplates { id title description stampsRequired rewardTitle rewardDescription isActive } coupons { id code title description couponType availability pointsCost discountType discountValue validFrom validUntil isActive } } }",
+    "variables": {
+        "storeId": "store-uuid-here"
+    }
+}'
+
+# Get Store Promotions - Simple Query (ANY ROLE) - requires storeId
+curl --location '{{base_url}}/graphql' \
+--header 'Content-Type: application/json' \
+--data '{
+    "query": "query { getStorePromotions(storeId: \"store-uuid-here\") { vouchers { id title pointsCost value } stampTemplates { id title stampsRequired } coupons { id title pointsCost discountValue } } }"
+}'
+
+# Get Store Basic Info (ANY ROLE) - requires storeId
+curl --location '{{base_url}}/graphql' \
+--header 'Content-Type: application/json' \
+--data '{
+    "query": "query { getStore(id: \"store-uuid-here\") { id name address city phone latitude longitude logoUrl merchant { id name slug logoUrl } } }"
+}'
+
+# Get Promoted Vouchers with Location (ANY ROLE) - requires GPS coordinates
+curl --location '{{base_url}}/graphql' \
+--header 'Content-Type: application/json' \
+--data '{
+    "query": "query { promotedVouchers(location: { latitude: 50.0647, longitude: 19.9450, radiusKm: 50 }, displayType: PROMOTED) { id title description value pointsCost imageUrl displayType priority merchant { id name slug } store { id name address city logoUrl } } }"
+}'
+
+# Get Stores for Map - All Stores with Promotions (ANY ROLE) - no params
+curl --location '{{base_url}}/graphql' \
+--header 'Content-Type: application/json' \
+--data '{
+    "query": "query { getStoresForMap { id name latitude longitude logoUrl merchant { name } availablePromotions { hasPromotions vouchers { id title pointsCost value } stampCards { id title stampsRequired rewardTitle } coupons { id title pointsCost discountType discountValue } } } }"
+}'
+
+# Get Stores for Map - Sorted by Distance (ANY ROLE) - requires GPS coordinates
+curl --location '{{base_url}}/graphql' \
+--header 'Content-Type: application/json' \
+--data '{
+    "query": "query { getStoresForMap(latitude: 52.2297, longitude: 21.0122, radiusKm: 10) { id name latitude longitude logoUrl distanceKm merchant { name } availablePromotions { hasPromotions vouchers { id title pointsCost value } stampCards { id title stampsRequired rewardTitle } coupons { id title pointsCost discountType discountValue } } } }"
+}'
+
+# Get Stores for Map - With Distance (No Radius Filter) (ANY ROLE) - requires GPS coordinates
+curl --location '{{base_url}}/graphql' \
+--header 'Content-Type: application/json' \
+--data '{
+    "query": "query { getStoresForMap(latitude: 50.0647, longitude: 19.9450) { id name address city latitude longitude logoUrl distanceKm merchant { name slug } availablePromotions { hasPromotions vouchers { id title pointsCost value } stampCards { id title stampsRequired rewardTitle } coupons { id title pointsCost discountType discountValue } } } }"
+}'

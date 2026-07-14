@@ -5,8 +5,13 @@ import { AppLayout } from './components/AppLayout';
 import { LoginPage } from './pages/LoginPage';
 import { SpotsPage } from './pages/SpotsPage';
 import { CreateSpotPage } from './pages/CreateSpotPage';
+import { EditSpotPage } from './pages/EditSpotPage';
 import { InviteSpotAdminPage } from './pages/InviteSpotAdminPage';
-import { PlaceholderPage } from './pages/PlaceholderPage';
+import { AdminsPage } from './pages/AdminsPage';
+import { NewsPage } from './pages/NewsPage';
+import { OrdersPage } from './pages/OrdersPage';
+import { PrizesPage } from './pages/PrizesPage';
+import { QuestsPage } from './pages/QuestsPage';
 
 function App() {
   return (
@@ -20,31 +25,19 @@ function App() {
             <Route element={<AppLayout />}>
               <Route path="/spots" element={<SpotsPage />} />
               <Route path="/spots/new" element={<CreateSpotPage />} />
+              <Route path="/spots/:spotId/edit" element={<EditSpotPage />} />
               <Route path="/spots/:spotId/invite" element={<InviteSpotAdminPage />} />
-              <Route
-                path="/news"
-                element={
-                  <PlaceholderPage
-                    title="News & Notifications"
-                    note="Coming in the next phase — publish news and send global notifications."
-                  />
-                }
-              />
+              <Route path="/orders" element={<OrdersPage />} />
+              <Route path="/prizes" element={<PrizesPage />} />
+              <Route path="/news" element={<NewsPage />} />
             </Route>
           </Route>
 
           {/* SUPER_ADMIN only */}
           <Route element={<ProtectedRoute superAdminOnly />}>
             <Route element={<AppLayout />}>
-              <Route
-                path="/admins"
-                element={
-                  <PlaceholderPage
-                    title="Admins"
-                    note="Coming in the next phase — create admin accounts."
-                  />
-                }
-              />
+              <Route path="/admins" element={<AdminsPage />} />
+              <Route path="/quests" element={<QuestsPage />} />
             </Route>
           </Route>
 

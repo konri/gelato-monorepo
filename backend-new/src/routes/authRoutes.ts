@@ -57,6 +57,11 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    // A disabled account cannot log in (e.g. a spot admin who resigned).
+    if (user.loginDisabled) {
+      return res.status(403).json({ error: 'This account has been disabled' });
+    }
+
     // Admin web is restricted to staff roles only.
     if (accountType === 'ADMIN') {
       const staffRoles = ['SUPER_ADMIN', 'SPOTS_ADMIN', 'SPOT_ADMIN', 'EMPLOYEE'];

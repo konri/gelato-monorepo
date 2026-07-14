@@ -53,6 +53,28 @@ const haversineKm = (lat1: number, lon1: number, lat2: number, lon2: number): nu
 };
 
 /**
+ * A spot's admin, with login status so a super admin can revoke access
+ * (e.g. when someone resigns from managing a spot).
+ */
+@ObjectType()
+class SpotAdminInfo {
+  @Field(() => ID)
+  id!: string;
+
+  @Field()
+  email!: string;
+
+  @Field({ nullable: true })
+  name?: string;
+
+  @Field(() => [String])
+  roles!: string[];
+
+  @Field()
+  loginDisabled!: boolean;
+}
+
+/**
  * Spot GraphQL Type
  */
 @ObjectType()
@@ -353,6 +375,7 @@ export class SpotResolver {
     @Arg('longitude') longitude: number,
     @Arg('phone') phone: string,
     @Arg('description', { nullable: true }) description?: string,
+    @Arg('deliveryEnabled', { defaultValue: true }) deliveryEnabled: boolean = true,
     @Arg('deliveryRadiusKm', { defaultValue: 5.0 }) deliveryRadiusKm: number = 5.0,
     @Arg('freeDeliveryThreshold', { nullable: true }) freeDeliveryThreshold?: number,
     @Ctx() { prisma }: Context
@@ -373,7 +396,9 @@ export class SpotResolver {
         latitude,
         longitude,
         phone,
-        deliveryRadiusKm,
+        deliveryEnabled,
+        // Radius only meaningful when delivery is enabled.
+        deliveryRadiusKm: deliveryEnabled ? deliveryRadiusKm : 0,
         freeDeliveryThreshold,
         openingHours: {},
         isActive: true,
@@ -512,6 +537,52 @@ export class SpotResolver {
 
     console.log(`✅ Spot admin removed: User ${userId} from Spot ${spotId}`);
 
+    return true;
+  }
+
+  /**
+   * List the admins managing a spot, with login status (SUPER_ADMIN / SPOTS_ADMIN).
+   * Uses the SpotAdminProfile relation (the real link between users and spots).
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN])
+  @Query(() => [SpotAdminInfo])
+  async spotAdmins(
+    @Arg('spotId', () => ID) spotId: string,
+    @Ctx() { prisma }: Context
+  ): Promise<SpotAdminInfo[]> {
+    const profiles = await prisma.spotAdminProfile.findMany({
+      where: { spotId },
+      include: { user: true },
+    });
+    return profiles.map((p) => ({
+      id: p.user.id,
+      email: p.user.email,
+      name: p.user.name ?? undefined,
+      roles: p.user.roles as string[],
+      loginDisabled: p.user.loginDisabled,
+    }));
+  }
+
+  /**
+   * Enable or disable a staff member's login (SUPER_ADMIN / SPOTS_ADMIN).
+   * Disabling also bumps tokenVersion so existing sessions are invalidated.
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN])
+  @Mutation(() => Boolean)
+  async setUserLoginDisabled(
+    @Arg('userId', () => ID) userId: string,
+    @Arg('disabled') disabled: boolean,
+    @Ctx() { prisma }: Context
+  ): Promise<boolean> {
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        loginDisabled: disabled,
+        // Invalidate active tokens when disabling.
+        ...(disabled ? { tokenVersion: { increment: 1 } } : {}),
+      },
+    });
+    console.log(`✅ User ${userId} login ${disabled ? 'disabled' : 'enabled'}`);
     return true;
   }
 }

@@ -1,0 +1,41 @@
+{
+  "firstSection": {
+    "readyToUseEasy": "Prêt pour Bonapka ?",
+    "downloadEasy": "Télécharger l'app",
+    "downloadingEasyTerms1": "En téléchargeant l'app, vous acceptez les",
+    "downloadingEasyTerms2": "Conditions d'utilisation",
+    "downloadingEasyTerms3": "et la",
+    "downloadingEasyTerms4": "Politique de confidentialité.",
+    "downloadEasyButton": "Télécharger sur l'App Store"
+  },
+  "secondSection": {
+    "lookingForDevice": "Plateformes disponibles",
+    "lookingDeviceIconText1": "Bonapka pour iOS",
+    "lookingDeviceIconText2": "BonApka Merchant iOS",
+    "lookingDeviceIconText3": "Bonapka pour Android",
+    "lookingDeviceIconText4": "BonApka Merchant Android",
+    "lookingDeviceIconText5": "",
+    "lookingDeviceIconText1Description": "App clients",
+    "lookingDeviceIconText2Description": "Panneau entreprise",
+    "lookingDeviceIconText3Description": "App clients",
+    "lookingDeviceIconText4Description": "Panneau entreprise",
+    "lookingDeviceIconText5Description": "",
+    "iosAlt": "Icône iOS",
+    "appleAlt": "Icône Apple",
+    "androidAlt": "Icône Android",
+    "webAlt": "",
+    "windowsAlt": ""
+  },
+  "thirdSection": {
+    "whatPeopleAreSaying": "Ce que disent nos utilisateurs",
+    "comment1": "Grâce à Bonapka, mes clients reviennent plus souvent ! Ils accumulent des points et des tampons pour les réparations vélo et les échangent contre des contrôles gratuits.",
+    "comment2": "Avant, je distribuais des cartes de fidélité papier que les clients perdaient. Maintenant tout est numérique dans Bonapka — plus de clients fidèles !",
+    "comment3": "Les coupons de réduction et les cartes à tampons attirent de nouveaux clients, les séries de visites fidélisent les habitués. Excellente solution !",
+    "name1": "Konrad Hopek",
+    "role1": "Propriétaire d'atelier vélo",
+    "name2": "Anna Kot",
+    "role2": "Propriétaire de café",
+    "name3": "Marta Nowicka",
+    "role3": "Propriétaire de salon de beauté"
+  }
+}

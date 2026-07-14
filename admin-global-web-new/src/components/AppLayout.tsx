@@ -3,6 +3,9 @@ import { useAuth } from '../auth/AuthContext';
 
 const navItems = [
   { to: '/spots', label: 'Spots', icon: '🍦' },
+  { to: '/orders', label: 'Order history', icon: '📦' },
+  { to: '/prizes', label: 'Rewards', icon: '🎁' },
+  { to: '/quests', label: 'Quests', icon: '🎯', superAdminOnly: true },
   { to: '/admins', label: 'Admins', icon: '👤', superAdminOnly: true },
   { to: '/news', label: 'News & Notifications', icon: '📣' },
 ];

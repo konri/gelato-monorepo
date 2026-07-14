@@ -97,6 +97,45 @@ export class OrderResolver {
   }
 
   /**
+   * Customer display name for admin order history ("for whom").
+   */
+  @FieldResolver(() => String, { nullable: true })
+  async customerName(
+    @Root() order: OrderType,
+    @Ctx() { prisma }: Context
+  ): Promise<string | null> {
+    const user = await prisma.user.findUnique({ where: { id: order.userId } });
+    if (!user) return null;
+    return user.name || [user.firstName, user.surname].filter(Boolean).join(' ') || user.email;
+  }
+
+  /**
+   * Customer phone for admin order history.
+   */
+  @FieldResolver(() => String, { nullable: true })
+  async customerPhone(
+    @Root() order: OrderType,
+    @Ctx() { prisma }: Context
+  ): Promise<string | null> {
+    const user = await prisma.user.findUnique({ where: { id: order.userId } });
+    return user?.phone ?? null;
+  }
+
+  /**
+   * Courier display name for admin order history ("who delivered").
+   */
+  @FieldResolver(() => String, { nullable: true })
+  async courierName(
+    @Root() order: OrderType,
+    @Ctx() { prisma }: Context
+  ): Promise<string | null> {
+    if (!order.courierId) return null;
+    const courier = await prisma.user.findUnique({ where: { id: order.courierId } });
+    if (!courier) return null;
+    return courier.name || [courier.firstName, courier.surname].filter(Boolean).join(' ') || courier.email;
+  }
+
+  /**
    * Latest courier position for an in-progress order (null if none yet).
    */
   @FieldResolver(() => OrderCourierLocation, { nullable: true })

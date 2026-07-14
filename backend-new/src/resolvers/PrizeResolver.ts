@@ -1,5 +1,6 @@
 import { Resolver, Query, Mutation, Arg, Ctx, Authorized, ID, Int } from 'type-graphql';
 import { Role, TransactionType } from '@prisma/client';
+import { GraphQLJSON } from 'graphql-type-json';
 import { Context } from '../types/Context';
 import { PrizeType, UserPrizeType } from '../types/PrizeType';
 import { v4 as uuidv4 } from 'uuid';
@@ -266,7 +267,7 @@ export class PrizeResolver {
           select: {
             id: true,
             firstName: true,
-            lastName: true,
+            surname: true,
           },
         },
       },
@@ -299,7 +300,7 @@ export class PrizeResolver {
           select: {
             id: true,
             firstName: true,
-            lastName: true,
+            surname: true,
           },
         },
       },
@@ -308,6 +309,88 @@ export class PrizeResolver {
     console.log(`✅ Prize QR ${qrCode} validated by user ${user.id} at spot ${spotId || 'N/A'}`);
 
     return updatedPrize as UserPrizeType;
+  }
+
+  /**
+   * Create a prize (SUPER_ADMIN / SPOTS_ADMIN).
+   * titleLocal/descriptionLocal are JSON objects { pl, en, ua }.
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN])
+  @Mutation(() => PrizeType)
+  async createPrize(
+    @Arg('title') title: string,
+    @Arg('pointsCost', () => Int) pointsCost: number,
+    @Arg('titleLocal', () => GraphQLJSON, { nullable: true }) titleLocal: any,
+    @Arg('description', () => String, { nullable: true }) description: string | undefined,
+    @Arg('descriptionLocal', () => GraphQLJSON, { nullable: true }) descriptionLocal: any,
+    @Arg('imageUrl', () => String, { nullable: true }) imageUrl: string | undefined,
+    @Arg('quantity', () => Int, { nullable: true }) quantity: number | undefined,
+    @Arg('isActive', { defaultValue: true }) isActive: boolean,
+    @Ctx() { prisma }: Context
+  ): Promise<PrizeType> {
+    const prize = await prisma.prize.create({
+      data: {
+        title,
+        titleLocal: titleLocal && typeof titleLocal === 'object'
+          ? titleLocal
+          : { pl: title, en: title, ua: title },
+        description,
+        descriptionLocal:
+          descriptionLocal && typeof descriptionLocal === 'object' ? descriptionLocal : undefined,
+        imageUrl,
+        pointsCost,
+        quantity: quantity ?? null,
+        isActive,
+      },
+    });
+    console.log(`✅ Prize created: ${prize.title} (${prize.id})`);
+    return prize as PrizeType;
+  }
+
+  /**
+   * Update a prize, including enable/disable via isActive (SUPER_ADMIN / SPOTS_ADMIN).
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN])
+  @Mutation(() => PrizeType)
+  async updatePrize(
+    @Arg('id', () => ID) id: string,
+    @Arg('title', () => String, { nullable: true }) title: string | undefined,
+    @Arg('titleLocal', () => GraphQLJSON, { nullable: true }) titleLocal: any,
+    @Arg('description', () => String, { nullable: true }) description: string | undefined,
+    @Arg('descriptionLocal', () => GraphQLJSON, { nullable: true }) descriptionLocal: any,
+    @Arg('imageUrl', () => String, { nullable: true }) imageUrl: string | undefined,
+    @Arg('pointsCost', () => Int, { nullable: true }) pointsCost: number | undefined,
+    @Arg('quantity', () => Int, { nullable: true }) quantity: number | undefined,
+    @Arg('isActive', () => Boolean, { nullable: true }) isActive: boolean | undefined,
+    @Ctx() { prisma }: Context
+  ): Promise<PrizeType> {
+    const data: any = {};
+    if (title !== undefined) data.title = title;
+    if (titleLocal !== undefined) data.titleLocal = titleLocal;
+    if (description !== undefined) data.description = description;
+    if (descriptionLocal !== undefined) data.descriptionLocal = descriptionLocal;
+    if (imageUrl !== undefined) data.imageUrl = imageUrl;
+    if (pointsCost !== undefined) data.pointsCost = pointsCost;
+    if (quantity !== undefined) data.quantity = quantity;
+    if (isActive !== undefined) data.isActive = isActive;
+
+    const prize = await prisma.prize.update({ where: { id }, data });
+    console.log(`✅ Prize updated: ${prize.title} (${prize.id})`);
+    return prize as PrizeType;
+  }
+
+  /**
+   * Delete a prize (SUPER_ADMIN only).
+   */
+  @Authorized([Role.SUPER_ADMIN])
+  @Mutation(() => Boolean)
+  async deletePrize(
+    @Arg('id', () => ID) id: string,
+    @Ctx() { prisma }: Context
+  ): Promise<boolean> {
+    await prisma.prize.delete({ where: { id } });
+    console.log(`✅ Prize deleted: ${id}`);
+    return true;
   }
 
   /**

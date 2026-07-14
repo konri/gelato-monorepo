@@ -123,6 +123,7 @@ model User {
 
   // Auth tokens
   tokenVersion           Int                  @default(0) // For JWT refresh invalidation
+  loginDisabled          Boolean              @default(false) // Admin can revoke a staff member's login access
 
   // Google OAuth
   googleId               String?

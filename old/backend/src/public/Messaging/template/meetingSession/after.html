@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html
+  lang="en"
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:v="urn:schemas-microsoft-com:vml"
+  xmlns:o="urn:schemas-microsoft-com:office:office"
+  xmlns:th="http://www.w3.org/1999/xhtml"
+>
+  <head>
+    <meta charset="utf-8" />
+    <!-- utf-8 works for most cases -->
+    <meta name="viewport" content="width=device-width" />
+    <!-- Forcing initial-scale shouldn't be necessary -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- Use the latest (edge) version of IE rendering engine -->
+    <meta name="x-apple-disable-message-reformatting" />
+    <!-- Disable auto-scale in iOS 10 Mail entirely -->
+    <title></title>
+    <!-- The title tag shows in email notifications, like Android 4.4. -->
+    <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.0/jquery.validate.min.js"></script>
+    <script>
+      $(document).ready(function () {
+        $("input[type='radio']").on('click', function () {
+          // Get the value of the selected radio button
+          const selectedValue = $(this).val()
+          console.log('selectedValue', selectedValue)
+
+          if (selectedValue === 'yes') {
+            $('#section_meeting_yes').show()
+            $('#section_meeting_no').hide()
+          }
+
+          if (selectedValue === 'no') {
+            $('#section_meeting_yes').hide()
+            $('#section_meeting_no').show()
+          }
+        })
+
+        $.validator.addMethod(
+          'regex',
+          function (value, element, regexp) {
+            return this.optional(element) || regexp.test(value)
+          },
+          'Please check your input.'
+        )
+
+        $('#basic-form').validate({
+          rules: {
+            meeting_happen: {
+              required: true,
+            },
+          },
+
+          messages: {
+            meeting_happen: {
+              required: 'Odpowied',
+            },
+          },
+        })
+
+        $('#basic-form').submit(function (event) {
+          const meetingHappen = $("input[name='meeting_happen']:checked").val()
+
+          const selectedRating = $("input[name='rating']:checked").val()
+          const feedbackYes = $('#feedback_yes').val()
+          const feedbackNo = $('#feedback_no').val()
+
+          const feedback = meetingHappen === 'yes' ? feedbackYes : feedbackNo
+          console.log('feedback', feedback)
+          event.preventDefault()
+
+          const host = '_HOST_REPLACE_'
+          const data = { meetingHappen, selectedRating, feedback }
+          $.ajax({
+            type: 'POST',
+            url: host,
+            data,
+            success: () => {
+              $('#basic-form').hide()
+              $('#basic-form-success').show()
+            },
+          })
+        })
+      })
+    </script>
+
+    <!-- CSS Reset : BEGIN -->
+    <style>
+      html,
+      body {
+        margin: 0 auto !important;
+        padding: 0 !important;
+        height: 100% !important;
+        width: 100% !important;
+        background: #fff !important;
+      }
+
+      /* What it does: Stops email clients resizing small text. */
+      * {
+        -ms-text-size-adjust: 100%;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      /* What it does: Centers email on Android 4.4 */
+      div[style*='margin: 16px 0'] {
+        margin: 0 !important;
+      }
+
+      /* What it does: Stops Outlook from adding extra spacing to tables. */
+      table,
+      td {
+        mso-table-lspace: 0pt !important;
+        mso-table-rspace: 0pt !important;
+      }
+
+      /* What it does: Fixes webkit padding issue. */
+      table {
+        border-spacing: 0 !important;
+        border-collapse: collapse !important;
+        table-layout: fixed !important;
+        margin: 0 auto !important;
+      }
+
+      /* What it does: Uses a better rendering method when resizing images in IE. */
+      img {
+        -ms-interpolation-mode: bicubic;
+      }
+
+      /* What it does: Prevents Windows 10 Mail from underlining links despite inline CSS. Styles for underlined links should be inline. */
+      a {
+        text-decoration: none;
+      }
+
+      /* What it does: A work-around for email clients meddling in triggered links. */
+      *[x-apple-data-detectors],  /* iOS */
+      .unstyle-auto-detected-links *,
+      .aBn {
+        border-bottom: 0 !important;
+        cursor: default !important;
+        color: inherit !important;
+        text-decoration: none !important;
+        font-size: inherit !important;
+        font-family: inherit !important;
+        font-weight: inherit !important;
+        line-height: inherit !important;
+      }
+
+      /* What it does: Prevents Gmail from displaying a download button on large, non-linked images. */
+      .a6S {
+        display: none !important;
+        opacity: 0.01 !important;
+      }
+
+      /* What it does: Prevents Gmail from changing the text color in conversation threads. */
+      .im {
+        color: inherit !important;
+      }
+
+      /* If the above doesn't work, add a .g-img class to any image in question. */
+      img.g-img + div {
+        display: none !important;
+      }
+
+      /* What it does: Removes right gutter in Gmail iOS app: https://github.com/TedGoas/Cerberus/issues/89  */
+      /* Create one of these media queries for each additional viewport size you'd like to fix */
+
+      /* iPhone 4, 4S, 5, 5S, 5C, and 5SE */
+      @media only screen and (min-device-width: 320px) and (max-device-width: 374px) {
+        u ~ div .email-container {
+          min-width: 320px !important;
+        }
+      }
+      /* iPhone 6, 6S, 7, 8, and X */
+      @media only screen and (min-device-width: 375px) and (max-device-width: 413px) {
+        u ~ div .email-container {
+          min-width: 375px !important;
+        }
+      }
+      /* iPhone 6+, 7+, and 8+ */
+      @media only screen and (min-device-width: 414px) {
+        u ~ div .email-container {
+          min-width: 414px !important;
+        }
+      }
+
+      @media (max-width: 700px) {
+        .header-image {
+          display: none !important;
+        }
+
+        .relocode-signiture {
+          font-size: 24px !important;
+        }
+
+        .offset {
+          padding: 10px !important;
+        }
+      }
+      .lightLogo {
+        display: none;
+      }
+
+      .full-background {
+        width: 100%;
+        background: #ffffff;
+      }
+      @media (prefers-color-scheme: dark) {
+        .darkLogo {
+          display: none !important;
+        }
+
+        .lightLogo {
+          display: block !important;
+        }
+
+        .full-background {
+          width: 100%;
+          background: #fff !important;
+        }
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        font-family: 'Montserrat', sans-serif;
+        color: #000000;
+        margin-top: 0;
+        font-weight: 400;
+      }
+
+      body {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 400;
+        font-size: 15px;
+        line-height: 1.8;
+        color: #543457;
+      }
+
+      a {
+        color: #448ef6;
+      }
+
+      form,
+      p {
+        margin: 20px;
+      }
+
+      p.note {
+        font-size: 1rem;
+        color: red;
+      }
+
+      input,
+      textarea {
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        padding: 4px;
+        font-family: 'Lato';
+        width: 300px;
+        margin-top: 10px;
+        outline: none;
+      }
+
+      label {
+        width: 300px;
+        font-weight: bold;
+        display: inline-block;
+        margin-top: 20px;
+      }
+
+      label span {
+        font-size: 1rem;
+      }
+
+      label.error {
+        color: red;
+        font-size: 1rem;
+        display: block;
+        margin-top: 5px;
+      }
+
+      label.error.fail-alert {
+        border: 2px solid red;
+        border-radius: 4px;
+        line-height: 1;
+        padding: 2px 0 6px 6px;
+        background: #ffe6eb;
+      }
+
+      input.valid.success-alert {
+        border: 2px solid #4caf50;
+        color: green;
+      }
+
+      input.error,
+      textarea.error {
+        border: 1px dashed red;
+        font-weight: 300;
+        color: red;
+      }
+
+      [type='submit'],
+      [type='reset'],
+      button,
+      html [type='button'] {
+        margin-left: 0;
+        border-radius: 0;
+        background: black;
+        color: white;
+        border: none;
+        font-weight: 300;
+        padding: 10px 0;
+        line-height: 1;
+      }
+      /* What it does: Stops email clients resizing small text. */
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        font-family: 'Montserrat', sans-serif;
+        color: #000000;
+        margin-top: 0;
+        font-weight: 400;
+      }
+
+      body {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 400;
+        font-size: 15px;
+        line-height: 1.8;
+        color: #543457;
+      }
+
+      a {
+        color: #448ef6;
+      }
+
+      .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        font-size: 1.5em;
+        justify-content: space-around;
+        padding: 0 .em;
+        text-align: center;
+        width: 7em;
+      }
+
+      .star-rating input {
+        display: none;
+      }
+
+      .star-rating label {
+        color: #ccc;
+        cursor: pointer;
+      }
+
+      .star-rating :checked ~ label {
+        color: #f90;
+      }
+
+      .star-rating label:hover,
+      .star-rating label:hover ~ label {
+        color: #fc0;
+      }
+
+      #section_meeting_yes,
+      #section_meeting_no {
+        display: none;
+      }
+    </style>
+
+    <!-- CSS Reset : END -->
+  </head>
+
+  <body
+    width="100%"
+    style="
+      margin: 0;
+      padding: 0 !important;
+      mso-line-height-rule: exactly;
+      background-color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 400;
+      font-size: 15px;
+      line-height: 1.8;
+      color: #543457;
+    "
+  >
+    <div class="full-background">
+      <div
+        style="
+          display: none;
+          font-size: 1px;
+          max-height: 0px;
+          max-width: 0px;
+          opacity: 0;
+          overflow: hidden;
+          mso-hide: all;
+          font-family: sans-serif;
+        "
+      ></div>
+      <div style="max-width: 600px; margin: 0 auto; padding-left: 3%; padding-right: 3%">
+        <!-- BEGIN BODY -->
+        <table
+          align="center"
+          role="presentation"
+          cellspacing="0"
+          cellpadding="0"
+          border="0"
+          width="100%"
+          style="margin: auto"
+        >
+          <tr>
+            <td
+              valign="top"
+              style="
+                background-repeat: no-repeat;
+                position: relative;
+                z-index: 0;
+                border-left: 3px solid #ff3b3b;
+                padding-bottom: 50px;
+              "
+            >
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td class="logo" style="padding-top: 20px; padding-bottom: 20px; padding-left: 10px; width: 160px">
+                    <a href="https://www.zencast.app" style="margin: 0; padding: 0">
+                      <div class="darkLogo">
+                        <img src="https://i.imgur.com/Bu4d5x5.png" alt="Image" title="Zencast logo" width="300" />
+                      </div>
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!---->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="padding-left: 30px" class="offset">
+                    <div style="font-size: 24px">
+                      <!-- MAIN CONTENT -->
+                      <div style="clear: both; overflow: hidden"></div>
+
+                      <!--FORGET PASSWORD-->
+                      <div>
+                        <form id="basic-form">
+                          <p>Czy spotkanie się odbyło z _NAME_REPLACE_</p>
+                          <p>dnia: _DATE_REPLACE_ o godzinie: _HOUR_REPLACE_</p>
+                          <p style="display: flex; flex-direction: row">
+                            <input type="radio" id="meeting_yes" name="meeting_happen" value="yes" />
+                            <label for="meeting_yes">Tak</label><br />
+                          </p>
+                          <p style="display: flex; flex-direction: row">
+                            <input type="radio" id="meeting_no" name="meeting_happen" value="no" />
+                            <label for="meeting_no">Nie</label><br />
+                          </p>
+
+                          <div id="section_meeting_yes">
+                            <p>Oceń spotkanie pod względem technicznym:</p>
+                            <div class="star-rating">
+                              <input type="radio" id="5-stars" name="rating" value="5" />
+                              <label for="5-stars" class="star">&#9733;</label>
+                              <input type="radio" id="4-stars" name="rating" value="4" />
+                              <label for="4-stars" class="star">&#9733;</label>
+                              <input type="radio" id="3-stars" name="rating" value="3" />
+                              <label for="3-stars" class="star">&#9733;</label>
+                              <input type="radio" id="2-stars" name="rating" value="2" />
+                              <label for="2-stars" class="star">&#9733;</label>
+                              <input type="radio" id="1-star" name="rating" value="1" />
+                              <label for="1-star" class="star">&#9733;</label>
+                            </div>
+
+                            <textarea id="feedback_yes" name="feedback" rows="4" cols="50"></textarea>
+
+                            <p>
+                              <input class="submit" type="submit" value="ZAPISZ" />
+                            </p>
+                          </div>
+                          <div id="section_meeting_no">
+                            <p>
+                              Opisz dlaczego spotkanie się nie odbyło, czy użytkownik powinien dostać zwrót kosztów?
+                            </p>
+                            <textarea id="feedback_no" name="feedback" rows="4" cols="50"></textarea>
+                            <p>
+                              <input class="submit" type="submit" value="ZAPISZ" />
+                            </p>
+                          </div>
+                        </form>
+
+                        <div id="basic-form-success" style="display: none">
+                          Dziękujemy za wypełnienie formularza spotkania.
+                        </div>
+                      </div>
+                      <!--FORGET PASSWORD-->
+                    </div>
+                  </td>
+                </tr>
+              </table>
+              <div>
+                <p>
+                  Dziękujemy za korzysanie z naszej aplikacji, jeżeli masz jakieś pytanie, prosimy je kierować na adres:
+                  <a href="mailto:kontakt@zencast.app">kontakt@zencast.app</a>
+                </p>
+              </div>
+            </td>
+          </tr>
+          <!-- end tr -->
+        </table>
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td
+              style="
+                background-image: url('https://i.imgur.com/c7LXsbH.png');
+                background-repeat: no-repeat;
+                height: 85px;
+                padding-left: 70px;
+                font-size: 40px;
+                line-height: 70px;
+                color: #543457;
+                font-style: italic;
+              "
+            >
+              <div class="relocode-signiture">Zencast</div>
+            </td>
+          </tr>
+
+          <tr>
+            <!--        <td style="padding-left:70px; font-size: 18px">Learn more about <a href="https://www.relocode.it/terms/" style="color: #FF9A49; font-weight: bold">policy</a></td>-->
+          </tr>
+
+          <tr>
+            <td style="height: 50px"></td>
+          </tr>
+          <!-- delimeter -->
+        </table>
+
+        <table
+          align="center"
+          role="presentation"
+          cellspacing="0"
+          cellpadding="0"
+          border="0"
+          width="100%"
+          style="margin: auto"
+        >
+          <tr>
+            <td
+              valign="middle"
+              style="color: rgba(255, 255, 255, 0.5); padding-left: 3%; padding-right: 3%; background: #212121"
+            >
+              <table>
+                <tr>
+                  <td valign="top" width="100%">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tr>
+                        <td style="text-align: center">
+                          <p>&copy; 2023 Zencast. All Rights Reserved</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

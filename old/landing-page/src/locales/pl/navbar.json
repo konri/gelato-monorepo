@@ -1,0 +1,25 @@
+{
+  "navbar": {
+    "home": "Home",
+    "download": "Pobierz",
+    "subscription": "Subskrypcja",
+    "features": "Funkcje",
+    "about": "O nas",
+    "contact": "Kontakt",
+    "logoAlt": "Bonapka logo",
+    "openMenu": "Otwórz menu",
+    "closeMenu": "Zamknij menu",
+    "selectLanguage": "Wybierz język",
+    "dropdownArrow": "Strzałka rozwijania",
+    "register": "Zarejestruj się",
+    "language": {
+      "pl": { "label": "Polski", "short": "PL", "flagAlt": "Flaga polska" },
+      "en": { "label": "Angielski", "short": "EN", "flagAlt": "Flaga angielska" },
+      "es": { "label": "Hiszpański", "short": "ES", "flagAlt": "Flaga hiszpańska" },
+      "fr": { "label": "Francuski", "short": "FR", "flagAlt": "Flaga francuska" },
+      "de": { "label": "Niemiecki", "short": "DE", "flagAlt": "Flaga niemiecka" },
+      "it": { "label": "Włoski", "short": "IT", "flagAlt": "Flaga włoska" },
+      "ru": { "label": "Rosyjski", "short": "RU", "flagAlt": "Flaga rosyjska" }
+    }
+  }
+}

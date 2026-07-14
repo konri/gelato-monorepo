@@ -187,6 +187,7 @@ type Mutation {
   assignOrderToCourier(courierId: ID!, orderId: ID!): Boolean!
   assignSpotAdmin(spotId: ID!, userId: ID!): Boolean!
   awardPoints(description: String!, points: Int!, spotId: ID, userId: ID!): Boolean!
+  broadcastToCity(body: String!, cityId: String!, language: String = "pl", title: String!): Boolean!
   broadcastToClients(body: String!, language: String = "pl", title: String!): Boolean!
   broadcastToCouriers(body: String!, language: String = "pl", title: String!): Boolean!
   broadcastToSpotStaff(body: String!, language: String = "pl", title: String!): Boolean!
@@ -195,15 +196,20 @@ type Mutation {
   claimOrder(orderId: ID!): OrderType!
   commentNews(content: String!, newsId: ID!): NewsCommentType!
   createAdminAccount(email: String!, name: String!, role: String!): UserType!
+  createCity(country: String = "Poland", latitude: Float!, longitude: Float!, name: String!, nameLocal: JSON): City!
   createEmployee(email: String!, name: String!, password: String!, spotId: ID!): UserType!
   createNews(input: CreateNewsInput!): NewsType!
   createOrder(input: CreateOrderInput!): OrderType!
   createPaymentIntent(orderId: ID!): String!
+  createPrize(description: String, descriptionLocal: JSON, imageUrl: String, isActive: Boolean = true, pointsCost: Int!, quantity: Int, title: String!, titleLocal: JSON): PrizeType!
+  createQuest(conditions: JSON, description: String, descriptionLocal: JSON, isActive: Boolean = true, isRepeatable: Boolean = false, pointsReward: Int!, targetCityIds: [String!] = [], targetSpotIds: [String!] = [], title: String!, titleLocal: JSON, type: String!): Quest!
   createReview(comment: String, courierRating: Int, orderId: ID!, overallRating: Int!, spotRating: Int!): ReviewType!
-  createSpot(address: String!, cityId: String!, deliveryRadiusKm: Float = 5, description: String, freeDeliveryThreshold: Float, id: String!, latitude: Float!, longitude: Float!, name: String!, phone: String!): SpotType!
+  createSpot(address: String!, cityId: String!, deliveryEnabled: Boolean = true, deliveryRadiusKm: Float = 5, description: String, freeDeliveryThreshold: Float, id: String!, latitude: Float!, longitude: Float!, name: String!, phone: String!): SpotType!
   createTaste(allergens: [String!] = [], description: String, descriptionLocal: String, imageUrl: String, kcalPer100g: Float, kcalPerPortion: Float, spotId: ID!, subtitle: String, title: String!, titleLocal: String!, type: TasteType!): Taste!
   deleteAccount: Boolean!
   deleteNews(id: ID!): Boolean!
+  deletePrize(id: ID!): Boolean!
+  deleteQuest(id: ID!): Boolean!
   deleteSpot(id: ID!): Boolean!
   deleteTaste(id: ID!): Boolean!
   deleteUser(userId: ID!): Boolean!
@@ -211,6 +217,7 @@ type Mutation {
   inviteSpotAdmin(email: String!, name: String!, spotId: ID!): UserType!
   likeNews(newsId: ID!): Boolean!
   login(email: String!, password: String!): AuthResponse!
+  loginWithGoogle(idToken: String!): AuthResponse!
   logout: Boolean!
   redeemPrize(prizeId: ID!): UserPrizeType!
   refreshToken(refreshToken: String!): String!
@@ -223,14 +230,18 @@ type Mutation {
   sendNotificationToUser(body: String!, title: String!, userId: String!): Boolean!
   sendOTP(language: String = "pl", phone: String!): Boolean!
   sendTestNotification: Boolean!
+  setUserLoginDisabled(disabled: Boolean!, userId: ID!): Boolean!
   startWorkSession(spotIds: [ID!]!): WorkSessionType!
   toggleFavoriteSpot(spotId: ID!): Boolean!
+  updateCity(country: String, id: ID!, isActive: Boolean, latitude: Float, longitude: Float, name: String, nameLocal: JSON): City!
   updateCourierLocation(accuracy: Float, latitude: Float!, longitude: Float!, orderId: ID): Boolean!
   updateCourierStatus(currentSpotId: ID, isAvailable: Boolean, isOnline: Boolean!): Boolean!
   updateDeliveryStatus(orderId: ID!, status: OrderStatus!): Boolean!
   updateNews(id: ID!, input: UpdateNewsInput!): NewsType!
   updateOrderStatus(id: ID!, status: OrderStatus!): Boolean!
+  updatePrize(description: String, descriptionLocal: JSON, id: ID!, imageUrl: String, isActive: Boolean, pointsCost: Int, quantity: Int, title: String, titleLocal: JSON): PrizeType!
   updateProfile(data: UserChangeInput!): UserType!
+  updateQuest(conditions: JSON, description: String, descriptionLocal: JSON, id: ID!, isActive: Boolean, isRepeatable: Boolean, pointsReward: Int, targetCityIds: [String!], targetSpotIds: [String!], title: String, titleLocal: JSON): Quest!
   updateSpot(address: String, deliveryRadiusKm: Float, description: String, freeDeliveryThreshold: Float, id: ID!, isActive: Boolean, latitude: Float, longitude: Float, name: String, phone: String): SpotType!
   updateTasteAvailability(id: ID!, isAvailable: Boolean!): Boolean!
   updateUserRoles(roles: [Role!]!, userId: ID!): UserType!
@@ -322,7 +333,10 @@ type OrderType {
   courierAssignedAt: DateTime
   courierId: ID
   courierLocation: OrderCourierLocation
+  courierName: String
   createdAt: DateTime!
+  customerName: String
+  customerPhone: String
   deliveredAt: DateTime
   deliveryAddress: String!
   deliveryFee: Float!
@@ -497,8 +511,11 @@ type Query {
   prize(id: ID!): PrizeType
   prizes(includeInactive: Boolean = false): [PrizeType!]!
   product(id: ID!): Product
+  quest(id: ID!): Quest
+  quests(includeInactive: Boolean = false): [Quest!]!
   searchUsers(query: String!): [UserType!]!
   spot(id: ID!): SpotType
+  spotAdmins(spotId: ID!): [SpotAdminInfo!]!
   spotEmployees(spotId: ID!): [UserType!]!
   spotOrders(spotId: ID!, status: OrderStatus): [OrderType!]!
   spotProducts(includeUnavailable: Boolean = false, spotId: ID!): [Product!]!
@@ -511,6 +528,24 @@ type Query {
   users: [UserType!]!
   usersByRole(role: Role!): [UserType!]!
   validatePromoCode(code: String!, subtotal: Float!): PromoValidation!
+}
+
+type Quest {
+  conditions: JSON
+  createdAt: DateTime!
+  description: String
+  descriptionLocal: JSON
+  id: ID!
+  isActive: Boolean!
+  isRepeatable: Boolean!
+  pointsReward: Int!
+  targetCityIds: [String!]!
+  targetSpotIds: [String!]!
+  title: String!
+  titleLocal: JSON!
+  type: String!
+  validFrom: DateTime
+  validUntil: DateTime
 }
 
 type ReferralCodeType {
@@ -565,6 +600,14 @@ enum Role {
   SPOTS_ADMIN
   SPOT_ADMIN
   SUPER_ADMIN
+}
+
+type SpotAdminInfo {
+  email: String!
+  id: ID!
+  loginDisabled: Boolean!
+  name: String
+  roles: [String!]!
 }
 
 type SpotType {

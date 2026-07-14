@@ -171,6 +171,52 @@ export class NotificationResolver {
   }
 
   /**
+   * Broadcast a push to clients in a specific city (SUPER_ADMIN only).
+   * FCM topics can't be filtered by city, so we resolve the audience
+   * ourselves: find CLIENT users whose preferredCityId matches, gather their
+   * active device tokens, and send to each.
+   */
+  @Authorized([Role.SUPER_ADMIN])
+  @Mutation(() => Boolean)
+  async broadcastToCity(
+    @Arg('cityId') cityId: string,
+    @Arg('title') title: string,
+    @Arg('body') body: string,
+    @Arg('language', { defaultValue: 'pl' }) language: 'pl' | 'en' | 'ua' = 'pl',
+    @Ctx() { prisma }: Context
+  ): Promise<boolean> {
+    // Active device tokens of CLIENTs who chose this city.
+    const tokens = await prisma.deviceToken.findMany({
+      where: {
+        isActive: true,
+        user: {
+          preferredCityId: cityId,
+          roles: { has: Role.CLIENT },
+        },
+      },
+      select: { token: true },
+    });
+
+    if (tokens.length === 0) return false;
+
+    const results = await Promise.all(
+      tokens.map((t) =>
+        FCMService.sendToDevice(
+          t.token,
+          NotificationType.NEWS_PUBLISHED,
+          language,
+          { newsTitle: title },
+          { customBody: body }
+        )
+      )
+    );
+
+    const sent = results.filter(Boolean).length;
+    console.log(`✅ broadcastToCity ${cityId}: ${sent}/${tokens.length} delivered`);
+    return sent > 0;
+  }
+
+  /**
    * Broadcast notification to all couriers (SUPER_ADMIN, SPOTS_ADMIN)
    */
   @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN])

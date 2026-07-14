@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EasyBons Invitation</title>
+  </head>
+  <body style="font-family: Arial, sans-serif; line-height: 1.5; color: #111827">
+    <h2>You received a cooperator invitation</h2>
+    <p>
+      Merchant:
+      <strong th:text="${merchant_name}">Merchant</strong>
+    </p>
+    <p>
+      Access level:
+      <strong th:text="${access_level}">FULL_MERCHANT</strong>
+    </p>
+    <p>
+      Invitation expires at:
+      <strong th:text="${expires_at}">2026-03-11T10:00:00.000Z</strong>
+    </p>
+    <p>
+      Open in web:
+      <a th:href="${web_url}" th:text="${web_url}">web_url</a>
+    </p>
+  </body>
+</html>

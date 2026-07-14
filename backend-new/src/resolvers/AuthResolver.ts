@@ -150,6 +150,92 @@ export class AuthResolver {
   }
 
   /**
+   * Login/register with Google on the WEB.
+   *
+   * The browser uses Google Identity Services (GIS) which yields an ID token
+   * directly (no serverAuthCode exchange, so no client secret is needed here).
+   * We verify the ID token against GOOGLE_CLIENT_ID and upsert a CLIENT user.
+   */
+  @Mutation(() => AuthResponse)
+  async loginWithGoogle(
+    @Arg('idToken') idToken: string,
+    @Ctx() { prisma }: Context
+  ): Promise<{ accessToken: string; refreshToken: string; user: User }> {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      throw new Error('Google login is not configured');
+    }
+
+    // Verify the ID token issued to our web client.
+    const client = new OAuth2Client(clientId);
+    let payload;
+    try {
+      const ticket = await client.verifyIdToken({ idToken, audience: clientId });
+      payload = ticket.getPayload();
+    } catch {
+      throw new Error('Invalid Google token');
+    }
+    if (!payload || !payload.email) {
+      throw new Error('Invalid Google token');
+    }
+
+    const googleId = payload.sub;
+    const email = payload.email.toLowerCase();
+    const name = payload.name || email.split('@')[0];
+    const firstName = payload.given_name || undefined;
+    const surname = payload.family_name || undefined;
+    const profilePicture = payload.picture || undefined;
+
+    // Web accounts live in the CLIENT namespace; match by email or googleId.
+    let user = await prisma.user.findFirst({
+      where: {
+        accountType: 'CLIENT',
+        OR: [{ email }, { googleId }],
+      },
+    });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email,
+          password: await hashPassword(CodeGenerator.generateRandomString(32)),
+          googleId,
+          name,
+          firstName,
+          surname,
+          profilePicture,
+          roles: ['CLIENT'],
+          emailVerified: true,
+          phoneVerified: false,
+          registrationSource: 'WEB_CLIENT',
+          language: Language.PL,
+          referralCode: {
+            create: { code: CodeGenerator.generateReferralCode(name || email) },
+          },
+          pointBalance: {
+            create: { totalPoints: 0, availablePoints: 0, lockedPoints: 0 },
+          },
+        },
+      });
+      console.log(`✅ New user created via Google (web): ${user.email}`);
+    } else if (!user.googleId) {
+      // Link the Google identity to an existing email account.
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { googleId, emailVerified: true },
+      });
+      console.log(`✅ Linked Google to existing user (web): ${user.email}`);
+    } else {
+      console.log(`✅ User logged in via Google (web): ${user.email}`);
+    }
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    return { accessToken, refreshToken, user };
+  }
+
+  /**
    * Send OTP to phone number
    */
   @Mutation(() => Boolean)
