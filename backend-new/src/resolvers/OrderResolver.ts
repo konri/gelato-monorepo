@@ -12,12 +12,57 @@ import {
   Field,
   Float,
 } from 'type-graphql';
-import { Role, OrderStatus, TransactionType } from '@prisma/client';
+import { Role, OrderStatus, FulfillmentType } from '@prisma/client';
 import { Context } from '../types/Context';
-import { OrderType, CreateOrderInput } from '../types/OrderType';
+import { OrderType, OrderItemType, CreateOrderInput, CollectOrderResult } from '../types/OrderType';
 import { PubSubService } from '../services/PubSubService';
-import { PointsResolver } from './PointsResolver';
 import { computeDiscount } from './PromoCodeResolver';
+import { OrderPointsService } from '../services/OrderPointsService';
+import { CodeGenerator } from '../shared/utils/CodeGenerator';
+
+/**
+ * Resolves human-readable names for order line items so spot staff can see
+ * what to prepare (taste titles / product names / box scoop choices).
+ */
+@Resolver(() => OrderItemType)
+export class OrderItemResolver {
+  @FieldResolver(() => String, { nullable: true })
+  async displayName(
+    @Root() item: OrderItemType,
+    @Ctx() { prisma }: Context
+  ): Promise<string | null> {
+    if (item.tasteId) {
+      const taste = await prisma.taste.findUnique({
+        where: { id: item.tasteId },
+        select: { title: true },
+      });
+      return taste?.title ?? null;
+    }
+    if (item.productId) {
+      const product = await prisma.product.findUnique({
+        where: { id: item.productId },
+        select: { name: true },
+      });
+      return product?.name ?? null;
+    }
+    return null;
+  }
+
+  @FieldResolver(() => [String])
+  async boxTasteNames(
+    @Root() item: OrderItemType,
+    @Ctx() { prisma }: Context
+  ): Promise<string[]> {
+    if (!item.boxTasteIds || item.boxTasteIds.length === 0) return [];
+    const tastes = await prisma.taste.findMany({
+      where: { id: { in: item.boxTasteIds } },
+      select: { id: true, title: true },
+    });
+    const byId = new Map(tastes.map((t) => [t.id, t.title]));
+    // Preserve order + repeats (one entry per chosen scoop).
+    return item.boxTasteIds.map((id) => byId.get(id) ?? '—');
+  }
+}
 
 /**
  * Minimal spot info attached to an order (for the list + tracking map).
@@ -73,7 +118,6 @@ class OrderCourierLocation {
  */
 @Resolver(() => OrderType)
 export class OrderResolver {
-  private pointsResolver = new PointsResolver();
 
   /**
    * Resolve the spot summary for an order (list + tracking map).
@@ -122,17 +166,42 @@ export class OrderResolver {
   }
 
   /**
-   * Courier display name for admin order history ("who delivered").
+   * The assigned courier's user record. NOTE: order.courierId is a
+   * CourierProfile id, so we resolve profile → user (a direct user lookup by
+   * courierId returns nothing).
+   */
+  private async courierUser(order: OrderType, prisma: Context['prisma']) {
+    if (!order.courierId) return null;
+    const profile = await prisma.courierProfile.findUnique({
+      where: { id: order.courierId },
+      include: { user: true },
+    });
+    return profile?.user ?? null;
+  }
+
+  /**
+   * Courier display name shown to the client + spot ("who's delivering").
    */
   @FieldResolver(() => String, { nullable: true })
   async courierName(
     @Root() order: OrderType,
     @Ctx() { prisma }: Context
   ): Promise<string | null> {
-    if (!order.courierId) return null;
-    const courier = await prisma.user.findUnique({ where: { id: order.courierId } });
+    const courier = await this.courierUser(order, prisma);
     if (!courier) return null;
     return courier.name || [courier.firstName, courier.surname].filter(Boolean).join(' ') || courier.email;
+  }
+
+  /**
+   * Courier's profile photo (selfie) URL, shown to the client + spot.
+   */
+  @FieldResolver(() => String, { nullable: true })
+  async courierPhoto(
+    @Root() order: OrderType,
+    @Ctx() { prisma }: Context
+  ): Promise<string | null> {
+    const courier = await this.courierUser(order, prisma);
+    return courier?.profilePicture ?? null;
   }
 
   /**
@@ -172,16 +241,28 @@ export class OrderResolver {
       throw new Error('Spot not found or not active');
     }
 
-    // 2. Validate delivery address is within delivery radius
-    const distance = this.calculateDistance(
-      input.deliveryLatitude,
-      input.deliveryLongitude,
-      spot.latitude,
-      spot.longitude
-    );
+    const fulfillmentType = input.fulfillmentType ?? FulfillmentType.DELIVERY;
+    const isPickup = fulfillmentType === FulfillmentType.PICKUP;
 
-    if (distance > spot.deliveryRadiusKm) {
-      throw new Error(`Delivery address is outside delivery radius (${spot.deliveryRadiusKm}km)`);
+    // 2. For delivery, require an address within the spot's delivery radius.
+    //    Pickup orders skip this entirely (collected at the spot).
+    if (!isPickup) {
+      if (
+        input.deliveryAddress == null ||
+        input.deliveryLatitude == null ||
+        input.deliveryLongitude == null
+      ) {
+        throw new Error('Delivery orders require a delivery address');
+      }
+      const distance = this.calculateDistance(
+        input.deliveryLatitude,
+        input.deliveryLongitude,
+        spot.latitude,
+        spot.longitude
+      );
+      if (distance > spot.deliveryRadiusKm) {
+        throw new Error(`Delivery address is outside delivery radius (${spot.deliveryRadiusKm}km)`);
+      }
     }
 
     // 3. Validate and fetch items (tastes or products)
@@ -277,9 +358,9 @@ export class OrderResolver {
       };
     });
 
-    // Calculate delivery fee
-    let deliveryFee = spot.deliveryFee;
-    if (spot.freeDeliveryThreshold && subtotal >= spot.freeDeliveryThreshold) {
+    // Calculate delivery fee (pickup orders are never charged one).
+    let deliveryFee = isPickup ? 0 : spot.deliveryFee;
+    if (!isPickup && spot.freeDeliveryThreshold && subtotal >= spot.freeDeliveryThreshold) {
       deliveryFee = 0;
     }
 
@@ -319,6 +400,13 @@ export class OrderResolver {
     });
     const orderNumber = `${datePrefix}-${String(todayOrders + 1).padStart(3, '0')}`;
 
+    // Handover codes for delivery orders: a spot→courier pickup code and a
+    // client→courier 4-digit delivery PIN (nothing to hand over for pickup).
+    const pickupCode = isPickup ? null : CodeGenerator.generateRandomString(4).toUpperCase();
+    const deliveryPin = isPickup
+      ? null
+      : String(Math.floor(1000 + Math.random() * 9000));
+
     // 7. Create order in transaction
     const order = await prisma.$transaction(async (tx) => {
       // Create order
@@ -328,20 +416,24 @@ export class OrderResolver {
           userId,
           spotId: input.spotId,
           status: OrderStatus.PENDING,
+          fulfillmentType,
           subtotal,
           deliveryFee,
           discount,
           total,
           paymentMethod: input.paymentMethod,
           paymentStatus: 'pending',
-          deliveryAddress: input.deliveryAddress,
-          deliveryLatitude: input.deliveryLatitude,
-          deliveryLongitude: input.deliveryLongitude,
-          buildingType: input.buildingType,
-          apartmentNumber: input.apartmentNumber,
-          floor: input.floor,
+          // Pickup orders carry no address.
+          deliveryAddress: isPickup ? null : input.deliveryAddress,
+          deliveryLatitude: isPickup ? null : input.deliveryLatitude,
+          deliveryLongitude: isPickup ? null : input.deliveryLongitude,
+          buildingType: isPickup ? null : input.buildingType,
+          apartmentNumber: isPickup ? null : input.apartmentNumber,
+          floor: isPickup ? null : input.floor,
           noteForCourier: input.deliveryNotes,
           noteForSpot: input.spotNotes,
+          pickupCode,
+          deliveryPin,
           scheduledFor: input.scheduledFor,
           invoiceRequested: input.invoiceRequested ?? false,
           invoiceNIP: input.invoiceNIP,
@@ -381,9 +473,15 @@ export class OrderResolver {
 
     console.log(`✅ Order created: ${order.orderNumber} (${order.id}) for user ${userId} at spot ${input.spotId}`);
 
-    // 8. Publish real-time events
+    // 8. Publish real-time events.
     await PubSubService.publishOrderCreated(order);
-    await PubSubService.publishNewOrderNotification(input.spotId, order);
+    // Only alert the spot (queue modal + sound) once the order is actually
+    // payable-committed: cash/pay-at-spot orders commit on create, while
+    // pay-online orders are announced from the Stripe webhook on success — so
+    // we don't disturb the spot before the customer has paid.
+    if (order.paymentMethod === 'cash') {
+      await PubSubService.publishNewOrderNotification(input.spotId, order);
+    }
 
     return order as OrderType;
   }
@@ -639,6 +737,9 @@ export class OrderResolver {
       case OrderStatus.DELIVERED:
         updateData.deliveredAt = new Date();
         break;
+      case OrderStatus.COLLECTED:
+        updateData.collectedAt = new Date();
+        break;
       case OrderStatus.CANCELLED:
         updateData.cancelledAt = new Date();
         break;
@@ -653,32 +754,26 @@ export class OrderResolver {
       },
     });
 
-    // If order is delivered, award loyalty points
-    if (status === OrderStatus.DELIVERED && order.status !== OrderStatus.DELIVERED) {
-      // Award 1% of subtotal as points (1 PLN = 100 points)
-      const pointsToAward = Math.floor(updatedOrder.subtotal * 1); // 1% = subtotal * 0.01 * 100 points
+    // Order reached a terminal "completed" status — award loyalty points once.
+    // (Idempotent via the pointsAwarded guard, so a prior pay-now award for a
+    // pickup order won't double up here.)
+    const becameComplete =
+      (status === OrderStatus.DELIVERED && order.status !== OrderStatus.DELIVERED) ||
+      (status === OrderStatus.COLLECTED && order.status !== OrderStatus.COLLECTED);
+    if (becameComplete) {
+      await OrderPointsService.awardOrderPointsIfNeeded(id, prisma);
 
-      if (pointsToAward > 0) {
-        await this.awardOrderPoints(
-          order.userId,
-          pointsToAward,
-          id,
-          prisma
-        );
+      // Send delivery confirmation email (delivery only).
+      if (status === OrderStatus.DELIVERED) {
+        const { EmailService } = await import('../services/EmailService');
+        await EmailService.sendOrderDelivered({
+          email: updatedOrder.user.email,
+          name: updatedOrder.user.firstName || updatedOrder.user.name || 'Customer',
+          orderNumber: updatedOrder.orderNumber,
+          orderId: updatedOrder.id,
+          language: updatedOrder.user.language,
+        });
       }
-
-      // Check if this is referee's first order and award referral bonus
-      await this.pointsResolver.awardReferralPoints(order.userId, id, prisma);
-
-      // Send delivery confirmation email
-      const { EmailService } = await import('../services/EmailService');
-      await EmailService.sendOrderDelivered({
-        email: updatedOrder.user.email,
-        name: updatedOrder.user.firstName || updatedOrder.user.name || 'Customer',
-        orderNumber: updatedOrder.orderNumber,
-        orderId: updatedOrder.id,
-        language: updatedOrder.user.language,
-      });
     }
 
     // Publish order status change
@@ -698,6 +793,115 @@ export class OrderResolver {
     console.log(`✅ Order ${id} status updated: ${order.status} -> ${status}`);
 
     return true;
+  }
+
+  /**
+   * Pickup orders for a customer that are ready to be collected at a spot.
+   * Used by the spot app after scanning the customer's loyalty QR/code.
+   * Returns non-terminal PICKUP orders at this spot for that customer.
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN, Role.EMPLOYEE])
+  @Query(() => [OrderType])
+  async collectablePickupOrders(
+    @Arg('spotId', () => ID) spotId: string,
+    @Arg('userId', () => ID) userId: string,
+    @Ctx() { req, prisma }: Context
+  ): Promise<OrderType[]> {
+    await this.assertCanManageSpot(req.user!, spotId, prisma);
+
+    const orders = await prisma.order.findMany({
+      where: {
+        spotId,
+        userId,
+        fulfillmentType: FulfillmentType.PICKUP,
+        status: { notIn: [OrderStatus.COLLECTED, OrderStatus.CANCELLED, OrderStatus.FAILED] },
+      },
+      include: { items: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    return orders as unknown as OrderType[];
+  }
+
+  /**
+   * Mark a pickup order collected at the spot. For pay-at-spot (cash) orders
+   * this also marks the order paid and awards loyalty points (points are only
+   * granted for cash orders on collection). Pay-now orders were already paid +
+   * awarded, so this just finalizes the status.
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN, Role.EMPLOYEE])
+  @Mutation(() => CollectOrderResult)
+  async collectPickupOrder(
+    @Arg('orderId', () => ID) orderId: string,
+    @Ctx() { req, prisma }: Context
+  ): Promise<CollectOrderResult> {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        orderNumber: true,
+        spotId: true,
+        status: true,
+        fulfillmentType: true,
+        paymentStatus: true,
+      },
+    });
+    if (!order) throw new Error('Order not found');
+    if (order.fulfillmentType !== FulfillmentType.PICKUP) {
+      throw new Error('Only pickup orders can be collected');
+    }
+    if (order.status === OrderStatus.COLLECTED) {
+      throw new Error('This order was already collected');
+    }
+    if (order.status === OrderStatus.CANCELLED || order.status === OrderStatus.FAILED) {
+      throw new Error('This order cannot be collected');
+    }
+
+    await this.assertCanManageSpot(req.user!, order.spotId, prisma);
+
+    // Cash orders are settled in person at collection.
+    const markPaid = order.paymentStatus !== 'paid';
+
+    const updated = await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: OrderStatus.COLLECTED,
+        collectedAt: new Date(),
+        ...(markPaid ? { paymentStatus: 'paid' } : {}),
+      },
+      include: { items: true, user: true },
+    });
+
+    // Award points once (idempotent). Pay-now pickups already awarded on the
+    // Stripe webhook, so this returns 0 for them.
+    const pointsAwarded = await OrderPointsService.awardOrderPointsIfNeeded(orderId, prisma);
+
+    await PubSubService.publishOrderStatusChanged(updated);
+
+    console.log(`✅ Pickup order ${order.orderNumber} collected (points awarded: ${pointsAwarded})`);
+
+    return {
+      orderId: updated.id,
+      orderNumber: updated.orderNumber,
+      status: updated.status,
+      pointsAwarded,
+    };
+  }
+
+  /**
+   * Shared permission check: global admins pass; otherwise the caller must be
+   * a spot admin or employee of the given spot.
+   */
+  private async assertCanManageSpot(user: any, spotId: string, prisma: any): Promise<void> {
+    if (user.roles.includes(Role.SUPER_ADMIN) || user.roles.includes(Role.SPOTS_ADMIN)) {
+      return;
+    }
+    const [spotAdmin, employee] = await Promise.all([
+      prisma.spotAdminProfile.findFirst({ where: { userId: user.id, spotId } }),
+      prisma.employeeProfile.findFirst({ where: { userId: user.id, spotId } }),
+    ]);
+    if (!spotAdmin && !employee) {
+      throw new Error('You can only manage orders for your spots');
+    }
   }
 
   /**
@@ -758,62 +962,4 @@ export class OrderResolver {
     return degrees * (Math.PI / 180);
   }
 
-  /**
-   * Award loyalty points for order
-   */
-  private async awardOrderPoints(
-    userId: string,
-    points: number,
-    orderId: string,
-    prisma: any
-  ): Promise<void> {
-    // Get or create balance
-    let balance = await prisma.pointBalance.findUnique({
-      where: { userId },
-    });
-
-    if (!balance) {
-      balance = await prisma.pointBalance.create({
-        data: {
-          userId,
-          totalPoints: 0,
-          availablePoints: 0,
-          lockedPoints: 0,
-        },
-      });
-    }
-
-    // Update balance
-    const newBalance = await prisma.pointBalance.update({
-      where: { userId },
-      data: {
-        totalPoints: { increment: points },
-        availablePoints: { increment: points },
-      },
-    });
-
-    // Create transaction
-    await prisma.pointTransaction.create({
-      data: {
-        userId,
-        type: TransactionType.EARNED,
-        amount: points,
-        description: 'Points earned from order',
-        referenceId: orderId,
-        referenceType: 'order',
-        balanceBefore: balance.availablePoints,
-        balanceAfter: newBalance.availablePoints,
-      },
-    });
-
-    // Publish update
-    await PubSubService.publishPointsUpdated(
-      userId,
-      newBalance.totalPoints,
-      newBalance.availablePoints,
-      points
-    );
-
-    console.log(`✅ Awarded ${points} loyalty points to user ${userId} for order ${orderId}`);
-  }
 }

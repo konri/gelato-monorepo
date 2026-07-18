@@ -74,25 +74,22 @@ export async function canManageSpot(
 ): Promise<boolean> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: {
-      managedSpots: true,
-      employmentSpots: true,
-    },
+    select: { id: true, roles: true },
   });
 
   if (!user) return false;
 
-  // Super admin and spots admin can manage any spot
+  // Super admin and spots admin can manage any spot.
   if (isSuperAdmin(user) || user.roles.includes(Role.SPOTS_ADMIN)) {
     return true;
   }
 
-  // Spot admin can manage their own spots
-  if (user.roles.includes(Role.SPOT_ADMIN)) {
-    return user.managedSpots.some((spot: any) => spot.id === spotId);
-  }
-
-  return false;
+  // A spot admin can manage a spot they're bound to via SpotAdminProfile
+  // (the real relation — `managedSpots`/`employmentSpots` don't exist).
+  const admin = await prisma.spotAdminProfile.findFirst({
+    where: { userId, spotId },
+  });
+  return !!admin;
 }
 
 /**

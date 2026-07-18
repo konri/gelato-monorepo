@@ -30,6 +30,28 @@ type City {
   updatedAt: DateTime!
 }
 
+type CollectOrderResult {
+  orderId: ID!
+  orderNumber: String!
+  pointsAwarded: Int!
+  status: OrderStatus!
+}
+
+type Complaint {
+  createdAt: DateTime!
+  customerName: String
+  id: ID!
+  message: String!
+  orderId: ID!
+  orderNumber: String
+  resolution: String
+  resolvedAt: DateTime
+  spotId: ID!
+  status: String!
+  subject: String!
+  userId: ID!
+}
+
 type CourierApplicationType {
   appliedAt: DateTime!
   cityName: String
@@ -132,11 +154,12 @@ input CreateNewsInput {
 input CreateOrderInput {
   apartmentNumber: String
   buildingType: String
-  deliveryAddress: String!
-  deliveryLatitude: Float!
-  deliveryLongitude: Float!
+  deliveryAddress: String
+  deliveryLatitude: Float
+  deliveryLongitude: Float
   deliveryNotes: String
   floor: String
+  fulfillmentType: FulfillmentType
   invoiceAddress: String
   invoiceCompanyName: String
   invoiceNIP: String
@@ -147,6 +170,28 @@ input CreateOrderInput {
   scheduledFor: DateTime
   spotId: ID!
   spotNotes: String
+}
+
+input CreateSpotNewsInput {
+  description: String!
+  descriptionLocal: String
+  images: [String!] = []
+  spotId: ID!
+  title: String!
+  titleLocal: String
+}
+
+type DashboardDailyStat {
+  date: String!
+  orders: Int!
+  revenue: Float!
+}
+
+type DashboardEmployeeStat {
+  name: String!
+  orders: Int!
+  preparedById: ID
+  revenue: Float!
 }
 
 """
@@ -168,6 +213,12 @@ enum DiscountType {
   PERCENTAGE
 }
 
+"""How the customer receives the order (delivery vs pickup)"""
+enum FulfillmentType {
+  DELIVERY
+  PICKUP
+}
+
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -180,8 +231,20 @@ enum Language {
   UA
 }
 
+type LoyaltyCustomerType {
+  availablePoints: Int!
+  availablePrizes: Int!
+  id: ID!
+  loyaltyCode: String
+  name: String
+  profilePicture: String
+  totalPoints: Int!
+}
+
 type Mutation {
   acceptDelivery(orderId: ID!): CourierDeliveryType!
+  addSpotNewsImage(imageUrl: String!, newsId: ID!): NewsType!
+  adminResetStaffPassword(newPassword: String!, userId: ID!): Boolean!
   applyCourierToSpot(spotId: ID!): CourierApplicationType!
   applyReferralCode(code: String!): Boolean!
   assignOrderToCourier(courierId: ID!, orderId: ID!): Boolean!
@@ -194,21 +257,29 @@ type Mutation {
   cancelPaymentIntent(orderId: ID!): Boolean!
   claimBirthdayBonus: Boolean!
   claimOrder(orderId: ID!): OrderType!
-  commentNews(content: String!, newsId: ID!): NewsCommentType!
+  collectPickupOrder(orderId: ID!): CollectOrderResult!
+  commentNews(content: String!, newsId: ID!, parentId: ID): NewsCommentType!
   createAdminAccount(email: String!, name: String!, role: String!): UserType!
   createCity(country: String = "Poland", latitude: Float!, longitude: Float!, name: String!, nameLocal: JSON): City!
+  createComplaint(message: String!, orderId: ID!, subject: String!): Complaint!
   createEmployee(email: String!, name: String!, password: String!, spotId: ID!): UserType!
   createNews(input: CreateNewsInput!): NewsType!
   createOrder(input: CreateOrderInput!): OrderType!
   createPaymentIntent(orderId: ID!): String!
+  createPointTemplate(name: String!, nameLocal: JSON, points: Int!, spotId: ID!): PointTemplate!
   createPrize(description: String, descriptionLocal: JSON, imageUrl: String, isActive: Boolean = true, pointsCost: Int!, quantity: Int, title: String!, titleLocal: JSON): PrizeType!
+  createProduct(allergens: [String!] = [], description: String, descriptionLocal: String, imageUrl: String, isBox: Boolean = false, kcalPer100g: Float, kcalPerPortion: Float, maxTastes: Int, name: String!, nameLocal: String!, price: Float!, spotId: ID!, type: ProductType!, weightGrams: Int): Product!
   createQuest(conditions: JSON, description: String, descriptionLocal: JSON, isActive: Boolean = true, isRepeatable: Boolean = false, pointsReward: Int!, targetCityIds: [String!] = [], targetSpotIds: [String!] = [], title: String!, titleLocal: JSON, type: String!): Quest!
   createReview(comment: String, courierRating: Int, orderId: ID!, overallRating: Int!, spotRating: Int!): ReviewType!
   createSpot(address: String!, cityId: String!, deliveryEnabled: Boolean = true, deliveryRadiusKm: Float = 5, description: String, freeDeliveryThreshold: Float, id: String!, latitude: Float!, longitude: Float!, name: String!, phone: String!): SpotType!
+  createSpotNews(input: CreateSpotNewsInput!): NewsType!
+  createSpotStaff(email: String!, name: String!, password: String!, role: String!, spotId: ID!): UserType!
   createTaste(allergens: [String!] = [], description: String, descriptionLocal: String, imageUrl: String, kcalPer100g: Float, kcalPerPortion: Float, spotId: ID!, subtitle: String, title: String!, titleLocal: String!, type: TasteType!): Taste!
   deleteAccount: Boolean!
   deleteNews(id: ID!): Boolean!
+  deletePointTemplate(id: ID!): Boolean!
   deletePrize(id: ID!): Boolean!
+  deleteProduct(id: ID!): Boolean!
   deleteQuest(id: ID!): Boolean!
   deleteSpot(id: ID!): Boolean!
   deleteTaste(id: ID!): Boolean!
@@ -219,6 +290,8 @@ type Mutation {
   login(email: String!, password: String!): AuthResponse!
   loginWithGoogle(idToken: String!): AuthResponse!
   logout: Boolean!
+  markAllNotificationsRead: Boolean!
+  markNotificationRead(id: ID!): Boolean!
   redeemPrize(prizeId: ID!): UserPrizeType!
   refreshToken(refreshToken: String!): String!
   refundOrder(amount: Float, orderId: ID!, reason: String): Boolean!
@@ -226,23 +299,32 @@ type Mutation {
   registerFCMToken(deviceId: String!, platform: String = "android", token: String!): Boolean!
   removeFCMToken(deviceId: String!): Boolean!
   removeSpotAdmin(spotId: ID!, userId: ID!): Boolean!
+  reportDeliveryIncident(cancel: Boolean, incidentType: String!, note: String, orderId: ID!, photoUrl: String): Boolean!
+  resendAdminInvite(userId: ID!): Boolean!
+  resolveComplaint(id: ID!, resolution: String!): Complaint!
   reviewCourierApplication(applicationId: ID!, approved: Boolean!): Boolean!
   sendNotificationToUser(body: String!, title: String!, userId: String!): Boolean!
   sendOTP(language: String = "pl", phone: String!): Boolean!
   sendTestNotification: Boolean!
+  setSpotPhotos(id: ID!, photos: [String!]!): SpotType!
+  setStaffLoginDisabled(disabled: Boolean!, userId: ID!): Boolean!
   setUserLoginDisabled(disabled: Boolean!, userId: ID!): Boolean!
   startWorkSession(spotIds: [ID!]!): WorkSessionType!
   toggleFavoriteSpot(spotId: ID!): Boolean!
   updateCity(country: String, id: ID!, isActive: Boolean, latitude: Float, longitude: Float, name: String, nameLocal: JSON): City!
   updateCourierLocation(accuracy: Float, latitude: Float!, longitude: Float!, orderId: ID): Boolean!
   updateCourierStatus(currentSpotId: ID, isAvailable: Boolean, isOnline: Boolean!): Boolean!
-  updateDeliveryStatus(orderId: ID!, status: OrderStatus!): Boolean!
+  updateDeliveryStatus(code: String, orderId: ID!, status: OrderStatus!): Boolean!
   updateNews(id: ID!, input: UpdateNewsInput!): NewsType!
   updateOrderStatus(id: ID!, status: OrderStatus!): Boolean!
+  updatePointTemplate(id: ID!, isActive: Boolean, name: String, nameLocal: JSON, points: Int): PointTemplate!
   updatePrize(description: String, descriptionLocal: JSON, id: ID!, imageUrl: String, isActive: Boolean, pointsCost: Int, quantity: Int, title: String, titleLocal: JSON): PrizeType!
+  updateProduct(allergens: [String!], description: String, descriptionLocal: String, id: ID!, imageUrl: String, kcalPer100g: Float, kcalPerPortion: Float, maxTastes: Int, name: String, nameLocal: String, price: Float, type: ProductType, weightGrams: Int): Product!
+  updateProductAvailability(id: ID!, isAvailable: Boolean!): Boolean!
   updateProfile(data: UserChangeInput!): UserType!
   updateQuest(conditions: JSON, description: String, descriptionLocal: JSON, id: ID!, isActive: Boolean, isRepeatable: Boolean, pointsReward: Int, targetCityIds: [String!], targetSpotIds: [String!], title: String, titleLocal: JSON): Quest!
-  updateSpot(address: String, deliveryRadiusKm: Float, description: String, freeDeliveryThreshold: Float, id: ID!, isActive: Boolean, latitude: Float, longitude: Float, name: String, phone: String): SpotType!
+  updateSpot(accessibilityFeatures: String, address: String, deliveryRadiusKm: Float, description: String, email: String, freeDeliveryThreshold: Float, hasSeating: Boolean, id: ID!, isActive: Boolean, latitude: Float, longitude: Float, name: String, openingHours: String, phone: String, seatingCapacity: Int): SpotType!
+  updateTaste(allergens: [String!], description: String, descriptionLocal: String, id: ID!, imageUrl: String, ingredients: String, kcalPer100g: Float, kcalPerPortion: Float, price: Float, subtitle: String, title: String, titleLocal: String, type: TasteType): Taste!
   updateTasteAvailability(id: ID!, isAvailable: Boolean!): Boolean!
   updateUserRoles(roles: [Role!]!, userId: ID!): UserType!
   validatePrizeQR(qrCode: String!, spotId: ID): UserPrizeType!
@@ -250,13 +332,23 @@ type Mutation {
 }
 
 type NewsCommentType {
+  asSpotId: ID
   content: String!
   createdAt: DateTime!
   id: ID!
+  isSpotReply: Boolean!
   newsId: ID!
+  parentId: ID
   userAvatar: String
   userId: ID!
   userName: String
+}
+
+type NewsSpotType {
+  cityId: ID
+  id: ID!
+  logoUrl: String
+  name: String!
 }
 
 type NewsType {
@@ -270,10 +362,22 @@ type NewsType {
   isPublished: Boolean!
   likesCount: Int!
   publishedAt: DateTime
+  spot: NewsSpotType
+  spotId: ID
   targetCityIds: [String!]!
   title: String!
   titleLocal: String!
   updatedAt: DateTime!
+}
+
+type NotificationType {
+  body: String!
+  createdAt: DateTime!
+  id: ID!
+  imageUrl: String
+  isRead: Boolean!
+  title: String!
+  type: String!
 }
 
 type OrderCourierLocation {
@@ -291,7 +395,9 @@ input OrderItemInput {
 
 type OrderItemType {
   boxTasteIds: [ID!]!
+  boxTasteNames: [String!]!
   createdAt: DateTime!
+  displayName: String
   id: ID!
   orderId: ID!
   pricePerUnit: Float!
@@ -314,6 +420,7 @@ type OrderSpotSummary {
 """Order lifecycle status"""
 enum OrderStatus {
   CANCELLED
+  COLLECTED
   COURIER_ASSIGNED
   DELIVERED
   FAILED
@@ -330,20 +437,24 @@ type OrderType {
   buildingType: String
   cancelledAt: DateTime
   claimedAt: DateTime
+  collectedAt: DateTime
   courierAssignedAt: DateTime
   courierId: ID
   courierLocation: OrderCourierLocation
   courierName: String
+  courierPhoto: String
   createdAt: DateTime!
   customerName: String
   customerPhone: String
   deliveredAt: DateTime
-  deliveryAddress: String!
+  deliveryAddress: String
   deliveryFee: Float!
-  deliveryLatitude: Float!
-  deliveryLongitude: Float!
+  deliveryLatitude: Float
+  deliveryLongitude: Float
+  deliveryPin: String
   discount: Float!
   floor: String
+  fulfillmentType: FulfillmentType!
   id: ID!
   invoiceAddress: String
   invoiceCompanyName: String
@@ -357,6 +468,7 @@ type OrderType {
   paymentMethod: String
   paymentStatus: String!
   pickedUpAt: DateTime
+  pickupCode: String
   preparedById: ID
   preparedByName: String
   readyAt: DateTime
@@ -388,6 +500,15 @@ type PointBalanceType {
   totalPoints: Int!
   updatedAt: DateTime!
   userId: ID!
+}
+
+type PointTemplate {
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  nameLocal: JSON!
+  points: Int!
+  spotId: ID!
 }
 
 type PointTransactionType {
@@ -479,11 +600,13 @@ type Query {
   checkDeliveryAvailability(latitude: Float!, longitude: Float!, spotId: ID!): DeliveryAvailability!
   cities(includeInactive: Boolean = false): [City!]!
   city(id: ID!): City
+  collectablePickupOrders(spotId: ID!, userId: ID!): [OrderType!]!
   courierLocationHistory(courierId: ID, limit: Int = 50, orderId: ID): [CourierLocationType!]!
   courierProfile(courierId: ID): CourierProfileType
   dbHealth: String!
   getPaymentStatus(orderId: ID!): String!
   health: String!
+  loyaltyCustomer(idOrCode: String!): LoyaltyCustomerType
   me: UserType!
   myActiveDelivery: CourierDeliveryType
   myActiveWorkSession: WorkSessionType
@@ -494,6 +617,7 @@ type Query {
   myEarnings(days: Int = 30): CourierEarningsSummaryType!
   myFCMTokens: [String!]!
   myFavoriteSpots: [SpotType!]!
+  myNotifications(limit: Int = 50, unreadOnly: Boolean = false): [NotificationType!]!
   myOrders: [OrderType!]!
   myPointBalance: PointBalanceType
   myPointTransactions(limit: Int = 50): [PointTransactionType!]!
@@ -516,14 +640,24 @@ type Query {
   searchUsers(query: String!): [UserType!]!
   spot(id: ID!): SpotType
   spotAdmins(spotId: ID!): [SpotAdminInfo!]!
+  spotComplaints(spotId: ID!, status: String): [Complaint!]!
+  spotCourierApplications(spotId: ID!): [SpotCourierApplicationType!]!
+  spotCourierEarnings(month: Int, spotId: ID!, year: Int): SpotCourierEarningsSummaryType!
+  spotCouriers(spotId: ID!): [SpotCourierType!]!
+  spotDashboard(from: String!, preparedById: ID, spotId: ID!, to: String!): SpotDashboardType!
   spotEmployees(spotId: ID!): [UserType!]!
+  spotNews(limit: Int = 30, spotId: ID!): [NewsType!]!
   spotOrders(spotId: ID!, status: OrderStatus): [OrderType!]!
+  spotPointTemplates(includeInactive: Boolean = false, spotId: ID!): [PointTemplate!]!
   spotProducts(includeUnavailable: Boolean = false, spotId: ID!): [Product!]!
+  spotStaffAdmins(spotId: ID!): [StaffMember!]!
+  spotStaffSessions(limit: Int = 100, spotId: ID!): [StaffLoginSessionType!]!
   spotTastes(includeUnavailable: Boolean = false, spotId: ID!): [Taste!]!
   spots(includeInactive: Boolean = false): [SpotType!]!
   spotsByCity(cityId: ID!): [SpotType!]!
   taste(id: ID!): Taste
   tastesByType(spotId: ID!, type: TasteType!): [Taste!]!
+  unreadNotificationCount: Int!
   user(id: ID!): UserType
   users: [UserType!]!
   usersByRole(role: Role!): [UserType!]!
@@ -610,6 +744,51 @@ type SpotAdminInfo {
   roles: [String!]!
 }
 
+type SpotCourierApplicationType {
+  appliedAt: DateTime!
+  courierId: ID!
+  courierName: String!
+  courierPhone: String
+  id: ID!
+  status: String!
+  totalDeliveries: Int!
+}
+
+type SpotCourierEarningType {
+  amount: Float!
+  courierId: ID!
+  deliveries: Int!
+  name: String!
+}
+
+type SpotCourierEarningsSummaryType {
+  couriers: [SpotCourierEarningType!]!
+  totalAmount: Float!
+  totalDeliveries: Int!
+}
+
+type SpotCourierType {
+  activeHere: Boolean!
+  averageRating: Float
+  courierId: ID!
+  email: String
+  isAvailable: Boolean!
+  isOnline: Boolean!
+  name: String!
+  phone: String
+  totalDeliveries: Int!
+  totalEarnings: Float!
+  userId: ID!
+}
+
+type SpotDashboardType {
+  averageOrder: Float!
+  byEmployee: [DashboardEmployeeStat!]!
+  daily: [DashboardDailyStat!]!
+  orders: Int!
+  revenue: Float!
+}
+
 type SpotType {
   accessibilityFeatures: String
   address: String!
@@ -639,11 +818,30 @@ type SpotType {
   updatedAt: DateTime!
 }
 
+type StaffLoginSessionType {
+  id: ID!
+  ipAddress: String
+  loginAt: DateTime!
+  role: String!
+  staffName: String!
+  userId: ID!
+}
+
+type StaffMember {
+  createdAt: DateTime!
+  email: String!
+  id: ID!
+  loginDisabled: Boolean!
+  name: String
+  role: String!
+}
+
 type Subscription {
   courierLocationUpdated: CourierLocationUpdate!
   courierRequest: String!
   deliveryBroadcast: String!
   deliveryClaimed: String!
+  deliveryIncident: String!
   deliveryStatusChanged: String!
   newOrderNotification: String!
   newsPublished: String!
@@ -742,6 +940,7 @@ type UserType {
   id: ID!
   language: Language!
   locationPermission: Boolean!
+  loyaltyCode: String
   name: String
   notificationPermission: Boolean!
   phone: String

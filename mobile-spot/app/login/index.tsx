@@ -8,7 +8,7 @@ import {
   changeAdminPassword,
   loginUser,
 } from '@/shared/api-client';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -24,12 +24,18 @@ export default function SpotLoginScreen() {
   const insets = useSafeAreaInsets();
   const { handlePostLogin } = useUserSync();
 
-  const [email, setEmail] = useState('');
+  // An invite email deep-links here with ?mode=reset&email=… so a newly invited
+  // spot admin lands directly on the set-password form (they have their code).
+  const params = useLocalSearchParams<{ mode?: string; email?: string }>();
+
+  const [email, setEmail] = useState(
+    typeof params.email === 'string' ? params.email : '',
+  );
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [resetCode, setResetCode] = useState('');
   const [mode, setMode] = useState<'login' | 'firstLogin' | 'forgot' | 'reset'>(
-    'login',
+    params.mode === 'reset' ? 'reset' : 'login',
   );
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -153,7 +159,7 @@ export default function SpotLoginScreen() {
 
   return (
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 40 }}>
-      <View className="px-6">
+      <View className="w-full max-w-[420px] self-center px-6">
         <View className="items-center mb-8">
           <Logo width={56} height={56} />
           <Typography variant="heading-32-bold" className="text-text-primary mt-3">
@@ -275,6 +281,14 @@ export default function SpotLoginScreen() {
           </View>
         ) : (
           <View className="gap-4">
+            <TextInput
+              className={inputCls}
+              placeholder={t('Spot.email')}
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
             <TextInput
               className={inputCls}
               placeholder={t('Spot.resetCode')}

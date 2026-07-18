@@ -155,24 +155,46 @@ export class SubscriptionResolver {
         return true;
       }
 
-      // SPOT_ADMIN and EMPLOYEE - check if they belong to this spot
-      const userSpots = await context.prisma.spot.findMany({
-        where: {
-          OR: [
-            { admins: { some: { id: user.id } } },
-            { employees: { some: { id: user.id } } },
-          ],
-        },
-        select: { id: true },
-      });
-
-      return userSpots.some((spot) => spot.id === spotId);
+      // SPOT_ADMIN / EMPLOYEE — check they belong to this spot via their
+      // profile rows (Spot has no admins/employees relation).
+      const [admin, employee] = await Promise.all([
+        context.prisma.spotAdminProfile.findFirst({ where: { userId: user.id, spotId } }),
+        context.prisma.employeeProfile.findFirst({ where: { userId: user.id, spotId } }),
+      ]);
+      return !!admin || !!employee;
     },
   })
   newOrderNotification(
     @Root() payload: any
-  ): any {
-    return payload.newOrderNotification;
+  ): string {
+    // Serialize to a JSON string (the field is declared as String, and the
+    // client JSON-parses it — returning a raw object breaks serialization).
+    return JSON.stringify(payload.newOrderNotification);
+  }
+
+  /**
+   * Spot staff subscribe to courier-reported delivery incidents / cancellations
+   * for their spot. Returns the incident payload as a JSON string.
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN, Role.EMPLOYEE])
+  @Subscription(() => String, {
+    topics: SubscriptionTopic.DELIVERY_INCIDENT,
+    filter: async ({ payload, context }) => {
+      const user = context.req?.user;
+      if (!user) return false;
+      const { spotId } = payload.deliveryIncident;
+      if (user.roles.includes(Role.SUPER_ADMIN) || user.roles.includes(Role.SPOTS_ADMIN)) {
+        return true;
+      }
+      const [admin, employee] = await Promise.all([
+        context.prisma.spotAdminProfile.findFirst({ where: { userId: user.id, spotId } }),
+        context.prisma.employeeProfile.findFirst({ where: { userId: user.id, spotId } }),
+      ]);
+      return !!admin || !!employee;
+    },
+  })
+  deliveryIncident(@Root() payload: any): string {
+    return JSON.stringify(payload.deliveryIncident);
   }
 
   /**

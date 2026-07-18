@@ -6,8 +6,11 @@ export type OrderStatus =
   | 'PICKED_UP'
   | 'IN_TRANSIT'
   | 'DELIVERED'
+  | 'COLLECTED'
   | 'CANCELLED'
   | 'FAILED';
+
+export type FulfillmentType = 'DELIVERY' | 'PICKUP';
 
 export type OrderSpot = {
   id: string;
@@ -38,9 +41,10 @@ export type OrderListEntry = {
   id: string;
   orderNumber: string;
   status: OrderStatus;
+  fulfillmentType: FulfillmentType;
   total: number;
   createdAt: string;
-  deliveryAddress: string;
+  deliveryAddress?: string | null;
   spot?: OrderSpot | null;
   items: OrderItem[];
 };
@@ -50,10 +54,15 @@ export type OrderDetail = OrderListEntry & {
   discount: number;
   deliveryFee: number;
   paymentStatus: string;
-  deliveryLatitude: number;
-  deliveryLongitude: number;
+  paymentMethod?: string | null;
+  deliveryLatitude?: number | null;
+  deliveryLongitude?: number | null;
   scheduledFor?: string | null;
   courierLocation?: OrderCourierLocation | null;
+  // Assigned courier identity + the PIN the customer reads out to confirm delivery.
+  courierName?: string | null;
+  courierPhoto?: string | null;
+  deliveryPin?: string | null;
 };
 
 export type MyOrdersResponse = { myOrders: OrderListEntry[] };

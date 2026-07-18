@@ -329,12 +329,40 @@ export class AuthResolver {
    */
   @Authorized()
   @Query(() => UserType)
-  async me(@Ctx() { req }: Context): Promise<UserType> {
+  async me(@Ctx() { req, prisma }: Context): Promise<UserType> {
     if (!req.user) {
       throw new Error('Not authenticated');
     }
 
+    // Lazily assign a short loyalty/account code the first time it's needed.
+    // Doing it here (rather than at every signup site) also backfills users
+    // created before this field existed, right when they open their QR card.
+    if (!req.user.loyaltyCode) {
+      const code = await AuthResolver.assignLoyaltyCode(prisma, req.user.id);
+      if (code) (req.user as any).loyaltyCode = code;
+    }
+
     return req.user as UserType;
+  }
+
+  /**
+   * Assign a unique loyalty code to a user, retrying on the rare collision.
+   * Returns the code, or null if the user already has one / assignment failed.
+   */
+  private static async assignLoyaltyCode(prisma: Context['prisma'], userId: string): Promise<string | null> {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = CodeGenerator.generateLoyaltyCode();
+      try {
+        await prisma.user.update({ where: { id: userId }, data: { loyaltyCode: code } });
+        return code;
+      } catch (e: any) {
+        // P2002 = unique constraint violation → regenerate and retry.
+        if (e?.code === 'P2002') continue;
+        console.error('Failed to assign loyalty code:', e);
+        return null;
+      }
+    }
+    return null;
   }
 
   /**

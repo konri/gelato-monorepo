@@ -5,17 +5,19 @@ const ORDER_FIELDS = `
   id
   orderNumber
   status
+  fulfillmentType
   total
   subtotal
   deliveryFee
   deliveryAddress
   noteForSpot
   noteForCourier
+  customerName
   preparedById
   preparedByName
   claimedAt
   createdAt
-  items { id quantity }
+  items { id quantity displayName boxTasteNames }
 `;
 
 // Orders for a spot, optionally filtered by status (staff view).

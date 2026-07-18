@@ -9,6 +9,7 @@ export const WHO_AM_I_QUERY = gql`
       roles
       firstName
       surname
+      loyaltyCode
       phone
       birthDate
       birthdayCompleted

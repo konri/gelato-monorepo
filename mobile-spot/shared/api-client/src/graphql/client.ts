@@ -139,6 +139,12 @@ export async function executeGraphQLQuery<T>(
 
   if (!result.success && result.error) {
     logGraphQLError({ message: result.error.message }, resolvedOperationName);
+    // Surface a friendly toast for non-auth failures (auth errors redirect to
+    // login via the session flow above, so we don't toast those).
+    if (!isAuthError(result.error.message)) {
+      const { emitRequestError } = await import('../errorEvents');
+      emitRequestError(result.error.message);
+    }
   }
   return result;
 }

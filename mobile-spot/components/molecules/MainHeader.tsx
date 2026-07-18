@@ -23,7 +23,7 @@ export function MainHeader() {
           style: 'destructive',
           onPress: async () => {
             await AsyncStorage.clear();
-            router.replace('/onboarding');
+            router.replace('/login');
           },
         },
       ],

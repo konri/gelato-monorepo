@@ -6,6 +6,9 @@ import {
   Ctx,
   Authorized,
   ID,
+  Int,
+  ObjectType,
+  Field,
 } from 'type-graphql';
 import { Role } from '@prisma/client';
 import { Context } from '../types/Context';
@@ -15,21 +18,132 @@ import { hashPassword } from '../auth/PasswordUtil';
 import { CodeGenerator } from '../shared/utils/CodeGenerator';
 import { EmailService } from '../services/EmailService';
 
-const RESET_CODE_TTL_MS = 15 * 60 * 1000;
+/**
+ * A spot's staff member (admin or employee) with login status.
+ */
+@ObjectType()
+class StaffMember {
+  @Field(() => ID)
+  id!: string;
+
+  @Field()
+  email!: string;
+
+  @Field({ nullable: true })
+  name?: string;
+
+  @Field()
+  role!: string;
+
+  @Field()
+  loginDisabled!: boolean;
+
+  @Field()
+  createdAt!: Date;
+}
+
+/**
+ * A staff login event for the session log.
+ */
+@ObjectType()
+class StaffLoginSessionType {
+  @Field(() => ID)
+  id!: string;
+
+  @Field(() => ID)
+  userId!: string;
+
+  @Field()
+  staffName!: string;
+
+  @Field()
+  role!: string;
+
+  @Field({ nullable: true })
+  ipAddress?: string;
+
+  @Field()
+  loginAt!: Date;
+}
+
+// Admin invite / set-password codes are valid for 24h (super admin invites
+// staff who may not act immediately).
+const RESET_CODE_TTL_MS = 24 * 60 * 60 * 1000;
 
 // Email a newly-created admin their initial set-password code.
-async function sendInviteCode(email: string, code: string, roleLabel: string) {
+// Styled to match the Gelato landing page (berry gradient, cream background).
+// `target` picks which app the set-password link points at:
+//   - 'spot'  → spot app (spot admins manage their spot there)
+//   - 'admin' → super-admin / spots-admin web panel
+async function sendInviteCode(
+  email: string,
+  code: string,
+  roleLabel: string,
+  target: 'admin' | 'spot' = 'admin',
+) {
+  const baseUrl =
+    target === 'spot'
+      ? process.env.GELATO_SPOT_URL || 'http://localhost:8083'
+      : process.env.GELATO_ADMIN_URL || 'http://localhost:5173';
+  // Deep-link straight to the set-password form with the email pre-filled.
+  const setPasswordUrl = `${baseUrl}/login?mode=reset&email=${encodeURIComponent(email)}`;
+
   await EmailService.sendEmail({
     to: email,
     subject: 'Your Gelato admin account',
-    html: `<div style="font-family:sans-serif;text-align:center;padding:24px">
-      <h2 style="color:#EC2828">Welcome to Gelato Admin 🍦</h2>
-      <p>An account was created for you as <b>${roleLabel}</b>.</p>
-      <p>Use this code on the admin site to set your password:</p>
-      <p style="font-size:32px;font-weight:800;letter-spacing:6px">${code}</p>
-      <p style="color:#888">This code expires in 15 minutes.</p>
-    </div>`,
-    text: `A Gelato admin account was created for you (${roleLabel}). Your set-password code is ${code}. It expires in 15 minutes.`,
+    html: `<!DOCTYPE html>
+<html>
+  <body style="margin:0;padding:0;background:#fff8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fff8f0;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 8px 30px rgba(192,38,163,0.12);">
+            <!-- Header -->
+            <tr>
+              <td style="background:linear-gradient(135deg,#c026a3 0%,#8a1673 100%);padding:36px 32px;text-align:center;">
+                <div style="font-size:40px;line-height:1;">🍦</div>
+                <h1 style="margin:12px 0 0;color:#ffffff;font-size:24px;font-weight:800;">Welcome to Gelato Admin</h1>
+              </td>
+            </tr>
+            <!-- Body -->
+            <tr>
+              <td style="padding:32px;text-align:center;color:#3a1526;">
+                <p style="margin:0 0 8px;font-size:16px;line-height:1.5;">
+                  An account was created for you as <b style="color:#c026a3;">${roleLabel}</b>.
+                </p>
+                <p style="margin:0 0 24px;font-size:15px;color:#5c2a3d;line-height:1.5;">
+                  Use this code on the admin site to set your password:
+                </p>
+                <!-- Code -->
+                <div style="display:inline-block;background:#fff1e6;border:2px dashed rgba(192,38,163,0.3);border-radius:16px;padding:18px 28px;margin-bottom:24px;">
+                  <span style="font-size:34px;font-weight:800;letter-spacing:10px;color:#8a1673;">${code}</span>
+                </div>
+                <!-- CTA -->
+                <div style="margin:8px 0 20px;">
+                  <a href="${setPasswordUrl}" style="display:inline-block;background:#c026a3;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:14px 32px;border-radius:999px;">
+                    Set your password
+                  </a>
+                </div>
+                <p style="margin:0 0 4px;font-size:13px;color:#5c2a3d;">Or open the app at:</p>
+                <p style="margin:0 0 20px;font-size:13px;">
+                  <a href="${baseUrl}" style="color:#c026a3;word-break:break-all;">${baseUrl}</a>
+                </p>
+                <p style="margin:0;font-size:13px;color:#9a8a90;">This code expires in 24 hours.</p>
+              </td>
+            </tr>
+            <!-- Footer -->
+            <tr>
+              <td style="background:#fff1e6;padding:20px 32px;text-align:center;">
+                <p style="margin:0;font-size:12px;color:#9a8a90;">Made with ❤️ for ice cream lovers · Gelato</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`,
+    text: `A Gelato admin account was created for you (${roleLabel}). Your set-password code is ${code} (expires in 24 hours). Set your password at ${setPasswordUrl}`,
   });
 }
 
@@ -174,10 +288,50 @@ export class AdminResolver {
     });
 
     if (inviteCode) {
-      await sendInviteCode(normalized, inviteCode, 'Spot Admin');
+      await sendInviteCode(normalized, inviteCode, 'Spot Admin', 'spot');
     }
     console.log(`✅ Spot admin invited: ${normalized} -> spot ${spotId}`);
     return user as UserType;
+  }
+
+  /**
+   * Resend a fresh set-password code to an admin (SUPER_ADMIN / SPOTS_ADMIN).
+   * Used when the invite code expired or was lost. Generates a new 24h code
+   * and re-emails it.
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN])
+  @Mutation(() => Boolean)
+  async resendAdminInvite(
+    @Arg('userId', () => ID) userId: string,
+    @Ctx() { prisma }: Context
+  ): Promise<boolean> {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.accountType !== 'ADMIN') {
+      throw new Error('Admin account not found');
+    }
+
+    const code = CodeGenerator.generateOTP();
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerificationCode: code,
+        emailVerificationExpires: new Date(Date.now() + RESET_CODE_TTL_MS),
+      },
+    });
+
+    // A plain SPOT_ADMIN manages their spot in the spot app; global admins use
+    // the admin panel — link the resend to whichever they belong to.
+    const isGlobalAdmin =
+      user.roles.includes(Role.SUPER_ADMIN) || user.roles.includes(Role.SPOTS_ADMIN);
+    const roleLabel = user.roles.includes(Role.SUPER_ADMIN)
+      ? 'Super Admin'
+      : user.roles.includes(Role.SPOTS_ADMIN)
+        ? 'Spots Admin'
+        : 'Spot Admin';
+    await sendInviteCode(user.email, code, roleLabel, isGlobalAdmin ? 'admin' : 'spot');
+
+    console.log(`✅ Resent invite code to ${user.email}`);
+    return true;
   }
 
   /**
@@ -249,8 +403,9 @@ export class AdminResolver {
   @Query(() => [UserType])
   async spotEmployees(
     @Arg('spotId', () => ID) spotId: string,
-    @Ctx() { prisma }: Context
+    @Ctx() { req, prisma }: Context
   ): Promise<UserType[]> {
+    await assertManagesSpot(req.user!, spotId, prisma);
     const profiles = await prisma.employeeProfile.findMany({
       where: { spotId },
       include: { user: true },
@@ -258,4 +413,234 @@ export class AdminResolver {
     });
     return profiles.map((p) => p.user) as UserType[];
   }
+
+  /**
+   * Admins (SpotAdminProfile) bound to a spot, with login status. A SPOT_ADMIN
+   * of the spot can view them too (so the spot app can list co-admins).
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN])
+  @Query(() => [StaffMember])
+  async spotStaffAdmins(
+    @Arg('spotId', () => ID) spotId: string,
+    @Ctx() { req, prisma }: Context
+  ): Promise<StaffMember[]> {
+    await assertManagesSpot(req.user!, spotId, prisma);
+    const profiles = await prisma.spotAdminProfile.findMany({
+      where: { spotId },
+      include: { user: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    return profiles.map((p) => ({
+      id: p.user.id,
+      email: p.user.email,
+      name: p.user.name ?? undefined,
+      role: 'SPOT_ADMIN',
+      loginDisabled: p.user.loginDisabled,
+      createdAt: p.user.createdAt,
+    }));
+  }
+
+  /**
+   * Create a staff member (SPOT_ADMIN or EMPLOYEE) for a spot, with an initial
+   * password the admin hands over. Works for a spot's own admin (not just
+   * global admins) — a spot can have multiple admins. Forced password change
+   * on first login for employees.
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN])
+  @Mutation(() => UserType)
+  async createSpotStaff(
+    @Arg('spotId', () => ID) spotId: string,
+    @Arg('email') email: string,
+    @Arg('name') name: string,
+    @Arg('password') password: string,
+    @Arg('role') role: string,
+    @Ctx() { req, prisma }: Context
+  ): Promise<UserType> {
+    const normalized = email.toLowerCase();
+    const wantAdmin = role === 'SPOT_ADMIN';
+    if (role !== 'SPOT_ADMIN' && role !== 'EMPLOYEE') {
+      throw new Error('Role must be SPOT_ADMIN or EMPLOYEE');
+    }
+
+    const spot = await prisma.spot.findUnique({ where: { id: spotId } });
+    if (!spot) throw new Error('Spot not found');
+
+    await assertManagesSpot(req.user!, spotId, prisma);
+
+    const existing = await prisma.user.findUnique({
+      where: { email_accountType: { email: normalized, accountType: 'ADMIN' } },
+    });
+    if (existing) throw new Error('An admin/employee with this email already exists');
+
+    let hashed: string;
+    try {
+      hashed = await hashPassword(password);
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Invalid password');
+    }
+
+    const created = await prisma.user.create({
+      data: {
+        email: normalized,
+        name,
+        accountType: 'ADMIN',
+        password: hashed,
+        roles: [wantAdmin ? Role.SPOT_ADMIN : Role.EMPLOYEE],
+        registrationSource: 'ADMIN_WEB',
+        emailVerified: true,
+        ...(wantAdmin
+          ? { spotAdminProfile: { create: { spotId } } }
+          : { employeeProfile: { create: { spotId, isFirstLogin: true } } }),
+      },
+    });
+
+    console.log(`✅ Spot staff created: ${normalized} (${role}) -> spot ${spotId}`);
+    return created as UserType;
+  }
+
+  /**
+   * Admin-initiated password reset for a staff member of a spot the caller
+   * manages. Sets a new password directly (admin hands it over) and invalidates
+   * existing sessions via tokenVersion. For employees, forces a first-login
+   * change again.
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN])
+  @Mutation(() => Boolean)
+  async adminResetStaffPassword(
+    @Arg('userId', () => ID) targetUserId: string,
+    @Arg('newPassword') newPassword: string,
+    @Ctx() { req, prisma }: Context
+  ): Promise<boolean> {
+    const target = await prisma.user.findUnique({
+      where: { id: targetUserId },
+      include: { employeeProfile: true, spotAdminProfile: true },
+    });
+    if (!target || target.accountType !== 'ADMIN') {
+      throw new Error('Staff member not found');
+    }
+
+    // The caller must manage a spot this staff member belongs to.
+    const targetSpotIds = [
+      ...target.employeeProfile.map((e) => e.spotId),
+      ...(target.spotAdminProfile ? [target.spotAdminProfile.spotId] : []),
+    ];
+    if (targetSpotIds.length === 0) throw new Error('This user is not spot staff');
+    const caller = req.user!;
+    const isGlobalAdmin =
+      caller.roles.includes(Role.SUPER_ADMIN) || caller.roles.includes(Role.SPOTS_ADMIN);
+    if (!isGlobalAdmin) {
+      const managed = await prisma.spotAdminProfile.findFirst({
+        where: { userId: caller.id, spotId: { in: targetSpotIds } },
+      });
+      if (!managed) throw new Error('You can only reset passwords for your spot staff');
+    }
+
+    let hashed: string;
+    try {
+      hashed = await hashPassword(newPassword);
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Invalid password');
+    }
+
+    await prisma.user.update({
+      where: { id: targetUserId },
+      data: { password: hashed, tokenVersion: { increment: 1 } },
+    });
+    // Employees must change it again on next login.
+    if (target.employeeProfile.length) {
+      await prisma.employeeProfile.updateMany({
+        where: { userId: targetUserId },
+        data: { isFirstLogin: true },
+      });
+    }
+
+    console.log(`✅ Admin ${caller.id} reset password for staff ${targetUserId}`);
+    return true;
+  }
+
+  /**
+   * Enable/disable a staff member's login, scoped to a spot the caller manages.
+   * Disabling bumps tokenVersion to invalidate active sessions.
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN])
+  @Mutation(() => Boolean)
+  async setStaffLoginDisabled(
+    @Arg('userId', () => ID) targetUserId: string,
+    @Arg('disabled') disabled: boolean,
+    @Ctx() { req, prisma }: Context
+  ): Promise<boolean> {
+    const target = await prisma.user.findUnique({
+      where: { id: targetUserId },
+      include: { employeeProfile: true, spotAdminProfile: true },
+    });
+    if (!target || target.accountType !== 'ADMIN') throw new Error('Staff member not found');
+
+    const targetSpotIds = [
+      ...target.employeeProfile.map((e) => e.spotId),
+      ...(target.spotAdminProfile ? [target.spotAdminProfile.spotId] : []),
+    ];
+    if (targetSpotIds.length === 0) throw new Error('This user is not spot staff');
+
+    const caller = req.user!;
+    const isGlobalAdmin =
+      caller.roles.includes(Role.SUPER_ADMIN) || caller.roles.includes(Role.SPOTS_ADMIN);
+    if (!isGlobalAdmin) {
+      if (caller.id === targetUserId) throw new Error('You cannot disable your own login');
+      const managed = await prisma.spotAdminProfile.findFirst({
+        where: { userId: caller.id, spotId: { in: targetSpotIds } },
+      });
+      if (!managed) throw new Error('You can only manage your own spot staff');
+    }
+
+    await prisma.user.update({
+      where: { id: targetUserId },
+      data: {
+        loginDisabled: disabled,
+        ...(disabled ? { tokenVersion: { increment: 1 } } : {}),
+      },
+    });
+    console.log(`✅ Staff ${targetUserId} login ${disabled ? 'disabled' : 'enabled'}`);
+    return true;
+  }
+
+  /**
+   * Recent login sessions for a spot's staff (for the session log + report).
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN])
+  @Query(() => [StaffLoginSessionType])
+  async spotStaffSessions(
+    @Arg('spotId', () => ID) spotId: string,
+    @Arg('limit', () => Int, { defaultValue: 100 }) limit: number = 100,
+    @Ctx() { req, prisma }: Context
+  ): Promise<StaffLoginSessionType[]> {
+    await assertManagesSpot(req.user!, spotId, prisma);
+    const sessions = await prisma.staffLoginSession.findMany({
+      where: { spotId },
+      include: { user: { select: { name: true, firstName: true, surname: true, email: true } } },
+      orderBy: { loginAt: 'desc' },
+      take: limit,
+    });
+    return sessions.map((s) => ({
+      id: s.id,
+      userId: s.userId,
+      staffName:
+        s.user.name ||
+        [s.user.firstName, s.user.surname].filter(Boolean).join(' ') ||
+        s.user.email,
+      role: s.role,
+      ipAddress: s.ipAddress ?? undefined,
+      loginAt: s.loginAt,
+    }));
+  }
+}
+
+/**
+ * Global admins pass; a SPOT_ADMIN must manage the given spot.
+ */
+async function assertManagesSpot(user: any, spotId: string, prisma: any): Promise<void> {
+  if (user.roles.includes(Role.SUPER_ADMIN) || user.roles.includes(Role.SPOTS_ADMIN)) return;
+  const manages = await prisma.spotAdminProfile.findFirst({
+    where: { userId: user.id, spotId },
+  });
+  if (!manages) throw new Error('You can only manage your own spot');
 }

@@ -24,6 +24,15 @@ export default function NewsCommentsScreen() {
   const { comments, loading, posting, post } = useNewsComments(postId ?? null);
   const { data: me } = useWhoAmI();
   const [commentText, setCommentText] = useState('');
+  // When set, the next comment is a reply to this comment.
+  const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
+
+  // Group flat comments into top-level + their replies (single level).
+  const topLevel = comments.filter((c) => !c.parentId);
+  const repliesByParent = comments.reduce<Record<string, typeof comments>>((acc, c) => {
+    if (c.parentId) (acc[c.parentId] ??= []).push(c);
+    return acc;
+  }, {});
 
   const timeAgo = (iso: string): string => {
     const diff = Date.now() - new Date(iso).getTime();
@@ -39,7 +48,9 @@ export default function NewsCommentsScreen() {
     const text = commentText.trim();
     if (!text) return;
     setCommentText('');
-    await post(text);
+    const parentId = replyTo?.id ?? null;
+    setReplyTo(null);
+    await post(text, parentId);
   };
 
   return (
@@ -73,40 +84,41 @@ export default function NewsCommentsScreen() {
             </Typography>
           </View>
         ) : (
-          comments.map((comment) => (
-            <View key={comment.id} className="mb-4 flex-row">
-              <View className="w-8 h-8 rounded-full bg-gray-200 items-center justify-center mr-3 overflow-hidden">
-                {comment.userAvatar ? (
-                  <Image
-                    url={comment.userAvatar}
-                    className="w-full h-full"
-                    resizeMode="cover"
-                    rounded
-                    fallbackWidth={32}
-                    fallbackHeight={32}
-                    fallbackLogoSize={12}
+          topLevel.map((comment) => (
+            <View key={comment.id} className="mb-4">
+              <CommentRow
+                comment={comment}
+                timeAgo={timeAgo}
+                onReply={() => setReplyTo({ id: comment.id, name: comment.userName ?? t('Home.user') })}
+                replyLabel={t('Home.reply')}
+                userFallback={t('Home.user')}
+              />
+              {/* Nested replies */}
+              {(repliesByParent[comment.id] ?? []).map((reply) => (
+                <View key={reply.id} className="ml-11 mt-3">
+                  <CommentRow
+                    comment={reply}
+                    timeAgo={timeAgo}
+                    userFallback={t('Home.user')}
                   />
-                ) : (
-                  <Ionicons name="person" size={16} color="#6B7280" />
-                )}
-              </View>
-              <View className="flex-1">
-                <View className="bg-gray-50 rounded-2xl px-3 py-2">
-                  <Typography variant="body-small-semibold" className="text-gray-900 mb-0.5">
-                    {comment.userName ?? t('Home.user')}
-                  </Typography>
-                  <Typography variant="body-base-regular" className="text-gray-800">
-                    {comment.content}
-                  </Typography>
                 </View>
-                <Typography variant="body-small-regular" className="text-gray-500 mt-1 ml-3">
-                  {timeAgo(comment.createdAt)}
-                </Typography>
-              </View>
+              ))}
             </View>
           ))
         )}
       </ScrollView>
+
+      {/* Reply context banner */}
+      {replyTo && (
+        <View className="flex-row items-center justify-between bg-gray-50 border-t border-gray-200 px-4 py-2">
+          <Typography variant="body-small-regular" className="text-gray-600">
+            {t('Home.replyingTo', { name: replyTo.name })}
+          </Typography>
+          <Pressable onPress={() => setReplyTo(null)} hitSlop={8}>
+            <Ionicons name="close" size={18} color="#6B7280" />
+          </Pressable>
+        </View>
+      )}
 
       {/* Comment Input */}
       <View
@@ -148,5 +160,84 @@ export default function NewsCommentsScreen() {
         </Pressable>
       </View>
     </KeyboardAvoidingView>
+  );
+}
+
+type CommentRowComment = {
+  id: string;
+  content: string;
+  userName?: string | null;
+  userAvatar?: string | null;
+  isSpotReply?: boolean;
+  createdAt: string;
+};
+
+function CommentRow({
+  comment,
+  timeAgo,
+  onReply,
+  replyLabel,
+  userFallback,
+}: {
+  comment: CommentRowComment;
+  timeAgo: (iso: string) => string;
+  onReply?: () => void;
+  replyLabel?: string;
+  userFallback: string;
+}) {
+  const { t } = useTranslation();
+  const spotBadgeLabel = t('Home.spotBadge');
+  return (
+    <View className="flex-row">
+      <View className="w-8 h-8 rounded-full bg-gray-200 items-center justify-center mr-3 overflow-hidden">
+        {comment.userAvatar ? (
+          <Image
+            url={comment.userAvatar}
+            className="w-full h-full"
+            resizeMode="cover"
+            rounded
+            fallbackWidth={32}
+            fallbackHeight={32}
+            fallbackLogoSize={12}
+          />
+        ) : (
+          <Ionicons name="person" size={16} color="#6B7280" />
+        )}
+      </View>
+      <View className="flex-1">
+        <View
+          className={`rounded-2xl px-3 py-2 ${comment.isSpotReply ? 'bg-red-50' : 'bg-gray-50'}`}
+        >
+          <View className="flex-row items-center mb-0.5">
+            <Typography variant="body-small-semibold" className="text-gray-900">
+              {comment.userName ?? userFallback}
+            </Typography>
+            {comment.isSpotReply && (
+              <View className="ml-2 flex-row items-center rounded-full bg-red-600 px-2 py-0.5">
+                <Ionicons name="storefront" size={10} color="#fff" />
+                <Typography variant="body-small-semibold" className="ml-1 text-white" style={{ fontSize: 10 }}>
+                  {spotBadgeLabel}
+                </Typography>
+              </View>
+            )}
+          </View>
+          <Typography variant="body-base-regular" className="text-gray-800">
+            {comment.content}
+          </Typography>
+        </View>
+        <View className="flex-row items-center mt-1 ml-3">
+          <Typography variant="body-small-regular" className="text-gray-500">
+            {timeAgo(comment.createdAt)}
+          </Typography>
+          {onReply && (
+            <Pressable onPress={onReply} hitSlop={8} className="ml-4">
+              <Typography variant="body-small-semibold" className="text-gray-600">
+                {replyLabel}
+              </Typography>
+            </Pressable>
+          )}
+        </View>
+      </View>
+    </View>
   );
 }

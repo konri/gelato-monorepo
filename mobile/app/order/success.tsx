@@ -10,8 +10,13 @@ export default function OrderSuccessScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
-  const { orderNumber, orderId } = useLocalSearchParams<{ orderNumber?: string; orderId?: string }>();
+  const { orderNumber, orderId, cash } = useLocalSearchParams<{
+    orderNumber?: string;
+    orderId?: string;
+    cash?: string;
+  }>();
   const confettiRef = useRef<ConfettiCannon>(null);
+  const isCashPickup = cash === '1';
 
   return (
     <View className="flex-1 bg-white items-center justify-center px-8" style={{ paddingTop: insets.top }}>
@@ -33,7 +38,7 @@ export default function OrderSuccessScreen() {
         {t('Payment.successTitle')}
       </Text>
       <Text className="font-urbanist text-text-secondary text-center mt-2">
-        {t('Payment.successMessage')}
+        {t(isCashPickup ? 'Payment.successPickupCash' : 'Payment.successMessage')}
       </Text>
       {orderNumber ? (
         <Text className="font-urbanist-bold text-accent text-center mt-3">

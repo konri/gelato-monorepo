@@ -4,16 +4,24 @@ import { useMyActiveDelivery } from '@/hooks/useCourierApplications';
 import { useCourierLocationPing } from '@/hooks/useCourierLocationPing';
 import { useCurrentLocation } from '@/hooks/useCurrentLocation';
 import { openNavigation } from '@/utils/mapsNavigation';
-import { updateDeliveryStatus } from '@repo/api-client';
+import {
+  updateDeliveryStatus,
+  reportDeliveryIncident,
+  uploadDeliveryIncidentPhoto,
+} from '@repo/api-client';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
+  Image,
+  Modal,
   Pressable,
   ScrollView,
+  TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,6 +32,7 @@ export default function ActiveDeliveryScreen() {
   const { data: delivery, loading, refetch } = useMyActiveDelivery();
   const { location } = useCurrentLocation();
   const [busy, setBusy] = useState(false);
+  const [incidentOpen, setIncidentOpen] = useState(false);
 
   // Ping GPS every 60s while a delivery is active.
   useCourierLocationPing(delivery?.id ?? null);
@@ -83,36 +92,27 @@ export default function ActiveDeliveryScreen() {
         label: delivery.spotName,
       };
 
-  const advance = async (next: 'PICKED_UP' | 'DELIVERED') => {
+  // Which handover code the courier must enter next (null = no modal open).
+  const [codePrompt, setCodePrompt] = useState<null | 'PICKED_UP' | 'DELIVERED'>(null);
+
+  const advance = async (next: 'PICKED_UP' | 'DELIVERED', code?: string) => {
     setBusy(true);
     try {
-      const res = await updateDeliveryStatus(delivery.id, next);
+      const res = await updateDeliveryStatus(delivery.id, next, { code });
       if (res.error) {
-        Alert.alert(t('Common.error'), res.error.message);
-        return;
+        // Surface wrong-code errors inline in the modal instead of an alert.
+        throw new Error(res.error.message);
       }
+      setCodePrompt(null);
       if (next === 'DELIVERED') {
         Alert.alert(t('Courier.deliveredTitle'), t('Courier.deliveredBody'));
         router.replace('/(tabs)');
         return;
       }
       await refetch();
-    } catch (e) {
-      Alert.alert(t('Common.error'), e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }
-  };
-
-  const confirmDelivered = () => {
-    Alert.alert(
-      t('Courier.confirmDeliveredTitle'),
-      t('Courier.confirmDeliveredBody'),
-      [
-        { text: t('Courier.cancel'), style: 'cancel' },
-        { text: t('Courier.confirm'), onPress: () => advance('DELIVERED') },
-      ],
-    );
   };
 
   return (
@@ -210,10 +210,10 @@ export default function ActiveDeliveryScreen() {
           </Typography>
         </Pressable>
 
-        {/* Advance status */}
+        {/* Advance status — prompts for the handover code first. */}
         <Pressable
           disabled={busy}
-          onPress={() => (pickedUp ? confirmDelivered() : advance('PICKED_UP'))}
+          onPress={() => setCodePrompt(pickedUp ? 'DELIVERED' : 'PICKED_UP')}
           className="rounded-2xl py-4 mt-3 items-center"
           style={{ backgroundColor: busy ? '#D1D5DB' : '#22C55E' }}
         >
@@ -225,7 +225,299 @@ export default function ActiveDeliveryScreen() {
             </Typography>
           )}
         </Pressable>
+
+        {/* Report a problem */}
+        <Pressable
+          disabled={busy}
+          onPress={() => setIncidentOpen(true)}
+          className="flex-row items-center justify-center rounded-2xl py-4 mt-3 border border-red-200"
+        >
+          <Ionicons name="alert-circle-outline" size={20} color="#DC2626" />
+          <Typography variant="body-base-bold" className="ml-2" style={{ color: '#DC2626' }}>
+            {t('Courier.reportProblem')}
+          </Typography>
+        </Pressable>
       </ScrollView>
+
+      {incidentOpen && (
+        <IncidentModal
+          orderId={delivery.id}
+          onClose={() => setIncidentOpen(false)}
+          onReported={() => {
+            setIncidentOpen(false);
+            Alert.alert(t('Courier.incidentTitle'), t('Courier.incidentSent'));
+            router.replace('/(tabs)');
+          }}
+        />
+      )}
+
+      {codePrompt && (
+        <CodeEntryModal
+          mode={codePrompt}
+          busy={busy}
+          onClose={() => setCodePrompt(null)}
+          onSubmit={(code) => advance(codePrompt, code)}
+        />
+      )}
     </View>
+  );
+}
+
+// Modal asking the courier to type the handover code: the spot's pickup code
+// to confirm PICKED_UP, or the customer's 4-digit PIN to confirm DELIVERED.
+function CodeEntryModal({
+  mode,
+  busy,
+  onClose,
+  onSubmit,
+}: {
+  mode: 'PICKED_UP' | 'DELIVERED';
+  busy: boolean;
+  onClose: () => void;
+  onSubmit: (code: string) => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const [code, setCode] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const isPin = mode === 'DELIVERED';
+
+  const submit = async () => {
+    if (!code.trim()) return;
+    setError(null);
+    try {
+      await onSubmit(code.trim());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t('Common.error'));
+    }
+  };
+
+  return (
+    <Modal transparent animationType="slide" onRequestClose={onClose}>
+      <View className="flex-1 justify-end bg-black/40">
+        <View className="rounded-t-3xl bg-white p-6" style={{ paddingBottom: insets.bottom + 16 }}>
+          <View className="flex-row items-center justify-between mb-1">
+            <Typography variant="body-lg-bold" className="text-text-primary">
+              {t(isPin ? 'Courier.enterPinTitle' : 'Courier.enterPickupTitle')}
+            </Typography>
+            <Pressable onPress={onClose} hitSlop={8}>
+              <Ionicons name="close" size={24} color="#374151" />
+            </Pressable>
+          </View>
+          <Typography variant="body-small-regular" className="text-gray-500 mb-4">
+            {t(isPin ? 'Courier.enterPinHint' : 'Courier.enterPickupHint')}
+          </Typography>
+          <TextInput
+            value={code}
+            onChangeText={(v) => { setCode(v); setError(null); }}
+            placeholder={isPin ? '••••' : 'ABCD'}
+            placeholderTextColor="#9CA3AF"
+            keyboardType={isPin ? 'number-pad' : 'default'}
+            autoCapitalize="characters"
+            maxLength={isPin ? 4 : 6}
+            className="rounded-xl border border-gray-300 px-4 py-4 text-center"
+            style={{ fontSize: 28, letterSpacing: 10, fontWeight: '700' }}
+          />
+          {error && (
+            <View className="rounded-xl bg-red-50 px-4 py-3 mt-3">
+              <Typography variant="body-small-regular" style={{ color: '#B91C1C' }}>{error}</Typography>
+            </View>
+          )}
+          <Pressable
+            onPress={submit}
+            disabled={busy || !code.trim()}
+            className="items-center rounded-2xl py-4 mt-4"
+            style={{ backgroundColor: busy || !code.trim() ? '#86EFAC' : '#22C55E' }}
+          >
+            {busy ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Typography variant="body-base-bold" className="text-white">
+                {t(isPin ? 'Courier.markDelivered' : 'Courier.markPickedUp')}
+              </Typography>
+            )}
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const INCIDENT_TYPES: { key: string; labelKey: string; icon: any }[] = [
+  { key: 'bike_broken', labelKey: 'Courier.incidentBikeBroken', icon: 'bicycle-outline' },
+  { key: 'address_not_found', labelKey: 'Courier.incidentAddressNotFound', icon: 'location-outline' },
+  { key: 'customer_unreachable', labelKey: 'Courier.incidentCustomerUnreachable', icon: 'call-outline' },
+  { key: 'other', labelKey: 'Courier.incidentOther', icon: 'ellipsis-horizontal' },
+];
+
+function IncidentModal({
+  orderId,
+  onClose,
+  onReported,
+}: {
+  orderId: string;
+  onClose: () => void;
+  onReported: () => void;
+}) {
+  const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const [type, setType] = useState<string | null>(null);
+  const [note, setNote] = useState('');
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const pickPhoto = async (fromCamera: boolean) => {
+    const res = fromCamera
+      ? await ImagePicker.launchCameraAsync({ quality: 0.7 })
+      : await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          quality: 0.7,
+        });
+    if (!res.canceled && res.assets[0]) setPhotoUri(res.assets[0].uri);
+  };
+
+  const submit = async () => {
+    if (!type) {
+      setError(t('Courier.incidentPickType'));
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      // Upload the photo first (if any) → get its URL.
+      let photoUrl: string | undefined;
+      if (photoUri) {
+        const up = await uploadDeliveryIncidentPhoto(orderId, photoUri);
+        if (up.error || !up.data) throw new Error(up.error || 'upload failed');
+        photoUrl = up.data.imageUrl;
+      }
+      const res = await reportDeliveryIncident({
+        orderId,
+        incidentType: type,
+        note: note.trim() || undefined,
+        photoUrl,
+        cancel: true,
+      });
+      if (res.error) throw new Error(res.error.message);
+      onReported();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t('Courier.incidentError'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Modal transparent animationType="slide" onRequestClose={onClose}>
+      <View className="flex-1 justify-end bg-black/40">
+        <View className="rounded-t-3xl bg-white p-6" style={{ paddingBottom: insets.bottom + 16 }}>
+          <View className="flex-row items-center justify-between mb-1">
+            <Typography variant="body-lg-bold" className="text-text-primary">
+              {t('Courier.incidentTitle')}
+            </Typography>
+            <Pressable onPress={onClose} hitSlop={8}>
+              <Ionicons name="close" size={24} color="#374151" />
+            </Pressable>
+          </View>
+          <Typography variant="body-small-regular" className="text-gray-500 mb-4">
+            {t('Courier.incidentSubtitle')}
+          </Typography>
+
+          <ScrollView style={{ maxHeight: 420 }}>
+            {/* Type chips */}
+            <View className="flex-row flex-wrap gap-2 mb-4">
+              {INCIDENT_TYPES.map((it) => {
+                const active = type === it.key;
+                return (
+                  <Pressable
+                    key={it.key}
+                    onPress={() => setType(it.key)}
+                    className="flex-row items-center rounded-full border px-3 py-2"
+                    style={{
+                      borderColor: active ? '#EC2828' : '#D1D5DB',
+                      backgroundColor: active ? '#FEECEC' : '#fff',
+                    }}
+                  >
+                    <Ionicons name={it.icon} size={15} color={active ? '#EC2828' : '#6B7280'} />
+                    <Typography
+                      variant="body-small-semibold"
+                      className="ml-1.5"
+                      style={{ color: active ? '#EC2828' : '#374151' }}
+                    >
+                      {t(it.labelKey)}
+                    </Typography>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <TextInput
+              value={note}
+              onChangeText={setNote}
+              placeholder={t('Courier.incidentNote')}
+              placeholderTextColor="#9CA3AF"
+              multiline
+              className="rounded-xl border border-gray-300 px-4 py-3 mb-4"
+              style={{ minHeight: 90, textAlignVertical: 'top', fontSize: 15 }}
+            />
+
+            {/* Photo */}
+            {photoUri ? (
+              <View className="mb-4">
+                <Image source={{ uri: photoUri }} style={{ width: '100%', height: 160, borderRadius: 12 }} />
+                <Pressable onPress={() => setPhotoUri(null)} className="mt-2 self-start">
+                  <Typography variant="body-small-semibold" style={{ color: '#DC2626' }}>
+                    {t('Courier.cancel')}
+                  </Typography>
+                </Pressable>
+              </View>
+            ) : (
+              <View className="flex-row gap-2 mb-4">
+                <Pressable
+                  onPress={() => pickPhoto(true)}
+                  className="flex-1 flex-row items-center justify-center rounded-xl border border-gray-300 py-3"
+                >
+                  <Ionicons name="camera-outline" size={18} color="#374151" />
+                  <Typography variant="body-small-semibold" className="ml-2 text-gray-700">
+                    {t('Courier.incidentTakePhoto')}
+                  </Typography>
+                </Pressable>
+                <Pressable
+                  onPress={() => pickPhoto(false)}
+                  className="flex-1 flex-row items-center justify-center rounded-xl border border-gray-300 py-3"
+                >
+                  <Ionicons name="images-outline" size={18} color="#374151" />
+                  <Typography variant="body-small-semibold" className="ml-2 text-gray-700">
+                    {t('Courier.incidentChoosePhoto')}
+                  </Typography>
+                </Pressable>
+              </View>
+            )}
+
+            {error && (
+              <View className="rounded-xl bg-red-50 px-4 py-3 mb-3">
+                <Typography variant="body-small-regular" style={{ color: '#B91C1C' }}>{error}</Typography>
+              </View>
+            )}
+          </ScrollView>
+
+          <Pressable
+            onPress={submit}
+            disabled={submitting}
+            className="items-center rounded-2xl py-4 mt-1"
+            style={{ backgroundColor: submitting ? '#F4A3A3' : '#EC2828' }}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Typography variant="body-base-bold" className="text-white">
+                {t('Courier.incidentSubmit')}
+              </Typography>
+            )}
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
   );
 }

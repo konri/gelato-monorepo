@@ -15,6 +15,7 @@ export enum SubscriptionTopic {
   COURIER_LOCATION_UPDATED = 'COURIER_LOCATION_UPDATED',
   DELIVERY_BROADCAST = 'DELIVERY_BROADCAST', // order ready → offered to online couriers
   DELIVERY_CLAIMED = 'DELIVERY_CLAIMED',     // an offered order was taken (remove from pools)
+  DELIVERY_INCIDENT = 'DELIVERY_INCIDENT',   // courier reported an incident / cancelled
 
   // Point events
   POINTS_UPDATED = 'POINTS_UPDATED',
@@ -51,6 +52,14 @@ export class PubSubService {
   static getInstance(): PubSub {
     if (!this.instance) {
       this.instance = new PubSub();
+      // Compatibility shim: graphql-subscriptions@3 renamed `asyncIterator` to
+      // `asyncIterableIterator`, but type-graphql@1 calls the old name — without
+      // this every @Subscription throws "pubSub.asyncIterator is not a function".
+      const anyPubSub = this.instance as any;
+      if (typeof anyPubSub.asyncIterator !== 'function' &&
+          typeof anyPubSub.asyncIterableIterator === 'function') {
+        anyPubSub.asyncIterator = anyPubSub.asyncIterableIterator.bind(anyPubSub);
+      }
       console.log('✅ PubSub service initialized');
     }
     return this.instance;
@@ -149,6 +158,16 @@ export class PubSubService {
         spotId,
         order,
       },
+    });
+  }
+
+  /**
+   * A courier reported a delivery incident (or cancelled) — notify the spot.
+   */
+  static async publishDeliveryIncident(spotId: string, incident: any): Promise<void> {
+    const pubsub = this.getInstance();
+    await pubsub.publish(SubscriptionTopic.DELIVERY_INCIDENT, {
+      deliveryIncident: { spotId, incident },
     });
   }
 

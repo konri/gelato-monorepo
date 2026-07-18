@@ -74,12 +74,15 @@ export const useNewsComments = (newsId: string | null) => {
   }, [load]);
 
   const post = useCallback(
-    async (content: string) => {
+    async (content: string, parentId?: string | null) => {
       if (!newsId || !content.trim()) return;
       setPosting(true);
       try {
         const token = await safeGetItem('access_token');
-        const res = await commentNews(newsId, content.trim(), { token: token ?? undefined });
+        const res = await commentNews(newsId, content.trim(), {
+          token: token ?? undefined,
+          parentId: parentId ?? null,
+        });
         if (res.success && res.data) setComments((prev) => [...prev, res.data as NewsComment]);
       } finally {
         setPosting(false);

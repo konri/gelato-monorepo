@@ -7,6 +7,7 @@ import {
   ReferralCodeType,
   ReferralType,
   ReferralStatsType,
+  LoyaltyCustomerType,
 } from '../types/PointsType';
 import { PubSubService } from '../services/PubSubService';
 
@@ -33,6 +34,84 @@ import { PubSubService } from '../services/PubSubService';
  */
 @Resolver()
 export class PointsResolver {
+  /**
+   * Resolve a customer by their real user id (from the loyalty QR) or their
+   * short loyalty code (typed by staff, e.g. "GL-ABCD2345"). Returns the user
+   * id + name, or null if nothing matches.
+   *
+   * id is a text column (uuid string), so comparing it against a loyalty code
+   * is a safe text comparison — no cast error.
+   */
+  private static async resolveCustomer(
+    prisma: Context['prisma'],
+    idOrCode: string,
+  ): Promise<{ id: string; name: string | null } | null> {
+    const raw = idOrCode.trim();
+    if (!raw) return null;
+    const normalizedCode = raw.toUpperCase().replace(/\s+/g, '');
+    return prisma.user.findFirst({
+      where: { OR: [{ id: raw }, { loyaltyCode: normalizedCode }] },
+      select: { id: true, name: true },
+    });
+  }
+
+  /**
+   * Look up a customer (by loyalty QR id or typed account code) so spot staff
+   * can confirm who they're awarding points to — shows name, current balance,
+   * and how many prizes they can currently afford.
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN, Role.EMPLOYEE])
+  @Query(() => LoyaltyCustomerType, { nullable: true })
+  async loyaltyCustomer(
+    @Arg('idOrCode', () => String) idOrCode: string,
+    @Ctx() { prisma }: Context,
+  ): Promise<LoyaltyCustomerType | null> {
+    const match = await PointsResolver.resolveCustomer(prisma, idOrCode);
+    if (!match) return null;
+
+    const user = await prisma.user.findUnique({
+      where: { id: match.id },
+      select: {
+        id: true,
+        name: true,
+        firstName: true,
+        surname: true,
+        loyaltyCode: true,
+        profilePicture: true,
+        pointBalance: { select: { availablePoints: true, totalPoints: true } },
+      },
+    });
+    if (!user) return null;
+
+    const availablePoints = user.pointBalance?.availablePoints ?? 0;
+    // Active prizes (respecting quantity/validity window) the customer can afford.
+    const now = new Date();
+    const prizes = await prisma.prize.findMany({
+      where: {
+        isActive: true,
+        pointsCost: { lte: availablePoints },
+        AND: [
+          { OR: [{ validFrom: null }, { validFrom: { lte: now } }] },
+          { OR: [{ validUntil: null }, { validUntil: { gte: now } }] },
+        ],
+      },
+      select: { quantity: true, claimed: true },
+    });
+    const availablePrizes = prizes.filter(
+      (p) => p.quantity == null || p.claimed < p.quantity,
+    ).length;
+
+    return {
+      id: user.id,
+      name: user.name || [user.firstName, user.surname].filter(Boolean).join(' ') || undefined,
+      loyaltyCode: user.loyaltyCode ?? undefined,
+      profilePicture: user.profilePicture ?? undefined,
+      availablePoints,
+      totalPoints: user.pointBalance?.totalPoints ?? 0,
+      availablePrizes,
+    };
+  }
+
   /**
    * Get user's point balance
    */
@@ -86,7 +165,9 @@ export class PointsResolver {
   @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN, Role.EMPLOYEE])
   @Mutation(() => Boolean)
   async awardPoints(
-    @Arg('userId', () => ID) userId: string,
+    // Accepts either the customer's real user id (from the QR) or their short
+    // loyalty code (typed by staff), e.g. "GL-ABCD2345".
+    @Arg('userId', () => ID) userIdOrCode: string,
     @Arg('points', () => Int) points: number,
     @Arg('description') description: string,
     @Arg('spotId', () => ID, { nullable: true }) spotId: string | undefined,
@@ -97,6 +178,14 @@ export class PointsResolver {
     if (points <= 0) {
       throw new Error('Points must be positive');
     }
+
+    // Resolve the target customer by real id (from the QR) or loyalty code
+    // (typed by staff).
+    const target = await PointsResolver.resolveCustomer(prisma, userIdOrCode);
+    if (!target) {
+      throw new Error('Customer not found for that account number');
+    }
+    const userId = target.id;
 
     // Check permission for SPOT_ADMIN/EMPLOYEE
     if (

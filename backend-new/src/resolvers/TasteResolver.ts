@@ -129,6 +129,56 @@ export class TasteResolver {
   }
 
   /**
+   * Full taste edit (SUPER_ADMIN, SPOTS_ADMIN, SPOT_ADMIN). Only provided
+   * fields change. Localized JSON fields are passed as JSON strings.
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN])
+  @Mutation(() => TasteType)
+  async updateTaste(
+    @Arg('id', () => ID) id: string,
+    @Arg('title', () => String, { nullable: true }) title?: string,
+    @Arg('titleLocal', () => String, { nullable: true }) titleLocal?: string,
+    @Arg('type', () => PrismaTasteType, { nullable: true }) type?: PrismaTasteType,
+    @Arg('subtitle', () => String, { nullable: true }) subtitle?: string,
+    @Arg('description', () => String, { nullable: true }) description?: string,
+    @Arg('descriptionLocal', () => String, { nullable: true }) descriptionLocal?: string,
+    @Arg('ingredients', () => String, { nullable: true }) ingredients?: string,
+    @Arg('imageUrl', () => String, { nullable: true }) imageUrl?: string,
+    @Arg('price', { nullable: true }) price?: number,
+    @Arg('kcalPerPortion', { nullable: true }) kcalPerPortion?: number,
+    @Arg('kcalPer100g', { nullable: true }) kcalPer100g?: number,
+    @Arg('allergens', () => [String], { nullable: true }) allergens?: string[],
+    @Ctx() { req, prisma }: Context
+  ): Promise<TasteType> {
+    const user = req.user!;
+    const existing = await prisma.taste.findUnique({ where: { id }, select: { spotId: true } });
+    if (!existing) throw new Error('Taste not found');
+
+    if (user.roles.includes(Role.SPOT_ADMIN) && !user.roles.includes(Role.SUPER_ADMIN) && !user.roles.includes(Role.SPOTS_ADMIN)) {
+      const ok = await canManageSpot(user.id, existing.spotId, prisma);
+      if (!ok) throw new Error('You do not have permission to manage this spot');
+    }
+
+    const data: any = {};
+    if (title !== undefined) data.title = title;
+    if (titleLocal !== undefined) data.titleLocal = JSON.parse(titleLocal);
+    if (type !== undefined) data.type = type;
+    if (subtitle !== undefined) data.subtitle = subtitle;
+    if (description !== undefined) data.description = description;
+    if (descriptionLocal !== undefined) data.descriptionLocal = JSON.parse(descriptionLocal);
+    if (ingredients !== undefined) data.ingredients = ingredients;
+    if (imageUrl !== undefined) data.imageUrl = imageUrl;
+    if (price !== undefined) data.price = price;
+    if (kcalPerPortion !== undefined) data.kcalPerPortion = kcalPerPortion;
+    if (kcalPer100g !== undefined) data.kcalPer100g = kcalPer100g;
+    if (allergens !== undefined) data.allergens = allergens;
+
+    const taste = await prisma.taste.update({ where: { id }, data });
+    console.log(`✅ Taste updated: ${taste.title} (${taste.id})`);
+    return taste as TasteType;
+  }
+
+  /**
    * Update taste availability (SUPER_ADMIN, SPOTS_ADMIN, SPOT_ADMIN, EMPLOYEE)
    */
   @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN, Role.EMPLOYEE])
@@ -150,19 +200,14 @@ export class TasteResolver {
       throw new Error('Taste not found');
     }
 
-    // Check permission
+    // Check permission — admin or employee of the spot may toggle availability.
+    // Uses the real SpotAdminProfile / EmployeeProfile relations.
     if (!user.roles.includes(Role.SUPER_ADMIN) && !user.roles.includes(Role.SPOTS_ADMIN)) {
-      const userSpot = await prisma.spot.findFirst({
-        where: {
-          id: taste.spotId,
-          OR: [
-            { admins: { some: { id: user.id } } },
-            { employees: { some: { id: user.id } } },
-          ],
-        },
-      });
-
-      if (!userSpot) {
+      const [admin, emp] = await Promise.all([
+        prisma.spotAdminProfile.findFirst({ where: { userId: user.id, spotId: taste.spotId } }),
+        prisma.employeeProfile.findFirst({ where: { userId: user.id, spotId: taste.spotId } }),
+      ]);
+      if (!admin && !emp) {
         throw new Error('You do not have permission to manage tastes at this spot');
       }
     }

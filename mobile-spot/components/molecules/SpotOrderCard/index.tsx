@@ -20,6 +20,7 @@ export function SpotOrderCard({ order, currentUserId, onClaim, onMarkReady }: Pr
 
   const itemCount = order.items?.reduce((s, i) => s + (i.quantity ?? 1), 0) ?? 0;
   const isPending = order.status === 'PENDING';
+  const isPickup = order.fulfillmentType === 'PICKUP';
   const minePreparing =
     order.status === 'PREPARING' && order.preparedById === currentUserId;
 
@@ -51,7 +52,58 @@ export function SpotOrderCard({ order, currentUserId, onClaim, onMarkReady }: Pr
         <Typography variant="body-small-regular" className="ml-2 text-gray-600">
           {t('Spot.itemsCount', { count: itemCount })}
         </Typography>
+        {/* Fulfillment badge so staff know pickup orders have no courier. */}
+        <View
+          className="ml-2 flex-row items-center rounded-full px-2 py-0.5"
+          style={{ backgroundColor: isPickup ? '#FEECEC' : '#EEF2FF' }}
+        >
+          <Ionicons
+            name={isPickup ? 'storefront-outline' : 'bicycle-outline'}
+            size={12}
+            color={isPickup ? '#EC2828' : '#4F46E5'}
+          />
+          <Typography
+            variant="body-very-small-medium"
+            className="ml-1"
+            style={{ color: isPickup ? '#EC2828' : '#4F46E5' }}
+          >
+            {t(isPickup ? 'Spot.pickup' : 'Spot.delivery')}
+          </Typography>
+        </View>
       </View>
+
+      {/* Customer — who ordered. */}
+      {!!order.customerName && (
+        <View className="mt-1 flex-row items-center">
+          <Ionicons name="person-outline" size={15} color="#6B7280" />
+          <Typography variant="body-small-regular" className="ml-2 text-gray-600">
+            {order.customerName}
+          </Typography>
+        </View>
+      )}
+
+      {/* What to prepare: line items with names + quantities. */}
+      {order.items?.length > 0 && (
+        <View className="mt-2 rounded-lg bg-gray-50 p-2.5">
+          {order.items.map((it) => (
+            <View key={it.id} className="mb-1">
+              <View className="flex-row">
+                <Typography variant="body-small-semibold" className="text-text-primary">
+                  {it.quantity}×
+                </Typography>
+                <Typography variant="body-small-regular" className="ml-2 flex-1 text-text-primary">
+                  {it.displayName ?? t('Spot.item')}
+                </Typography>
+              </View>
+              {!!it.boxTasteNames?.length && (
+                <Typography variant="body-very-small-medium" className="ml-5 text-gray-500">
+                  {it.boxTasteNames.join(', ')}
+                </Typography>
+              )}
+            </View>
+          ))}
+        </View>
+      )}
 
       {!!order.noteForSpot && (
         <View className="mt-2 rounded-lg bg-amber-50 p-2">

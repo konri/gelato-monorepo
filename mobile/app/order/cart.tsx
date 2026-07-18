@@ -104,6 +104,33 @@ export default function CartScreen() {
             className="border-t border-gray-200 px-6 pt-4"
             style={{ paddingBottom: insets.bottom + 12 }}
           >
+            {/* Fulfillment choice: delivery vs collect-at-spot */}
+            <View className="flex-row bg-gray-100 rounded-2xl p-1 mb-4">
+              {(['delivery', 'pickup'] as const).map((type) => {
+                const active = cart.fulfillmentType === type;
+                return (
+                  <Pressable
+                    key={type}
+                    onPress={() => cart.setFulfillmentType(type)}
+                    className="flex-1 flex-row items-center justify-center rounded-xl py-2.5"
+                    style={{ backgroundColor: active ? '#fff' : 'transparent' }}
+                  >
+                    <Ionicons
+                      name={type === 'delivery' ? 'bicycle-outline' : 'storefront-outline'}
+                      size={18}
+                      color={active ? '#EC2828' : '#6B7280'}
+                    />
+                    <Text
+                      className="ml-2 font-urbanist-bold"
+                      style={{ color: active ? '#EC2828' : '#6B7280' }}
+                    >
+                      {t(type === 'delivery' ? 'Ordering.delivery' : 'Ordering.pickup')}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
             <View className="flex-row justify-between mb-3">
               <Text className="font-urbanist text-text-secondary">
                 {t('Ordering.cartTotal', { count: cart.count })}
@@ -114,7 +141,9 @@ export default function CartScreen() {
             </View>
             <Pressable
               className="bg-accent rounded-2xl py-4 items-center"
-              onPress={() => router.push('/order/address')}
+              onPress={() =>
+                router.push(cart.fulfillmentType === 'pickup' ? '/order/details' : '/order/address')
+              }
             >
               <Text className="text-white font-urbanist-bold text-base">
                 {t('Ordering.checkout')} · {priceLabel(cart.subtotal)}

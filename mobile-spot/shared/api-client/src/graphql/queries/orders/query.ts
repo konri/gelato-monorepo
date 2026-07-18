@@ -39,6 +39,9 @@ export const ORDER_DETAIL_QUERY = gql`
       deliveryLongitude
       scheduledFor
       createdAt
+      courierName
+      courierPhoto
+      pickupCode
       spot {
         id
         name

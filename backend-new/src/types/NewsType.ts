@@ -1,6 +1,24 @@
 import { ObjectType, Field, ID, Int, InputType } from 'type-graphql';
 
 /**
+ * Lightweight authoring-spot info attached to a news item.
+ */
+@ObjectType()
+export class NewsSpotType {
+  @Field(() => ID)
+  id!: string;
+
+  @Field()
+  name!: string;
+
+  @Field({ nullable: true })
+  logoUrl?: string;
+
+  @Field(() => ID, { nullable: true })
+  cityId?: string;
+}
+
+/**
  * News GraphQL Type
  */
 @ObjectType()
@@ -22,6 +40,13 @@ export class NewsType {
 
   @Field(() => [String])
   images!: string[];
+
+  // Authoring spot (null for global/admin-authored news). Resolved lazily.
+  @Field(() => ID, { nullable: true })
+  spotId?: string;
+
+  @Field(() => NewsSpotType, { nullable: true })
+  spot?: NewsSpotType;
 
   @Field(() => [String])
   targetCityIds!: string[];
@@ -63,16 +88,28 @@ export class NewsCommentType {
   @Field(() => ID)
   newsId!: string;
 
+  // The comment this one replies to (null = top-level comment).
+  @Field(() => ID, { nullable: true })
+  parentId?: string;
+
+  // When set, this is an official reply posted as the spot.
+  @Field(() => ID, { nullable: true })
+  asSpotId?: string;
+
   @Field()
   content!: string;
 
-  // Display name of the commenter (resolved from the user).
+  // Display name: the spot's name for official spot replies, else the user's.
   @Field({ nullable: true })
   userName?: string;
 
-  // Commenter's profile picture URL (resolved from the user).
+  // Avatar: the spot's logo for official spot replies, else the user's picture.
   @Field({ nullable: true })
   userAvatar?: string;
+
+  // True when the comment is an official spot reply (for a badge in the UI).
+  @Field()
+  isSpotReply!: boolean;
 
   @Field()
   createdAt!: Date;
@@ -124,4 +161,33 @@ export class UpdateNewsInput {
 
   @Field(() => Boolean, { nullable: true })
   isPublished?: boolean;
+}
+
+/**
+ * Create-news input for a spot admin publishing from the spot app. Simpler
+ * than the global admin form: one title/description (optionally localized),
+ * optional images already uploaded, and the authoring spot. Targeting is
+ * derived from the spot's city, so no city picker is needed.
+ */
+@InputType()
+export class CreateSpotNewsInput {
+  @Field(() => ID)
+  spotId!: string;
+
+  @Field()
+  title!: string;
+
+  @Field()
+  description!: string;
+
+  // Optional localized blobs (JSON strings). If omitted, title/description
+  // are used for all languages.
+  @Field({ nullable: true })
+  titleLocal?: string;
+
+  @Field({ nullable: true })
+  descriptionLocal?: string;
+
+  @Field(() => [String], { defaultValue: [] })
+  images!: string[];
 }

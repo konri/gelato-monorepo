@@ -132,3 +132,32 @@ export class ReferralStatsType {
   @Field(() => Int)
   totalPointsEarned!: number;
 }
+
+/**
+ * Customer summary shown to spot staff before awarding points, resolved by
+ * scanning the loyalty QR or typing the account number.
+ */
+@ObjectType()
+export class LoyaltyCustomerType {
+  @Field(() => ID)
+  id!: string;
+
+  @Field({ nullable: true })
+  name?: string;
+
+  @Field({ nullable: true })
+  loyaltyCode?: string;
+
+  @Field({ nullable: true })
+  profilePicture?: string;
+
+  @Field(() => Int)
+  availablePoints!: number;
+
+  @Field(() => Int)
+  totalPoints!: number;
+
+  // Number of active prizes this customer can currently afford.
+  @Field(() => Int)
+  availablePrizes!: number;
+}

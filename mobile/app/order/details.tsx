@@ -24,6 +24,7 @@ export default function OrderDetailsScreen() {
   const { t } = useTranslation();
   const cart = useCart();
   const { data: spot } = useSpotDetail(cart.spotId);
+  const isPickup = cart.fulfillmentType === 'pickup';
 
   const [buildingType, setBuildingType] = useState<'house' | 'apartment'>('apartment');
   const [apartmentNumber, setApartmentNumber] = useState('');
@@ -50,11 +51,11 @@ export default function OrderDetailsScreen() {
   const promo = cart.form?.promo ?? null;
   const discount = promo?.discountAmount ?? 0;
 
-  // Delivery fee: spot fee, waived over free-delivery threshold.
+  // Delivery fee: spot fee, waived over free-delivery threshold. Pickup is free.
   const baseFee = cart.delivery?.deliveryFee ?? spot?.deliveryFee ?? 0;
   const freeThreshold = cart.delivery?.freeDeliveryThreshold ?? spot?.freeDeliveryThreshold ?? null;
-  const deliveryFee = freeThreshold != null && subtotal >= freeThreshold ? 0 : baseFee;
-  const amountToFree = freeThreshold != null ? Math.max(0, freeThreshold - subtotal) : 0;
+  const deliveryFee = isPickup ? 0 : freeThreshold != null && subtotal >= freeThreshold ? 0 : baseFee;
+  const amountToFree = isPickup || freeThreshold == null ? 0 : Math.max(0, freeThreshold - subtotal);
 
   const total = Math.max(0, subtotal - discount) + deliveryFee;
 
@@ -115,8 +116,8 @@ export default function OrderDetailsScreen() {
   });
 
   const canContinue =
-    !!cart.delivery &&
-    (buildingType === 'house' || apartmentNumber.trim().length > 0) &&
+    // Pickup needs no address / building details; delivery does.
+    (isPickup || (!!cart.delivery && (buildingType === 'house' || apartmentNumber.trim().length > 0))) &&
     (!invoiceRequested || (invoiceNIP.trim() && invoiceCompanyName.trim()));
 
   return (
@@ -131,20 +132,39 @@ export default function OrderDetailsScreen() {
       </View>
 
       <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16 }}>
-        {/* Delivery address (with change) */}
-        <Section title={t('Checkout.deliveryAddress')}>
-          <View className="flex-row items-start">
-            <Ionicons name="location" size={18} color="#EC2828" style={{ marginTop: 2 }} />
-            <Text className="flex-1 ml-2 font-urbanist text-text-primary">
-              {cart.delivery?.address ?? '—'}
-            </Text>
-            <Pressable onPress={() => router.back()} hitSlop={8}>
-              <Text className="font-urbanist-bold text-accent">{t('Checkout.change')}</Text>
-            </Pressable>
-          </View>
-        </Section>
+        {isPickup ? (
+          /* Collect-at-spot summary */
+          <Section title={t('Checkout.pickupLocation')}>
+            <View className="flex-row items-start">
+              <Ionicons name="storefront" size={18} color="#EC2828" style={{ marginTop: 2 }} />
+              <View className="flex-1 ml-2">
+                <Text className="font-urbanist-bold text-text-primary">{spot?.name ?? '—'}</Text>
+                {spot?.address ? (
+                  <Text className="font-urbanist text-text-secondary mt-0.5">{spot.address}</Text>
+                ) : null}
+                <Text className="font-urbanist text-text-tertiary text-xs mt-1">
+                  {t('Checkout.pickupHint')}
+                </Text>
+              </View>
+            </View>
+          </Section>
+        ) : (
+          /* Delivery address (with change) */
+          <Section title={t('Checkout.deliveryAddress')}>
+            <View className="flex-row items-start">
+              <Ionicons name="location" size={18} color="#EC2828" style={{ marginTop: 2 }} />
+              <Text className="flex-1 ml-2 font-urbanist text-text-primary">
+                {cart.delivery?.address ?? '—'}
+              </Text>
+              <Pressable onPress={() => router.back()} hitSlop={8}>
+                <Text className="font-urbanist-bold text-accent">{t('Checkout.change')}</Text>
+              </Pressable>
+            </View>
+          </Section>
+        )}
 
-        {/* Building type / apartment / floor */}
+        {/* Building type / apartment / floor — delivery only */}
+        {!isPickup && (
         <Section title={t('Checkout.building')}>
           <View className="flex-row mb-3">
             <TypeChip
@@ -176,9 +196,10 @@ export default function OrderDetailsScreen() {
             </View>
           ) : null}
         </Section>
+        )}
 
-        {/* Delivery time */}
-        <Section title={t('Checkout.deliveryTime')}>
+        {/* Time: delivery ETA or pickup collection time */}
+        <Section title={t(isPickup ? 'Checkout.pickupTime' : 'Checkout.deliveryTime')}>
           <Pressable
             className={`flex-row items-center justify-between rounded-xl px-4 py-3 mb-2 border ${
               slot === null ? 'border-accent bg-accent/5' : 'border-gray-200'
@@ -270,10 +291,12 @@ export default function OrderDetailsScreen() {
           {discount > 0 ? (
             <Row label={t('Checkout.discount')} value={`−${zl(discount)}`} highlight />
           ) : null}
-          <Row
-            label={t('Checkout.delivery')}
-            value={deliveryFee === 0 ? t('Checkout.free') : zl(deliveryFee)}
-          />
+          {!isPickup && (
+            <Row
+              label={t('Checkout.delivery')}
+              value={deliveryFee === 0 ? t('Checkout.free') : zl(deliveryFee)}
+            />
+          )}
           {amountToFree > 0 ? (
             <Text className="text-xs font-urbanist text-accent mt-1">
               {t('Checkout.addForFree', { amount: zl(amountToFree) })}
@@ -309,13 +332,15 @@ export default function OrderDetailsScreen() {
 
         {/* Notes */}
         <Section title={t('Checkout.notes')}>
-          <Field
-            className="mb-3"
-            placeholder={t('Checkout.noteCourier')}
-            value={noteForCourier}
-            onChangeText={setNoteForCourier}
-            multiline
-          />
+          {!isPickup && (
+            <Field
+              className="mb-3"
+              placeholder={t('Checkout.noteCourier')}
+              value={noteForCourier}
+              onChangeText={setNoteForCourier}
+              multiline
+            />
+          )}
           <Field
             placeholder={t('Checkout.noteSpot')}
             value={noteForSpot}

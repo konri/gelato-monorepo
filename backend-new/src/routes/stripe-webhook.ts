@@ -4,6 +4,7 @@ import Stripe from 'stripe';
 import { StripeService } from '../services/StripeService';
 import { PubSubService } from '../services/PubSubService';
 import { EmailService } from '../services/EmailService';
+import { OrderPointsService } from '../services/OrderPointsService';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -106,6 +107,13 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
 
   console.log(`✅ Payment succeeded for order ${order.orderNumber}`);
 
+  // Pickup orders paid online (pay-now) earn their loyalty points immediately.
+  // Delivery orders still earn on DELIVERED; cash pickups earn on collection.
+  // The award is idempotent (pointsAwarded guard), so collection won't re-award.
+  if (order.fulfillmentType === 'PICKUP') {
+    await OrderPointsService.awardOrderPointsIfNeeded(order.id, prisma);
+  }
+
   // Notify the user and the spot (client subscribes to order status; spot to new orders).
   await PubSubService.publishOrderStatusChanged(order);
   await PubSubService.publishNewOrderNotification(order.spotId, order);
@@ -124,8 +132,11 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     subtotal: order.subtotal,
     deliveryFee: order.deliveryFee,
     total: order.total,
-    deliveryAddress: order.deliveryAddress,
-    estimatedDelivery: '30-45 minutes',
+    deliveryAddress:
+      order.fulfillmentType === 'PICKUP'
+        ? `Pickup at ${order.spot.name}`
+        : order.deliveryAddress ?? '',
+    estimatedDelivery: order.fulfillmentType === 'PICKUP' ? 'Ready soon' : '30-45 minutes',
     spotName: order.spot.name,
     language: order.user.language,
   });

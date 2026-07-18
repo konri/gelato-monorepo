@@ -54,6 +54,10 @@ export type OrderDetail = OrderListEntry & {
   deliveryLongitude: number;
   scheduledFor?: string | null;
   courierLocation?: OrderCourierLocation | null;
+  // Assigned courier + the pickup code staff read out to the courier.
+  courierName?: string | null;
+  courierPhoto?: string | null;
+  pickupCode?: string | null;
 };
 
 export type MyOrdersResponse = { myOrders: OrderListEntry[] };

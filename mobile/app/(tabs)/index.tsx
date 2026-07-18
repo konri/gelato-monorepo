@@ -9,6 +9,9 @@ import Wordmark from '@/assets/images/bonapka.svg';
 import { NewsFeed, NewsFeedHandle } from '@/components/molecules/NewsFeed';
 import { TasksTabContent } from '@/components/molecules/Quests/TasksTabContent';
 import { usePointBalance } from '@/hooks/usePointBalance';
+import { useWhoAmI } from '@/hooks/useWhoAmI';
+import { useMyOrders } from '@/hooks/useOrders';
+import { usePrizes } from '@/hooks/usePrizes';
 import { useUnreadNotificationsCount } from '@/hooks/useUnreadNotificationsCount';
 import { TAB_BAR_TOTAL_HEIGHT } from '@/constants/tabBarStyles';
 import QRCodeSVG from 'react-native-qrcode-svg';
@@ -59,28 +62,35 @@ function NewsTab() {
 function AccountTab() {
   const { t } = useTranslation();
   const { data: pointBalance, refetch: refetchPoints } = usePointBalance();
+  const { data: me, refetch: refetchMe } = useWhoAmI();
+  const { data: myOrders, refetch: refetchOrders } = useMyOrders();
+  const { data: prizes, refetch: refetchPrizes } = usePrizes();
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await refetchPoints();
+      await Promise.all([refetchPoints(), refetchMe(), refetchOrders(), refetchPrizes()]);
     } finally {
       setRefreshing(false);
     }
-  }, [refetchPoints]);
+  }, [refetchPoints, refetchMe, refetchOrders, refetchPrizes]);
 
-  // Mock data - will be replaced with real API calls
+  // Real user identity. The QR encodes the user id (scanned at a spot to award
+  // points); the short loyalty code is shown as the human-readable account
+  // number that staff can also type in manually.
   const userPoints = pointBalance?.availablePoints ?? 0;
-  const userName = 'John Doe';
-  const userId = '123456789ABCDEF';
+  const userId = me?.id ?? '';
+  const loyaltyCode = me?.loyaltyCode ?? '';
   const userQRCode = JSON.stringify({
-    userId: userId,
+    userId,
     type: 'LOYALTY_USER',
-    timestamp: Date.now(),
   });
-  const totalOrders = 42;
-  const availablePrizes = 3;
+  const totalOrders = myOrders?.length ?? 0;
+  // Active prizes the user can currently afford with their point balance.
+  const availablePrizes = (prizes ?? []).filter(
+    (p) => p.isActive && p.pointsCost <= userPoints,
+  ).length;
 
   const handleRedeemPoints = () => {
     router.push('/prizes' as any);
@@ -165,7 +175,7 @@ function AccountTab() {
             {t('Home.accountNumber')}
           </Text>
           <Text className="text-sm font-mono font-urbanist-bold text-gray-900 text-center">
-            {userId.slice(0, 16).toUpperCase()}
+            {loyaltyCode || '—'}
           </Text>
         </View>
       </View>

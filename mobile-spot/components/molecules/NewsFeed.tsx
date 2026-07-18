@@ -53,6 +53,8 @@ export const NewsFeed = forwardRef<NewsFeedHandle>((_props, ref) => {
           title={item.title}
           description={item.description}
           imageUrls={item.images}
+          storeName={item.spot?.name}
+          storeLogoUrl={item.spot?.logoUrl ?? undefined}
           timestamp={timeAgo(item.publishedAt ?? item.createdAt)}
           likes={item.likesCount}
           isLiked={item.isLiked}

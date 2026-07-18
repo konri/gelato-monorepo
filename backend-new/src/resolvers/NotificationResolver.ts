@@ -1,7 +1,8 @@
-import { Resolver, Mutation, Arg, Ctx, Authorized, Query } from 'type-graphql';
+import { Resolver, Mutation, Arg, Ctx, Authorized, Query, ID, Int } from 'type-graphql';
 import { Role } from '@prisma/client';
 import { Context } from '../types/Context';
 import { FCMService, NotificationType } from '../services/FCMService';
+import { NotificationType as NotificationObjectType } from '../types/NotificationType';
 
 /**
  * Notification Management Resolver
@@ -122,6 +123,70 @@ export class NotificationResolver {
       },
     });
     return tokens.map((t) => t.token);
+  }
+
+  /**
+   * The current user's in-app notifications (bell list), newest first.
+   */
+  @Authorized()
+  @Query(() => [NotificationObjectType])
+  async myNotifications(
+    @Arg('unreadOnly', () => Boolean, { defaultValue: false }) unreadOnly: boolean,
+    @Arg('limit', () => Int, { defaultValue: 50 }) limit: number,
+    @Ctx() { req, prisma }: Context
+  ): Promise<NotificationObjectType[]> {
+    const rows = await prisma.notification.findMany({
+      where: { userId: req.user!.id, ...(unreadOnly ? { isRead: false } : {}) },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+    return rows.map((n) => ({
+      id: n.id,
+      title: n.title,
+      body: n.body,
+      imageUrl: n.imageUrl ?? undefined,
+      type: n.type,
+      isRead: n.isRead,
+      createdAt: n.createdAt,
+    }));
+  }
+
+  /**
+   * Count of the current user's unread notifications (for a badge).
+   */
+  @Authorized()
+  @Query(() => Int)
+  async unreadNotificationCount(@Ctx() { req, prisma }: Context): Promise<number> {
+    return prisma.notification.count({ where: { userId: req.user!.id, isRead: false } });
+  }
+
+  /**
+   * Mark one notification read (must belong to the caller).
+   */
+  @Authorized()
+  @Mutation(() => Boolean)
+  async markNotificationRead(
+    @Arg('id', () => ID) id: string,
+    @Ctx() { req, prisma }: Context
+  ): Promise<boolean> {
+    const result = await prisma.notification.updateMany({
+      where: { id, userId: req.user!.id },
+      data: { isRead: true, readAt: new Date() },
+    });
+    return result.count > 0;
+  }
+
+  /**
+   * Mark all of the caller's notifications read.
+   */
+  @Authorized()
+  @Mutation(() => Boolean)
+  async markAllNotificationsRead(@Ctx() { req, prisma }: Context): Promise<boolean> {
+    await prisma.notification.updateMany({
+      where: { userId: req.user!.id, isRead: false },
+      data: { isRead: true, readAt: new Date() },
+    });
+    return true;
   }
 
   /**

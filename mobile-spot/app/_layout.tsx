@@ -6,11 +6,15 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import 'react-native-reanimated'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { onSessionExpired } from '@/shared/api-client/src/session'
+import { useAuthState } from '@/hooks/useAuthState'
+import { OrderAlertProvider } from '@/components/organisms/OrderAlertProvider'
+import { ToastProvider } from '@/components/organisms/ToastProvider'
 import '../translations'
 import './global.css'
 
 export default function RootLayout() {
   useAppInitialization()
+  const { isLoggedIn } = useAuthState()
 
   // When a request can't be authorized (token expired + refresh failed), the
   // session module clears storage and fires this — send the user to login.
@@ -35,11 +39,23 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" options={{ headerShown: true }} />
-        </Stack>
+        <ToastProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="login" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="spot-details/index" options={{ headerShown: false }} />
+            <Stack.Screen name="dashboard/index" options={{ headerShown: false }} />
+            <Stack.Screen name="complaints/index" options={{ headerShown: false }} />
+            <Stack.Screen name="news/index" options={{ headerShown: false }} />
+            <Stack.Screen name="news_comments/[postId]" options={{ headerShown: false }} />
+            <Stack.Screen name="staff/index" options={{ headerShown: false }} />
+            <Stack.Screen name="notifications/index" options={{ headerShown: false }} />
+            <Stack.Screen name="order/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="+not-found" options={{ headerShown: true }} />
+          </Stack>
+          {/* App-wide incoming-order alert (non-dismissable, audible). */}
+          <OrderAlertProvider enabled={isLoggedIn} />
+        </ToastProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

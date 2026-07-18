@@ -5,6 +5,7 @@ import {
   CREATE_ADMIN_ACCOUNT,
   type AdminAccount,
 } from '../graphql/admin';
+import { RESEND_ADMIN_INVITE } from '../graphql/spots';
 
 const input =
   'w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-1 focus:ring-brand';
@@ -17,6 +18,18 @@ export function AdminsPage() {
   const [createAdmin, { loading: creating }] = useMutation(CREATE_ADMIN_ACCOUNT, {
     refetchQueries: [{ query: ADMIN_ACCOUNTS }],
   });
+  const [resendInvite] = useMutation(RESEND_ADMIN_INVITE);
+  const [resent, setResent] = useState<Record<string, 'sending' | 'sent' | 'error'>>({});
+
+  const resend = async (userId: string) => {
+    setResent((r) => ({ ...r, [userId]: 'sending' }));
+    try {
+      await resendInvite({ variables: { userId } });
+      setResent((r) => ({ ...r, [userId]: 'sent' }));
+    } catch {
+      setResent((r) => ({ ...r, [userId]: 'error' }));
+    }
+  };
 
   const [form, setForm] = useState({ email: '', name: '', role: 'SUPER_ADMIN' });
   const [error, setError] = useState<string | null>(null);
@@ -102,34 +115,53 @@ export function AdminsPage() {
               <th className="px-5 py-3">Name</th>
               <th className="px-5 py-3">Email</th>
               <th className="px-5 py-3">Roles</th>
+              <th className="px-5 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {loading && (
               <tr>
-                <td colSpan={3} className="px-5 py-6 text-center text-gray-500">
+                <td colSpan={4} className="px-5 py-6 text-center text-gray-500">
                   Loading…
                 </td>
               </tr>
             )}
             {!loading && admins.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-5 py-6 text-center text-gray-500">
+                <td colSpan={4} className="px-5 py-6 text-center text-gray-500">
                   No admins yet.
                 </td>
               </tr>
             )}
-            {admins.map((a) => (
-              <tr key={a.id}>
-                <td className="px-5 py-3 font-medium text-gray-900">{a.name || '—'}</td>
-                <td className="px-5 py-3 text-gray-600">{a.email}</td>
-                <td className="px-5 py-3">
-                  <span className="rounded-full bg-brand-light px-2.5 py-1 text-xs font-semibold text-brand">
-                    {a.roles.join(', ')}
-                  </span>
-                </td>
-              </tr>
-            ))}
+            {admins.map((a) => {
+              const state = resent[a.id];
+              return (
+                <tr key={a.id}>
+                  <td className="px-5 py-3 font-medium text-gray-900">{a.name || '—'}</td>
+                  <td className="px-5 py-3 text-gray-600">{a.email}</td>
+                  <td className="px-5 py-3">
+                    <span className="rounded-full bg-brand-light px-2.5 py-1 text-xs font-semibold text-brand">
+                      {a.roles.join(', ')}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3 text-right">
+                    <button
+                      onClick={() => resend(a.id)}
+                      disabled={state === 'sending'}
+                      className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                    >
+                      {state === 'sending'
+                        ? 'Sending…'
+                        : state === 'sent'
+                          ? 'Code sent ✓'
+                          : state === 'error'
+                            ? 'Failed — retry'
+                            : 'Resend code'}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

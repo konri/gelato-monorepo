@@ -8,10 +8,11 @@ const router = Router();
 const prisma = new PrismaClient();
 
 // Configure multer for memory storage
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10MB
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
+    fileSize: MAX_UPLOAD_BYTES,
   },
 });
 
@@ -199,13 +200,36 @@ router.post('/spot/:spotId', requireAuth, requireSpotAdmin, upload.single('image
  * Upload news image
  * POST /upload/news/:newsId
  */
-router.post('/news/:newsId', requireAuth, requireAdmin, upload.single('image'), async (req: Request, res: Response) => {
+router.post('/news/:newsId', requireAuth, upload.single('image'), async (req: Request, res: Response) => {
   try {
     const { newsId } = req.params;
     const file = req.file;
 
     if (!file) {
       return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const news = await prisma.news.findUnique({ where: { id: newsId } });
+    if (!news) {
+      return res.status(404).json({ error: 'News not found' });
+    }
+
+    // Authorize: global admins always; otherwise the user must manage the
+    // authoring spot (spot admin / employee of news.spotId).
+    const userId = (req as any).userId;
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { roles: true } });
+    const isGlobalAdmin =
+      !!user && (user.roles.includes('SUPER_ADMIN') || user.roles.includes('SPOTS_ADMIN'));
+    if (!isGlobalAdmin) {
+      let ok = false;
+      if (news.spotId) {
+        const [spotAdmin, employee] = await Promise.all([
+          prisma.spotAdminProfile.findFirst({ where: { userId, spotId: news.spotId } }),
+          prisma.employeeProfile.findFirst({ where: { userId, spotId: news.spotId } }),
+        ]);
+        ok = !!spotAdmin || !!employee;
+      }
+      if (!ok) return res.status(403).json({ error: 'Not allowed to edit this news post' });
     }
 
     S3Service.validateImage(file);
@@ -216,12 +240,6 @@ router.post('/news/:newsId', requireAuth, requireAdmin, upload.single('image'), 
       file.originalname,
       file.mimetype
     );
-
-    // Add to news images array
-    const news = await prisma.news.findUnique({ where: { id: newsId } });
-    if (!news) {
-      return res.status(404).json({ error: 'News not found' });
-    }
 
     await prisma.news.update({
       where: { id: newsId },
@@ -300,6 +318,54 @@ router.post('/profile', requireAuth, upload.single('image'), async (req: Request
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
+});
+
+/**
+ * Upload a delivery-incident photo (courier reporting bike damage, etc.).
+ * POST /upload/delivery-incident/:orderId — only the assigned courier.
+ * Returns { imageUrl }; the courier then passes it to reportDeliveryIncident.
+ */
+router.post('/delivery-incident/:orderId', requireAuth, upload.single('image'), async (req: Request, res: Response) => {
+  try {
+    const { orderId } = req.params;
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const userId = (req as any).userId;
+    const order = await prisma.order.findUnique({ where: { id: orderId }, select: { courierId: true } });
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    const courier = await prisma.courierProfile.findUnique({ where: { userId }, select: { id: true } });
+    if (!courier || order.courierId !== courier.id) {
+      return res.status(403).json({ error: 'Not assigned to this order' });
+    }
+
+    S3Service.validateImage(file);
+    const imageUrl = await S3Service.uploadImage(
+      file.buffer,
+      `delivery-incidents/${orderId}`,
+      file.originalname,
+      file.mimetype
+    );
+    res.json({ imageUrl });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Turn Multer errors (e.g. file too large) into clean JSON instead of an
+// HTML stack trace, so the client can show a proper message.
+router.use((err: any, _req: Request, res: Response, next: any) => {
+  if (err && err.name === 'MulterError') {
+    const tooBig = err.code === 'LIMIT_FILE_SIZE';
+    return res.status(400).json({
+      error: tooBig
+        ? `Image is too large. Max ${Math.round(MAX_UPLOAD_BYTES / (1024 * 1024))} MB.`
+        : `Upload error: ${err.message}`,
+      code: err.code,
+    });
+  }
+  if (err) return res.status(500).json({ error: err.message ?? 'Upload failed' });
+  next();
 });
 
 export default router;

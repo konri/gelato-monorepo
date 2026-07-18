@@ -1,10 +1,15 @@
 import { ObjectType, Field, ID, Float, Int, InputType, registerEnumType } from 'type-graphql';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, FulfillmentType } from '@prisma/client';
 
-// Register Prisma enum with TypeGraphQL
+// Register Prisma enums with TypeGraphQL
 registerEnumType(OrderStatus, {
   name: 'OrderStatus',
   description: 'Order lifecycle status',
+});
+
+registerEnumType(FulfillmentType, {
+  name: 'FulfillmentType',
+  description: 'How the customer receives the order (delivery vs pickup)',
 });
 
 /**
@@ -38,6 +43,17 @@ export class OrderItemType {
 
   @Field()
   createdAt!: Date;
+
+  // Human-readable name of what was ordered (taste title or product name),
+  // resolved from the referenced taste/product. Lets staff see what to prepare.
+  @Field({ nullable: true })
+  displayName?: string;
+
+  // For box products: the chosen taste names (one entry per scoop).
+  // Provided by a field resolver — optional on the TS type so existing
+  // Prisma-row casts to OrderType still hold.
+  @Field(() => [String])
+  boxTasteNames?: string[];
 }
 
 /**
@@ -59,6 +75,9 @@ export class OrderType {
 
   @Field(() => OrderStatus)
   status!: OrderStatus;
+
+  @Field(() => FulfillmentType)
+  fulfillmentType!: FulfillmentType;
 
   @Field(() => [OrderItemType])
   items!: OrderItemType[];
@@ -84,14 +103,14 @@ export class OrderType {
   @Field()
   paymentStatus!: string;
 
-  @Field()
-  deliveryAddress!: string;
+  @Field({ nullable: true })
+  deliveryAddress?: string;
 
-  @Field()
-  deliveryLatitude!: number;
+  @Field({ nullable: true })
+  deliveryLatitude?: number;
 
-  @Field()
-  deliveryLongitude!: number;
+  @Field({ nullable: true })
+  deliveryLongitude?: number;
 
   @Field({ nullable: true })
   buildingType?: string;
@@ -138,6 +157,14 @@ export class OrderType {
   @Field({ nullable: true })
   courierAssignedAt?: Date;
 
+  // Handover codes. pickupCode is shown to spot staff (courier reads it back);
+  // deliveryPin is shown to the customer (courier enters it to mark delivered).
+  @Field({ nullable: true })
+  pickupCode?: string;
+
+  @Field({ nullable: true })
+  deliveryPin?: string;
+
   @Field({ nullable: true })
   acceptedAt?: Date;
 
@@ -151,6 +178,9 @@ export class OrderType {
   deliveredAt?: Date;
 
   @Field({ nullable: true })
+  collectedAt?: Date;
+
+  @Field({ nullable: true })
   cancelledAt?: Date;
 
   @Field()
@@ -158,6 +188,26 @@ export class OrderType {
 
   @Field()
   updatedAt!: Date;
+}
+
+/**
+ * Result of a staff collecting a pickup order at the spot.
+ */
+@ObjectType()
+export class CollectOrderResult {
+  @Field(() => ID)
+  orderId!: string;
+
+  @Field()
+  orderNumber!: string;
+
+  @Field(() => OrderStatus)
+  status!: OrderStatus;
+
+  // Points credited to the customer as part of this collection (0 if the
+  // order was already paid online and points were awarded earlier).
+  @Field(() => Int)
+  pointsAwarded!: number;
 }
 
 /**
@@ -191,14 +241,18 @@ export class CreateOrderInput {
   @Field(() => [OrderItemInput])
   items!: OrderItemInput[];
 
-  @Field()
-  deliveryAddress!: string;
+  // DELIVERY (default) requires the address fields below; PICKUP ignores them.
+  @Field(() => FulfillmentType, { nullable: true })
+  fulfillmentType?: FulfillmentType;
 
-  @Field()
-  deliveryLatitude!: number;
+  @Field({ nullable: true })
+  deliveryAddress?: string;
 
-  @Field()
-  deliveryLongitude!: number;
+  @Field({ nullable: true })
+  deliveryLatitude?: number;
+
+  @Field({ nullable: true })
+  deliveryLongitude?: number;
 
   @Field({ nullable: true })
   buildingType?: string;

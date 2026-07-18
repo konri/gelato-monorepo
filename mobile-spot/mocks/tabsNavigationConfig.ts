@@ -18,6 +18,27 @@ export const DEFAULT_TABS_CONFIG: TabsNavigationConfig = {
       variant: "standard",
     },
     {
+      name: "scan",
+      labelKey: "SpotTabs.scan",
+      icon: "qr",
+      order: 2,
+      variant: "standard",
+    },
+    {
+      name: "couriers",
+      labelKey: "SpotTabs.couriers",
+      icon: "map",
+      order: 3,
+      variant: "standard",
+    },
+    {
+      name: "menu",
+      labelKey: "SpotTabs.menu",
+      icon: "icecream",
+      order: 4,
+      variant: "standard",
+    },
+    {
       name: "profile",
       labelKey: "SpotTabs.profile",
       icon: "profile",

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { adminForgotPassword, adminResetPassword } from '../lib/authApi';
 
@@ -8,9 +8,14 @@ type Mode = 'login' | 'forgot' | 'reset';
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<Mode>('login');
+  const [searchParams] = useSearchParams();
 
-  const [email, setEmail] = useState('');
+  // An invite email links here with ?mode=reset&email=… so the new admin
+  // lands directly on the set-password form (they already have their code).
+  const paramMode = searchParams.get('mode');
+  const [mode, setMode] = useState<Mode>(paramMode === 'reset' ? 'reset' : 'login');
+
+  const [email, setEmail] = useState(searchParams.get('email') ?? '');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -69,7 +74,7 @@ export function LoginPage() {
               ? 'Sign in to manage spots'
               : mode === 'forgot'
               ? 'Reset your password'
-              : 'Enter the code from your email'}
+              : 'Enter your code and set a password'}
           </p>
         </div>
 
@@ -146,8 +151,16 @@ export function LoginPage() {
           <form onSubmit={submitReset} className="space-y-3">
             <input
               className={input}
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <input
+              className={input}
               type="text"
-              placeholder="Reset code"
+              placeholder="Code from your email"
               value={code}
               onChange={(e) => setCode(e.target.value)}
               required

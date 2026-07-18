@@ -426,6 +426,11 @@ export class SpotResolver {
     @Arg('deliveryRadiusKm', { nullable: true }) deliveryRadiusKm?: number,
     @Arg('freeDeliveryThreshold', { nullable: true }) freeDeliveryThreshold?: number,
     @Arg('isActive', { nullable: true }) isActive?: boolean,
+    @Arg('email', () => String, { nullable: true }) email?: string,
+    @Arg('openingHours', () => String, { nullable: true }) openingHours?: string,
+    @Arg('hasSeating', () => Boolean, { nullable: true }) hasSeating?: boolean,
+    @Arg('seatingCapacity', () => Int, { nullable: true }) seatingCapacity?: number,
+    @Arg('accessibilityFeatures', () => String, { nullable: true }) accessibilityFeatures?: string,
     @Ctx() { req, prisma }: Context
   ): Promise<SpotType> {
     const user = req.user!;
@@ -449,6 +454,12 @@ export class SpotResolver {
     if (deliveryRadiusKm !== undefined) updateData.deliveryRadiusKm = deliveryRadiusKm;
     if (freeDeliveryThreshold !== undefined) updateData.freeDeliveryThreshold = freeDeliveryThreshold;
     if (isActive !== undefined) updateData.isActive = isActive;
+    if (email !== undefined) updateData.email = email;
+    // openingHours arrives as a JSON string ({ monday: "10:00-22:00", ... }).
+    if (openingHours !== undefined) updateData.openingHours = JSON.parse(openingHours);
+    if (hasSeating !== undefined) updateData.hasSeating = hasSeating;
+    if (seatingCapacity !== undefined) updateData.seatingCapacity = seatingCapacity;
+    if (accessibilityFeatures !== undefined) updateData.accessibilityFeatures = accessibilityFeatures;
 
     const spot = await prisma.spot.update({
       where: { id },
@@ -457,6 +468,26 @@ export class SpotResolver {
 
     console.log(`✅ Spot updated: ${spot.name} (${spot.id})`);
 
+    return spot as SpotType;
+  }
+
+  /**
+   * Replace a spot's gallery photos (SUPER_ADMIN, SPOTS_ADMIN, managing SPOT_ADMIN).
+   * The client sends the full desired array — used to remove/reorder photos.
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN])
+  @Mutation(() => SpotType)
+  async setSpotPhotos(
+    @Arg('id', () => ID) id: string,
+    @Arg('photos', () => [String]) photos: string[],
+    @Ctx() { req, prisma }: Context
+  ): Promise<SpotType> {
+    const user = req.user!;
+    if (user.roles.includes(Role.SPOT_ADMIN) && !isSuperAdmin(user) && !user.roles.includes(Role.SPOTS_ADMIN)) {
+      const ok = await canManageSpot(user.id, id, prisma);
+      if (!ok) throw new Error('You do not have permission to manage this spot');
+    }
+    const spot = await prisma.spot.update({ where: { id }, data: { photos } });
     return spot as SpotType;
   }
 

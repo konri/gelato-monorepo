@@ -17,40 +17,54 @@ export default function PaymentScreen() {
   const cart = useCart();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
+  const isPickup = cart.fulfillmentType === 'pickup';
   const [processing, setProcessing] = useState(false);
+  // Pay online (Stripe) now, or pay in cash at the spot. Cash is pickup-only.
+  const [payChoice, setPayChoice] = useState<'online' | 'cash'>('online');
+  const cash = isPickup && payChoice === 'cash';
 
   const discount = cart.form?.promo?.discountAmount ?? 0;
   const freeThreshold = cart.delivery?.freeDeliveryThreshold ?? null;
   const baseFee = cart.delivery?.deliveryFee ?? 0;
-  const deliveryFee = freeThreshold != null && cart.subtotal >= freeThreshold ? 0 : baseFee;
+  const deliveryFee = isPickup ? 0 : freeThreshold != null && cart.subtotal >= freeThreshold ? 0 : baseFee;
   const total = Math.max(0, cart.subtotal - discount) + deliveryFee;
 
   const buildInput = (): CreateOrderInput | null => {
-    if (!cart.spotId || !cart.delivery || cart.items.length === 0) return null;
+    if (!cart.spotId || cart.items.length === 0) return null;
+    // Delivery orders need a validated address; pickup orders don't.
+    if (!isPickup && !cart.delivery) return null;
     const f = cart.form;
+    const items = cart.items.map((i) => {
+      if (i.kind === 'taste') return { tasteId: i.refId, quantity: i.quantity };
+      // Expand box selections (title+qty) into a flat list of taste ids.
+      const boxTasteIds = i.boxSelections?.flatMap((s) =>
+        Array.from({ length: s.quantity }, () => s.tasteId),
+      );
+      return {
+        productId: i.refId,
+        quantity: i.quantity,
+        ...(boxTasteIds && boxTasteIds.length ? { boxTasteIds } : {}),
+      };
+    });
     return {
       spotId: cart.spotId,
-      items: cart.items.map((i) => {
-        if (i.kind === 'taste') return { tasteId: i.refId, quantity: i.quantity };
-        // Expand box selections (title+qty) into a flat list of taste ids.
-        const boxTasteIds = i.boxSelections?.flatMap((s) =>
-          Array.from({ length: s.quantity }, () => s.tasteId),
-        );
-        return {
-          productId: i.refId,
-          quantity: i.quantity,
-          ...(boxTasteIds && boxTasteIds.length ? { boxTasteIds } : {}),
-        };
-      }),
-      deliveryAddress: cart.delivery.address,
-      deliveryLatitude: cart.delivery.latitude,
-      deliveryLongitude: cart.delivery.longitude,
-      buildingType: f?.buildingType,
-      apartmentNumber: f?.apartmentNumber || undefined,
-      floor: f?.floor || undefined,
-      deliveryNotes: f?.noteForCourier || undefined,
+      items,
+      fulfillmentType: isPickup ? 'PICKUP' : 'DELIVERY',
+      // cash = pay at spot; otherwise pay online now via Stripe.
+      paymentMethod: cash ? 'cash' : 'card',
+      // Address only applies to delivery.
+      ...(isPickup
+        ? {}
+        : {
+            deliveryAddress: cart.delivery!.address,
+            deliveryLatitude: cart.delivery!.latitude,
+            deliveryLongitude: cart.delivery!.longitude,
+            buildingType: f?.buildingType,
+            apartmentNumber: f?.apartmentNumber || undefined,
+            floor: f?.floor || undefined,
+            deliveryNotes: f?.noteForCourier || undefined,
+          }),
       spotNotes: f?.noteForSpot || undefined,
-      paymentMethod: 'card',
       scheduledFor: f?.scheduledForIso || undefined,
       promoCode: f?.promo?.code,
       invoiceRequested: f?.invoiceRequested,
@@ -58,6 +72,15 @@ export default function PaymentScreen() {
       invoiceCompanyName: f?.invoiceCompanyName || undefined,
       invoiceAddress: f?.invoiceAddress || undefined,
     };
+  };
+
+  const goToSuccess = (order: { orderNumber: string; id: string }) => {
+    cart.clear();
+    router.replace(
+      `/order/success?orderNumber=${encodeURIComponent(order.orderNumber)}&orderId=${order.id}${
+        cash ? '&cash=1' : ''
+      }`,
+    );
   };
 
   const pay = async () => {
@@ -77,6 +100,12 @@ export default function PaymentScreen() {
         throw new Error(orderRes.error?.message || t('Payment.orderFailed'));
       }
       const order = orderRes.data;
+
+      // Pay-at-spot (cash): no online payment — order is settled on collection.
+      if (cash) {
+        goToSuccess(order);
+        return;
+      }
 
       // 2. Create a Stripe PaymentIntent for it.
       const piRes = await createPaymentIntent(order.id, auth);
@@ -106,8 +135,7 @@ export default function PaymentScreen() {
       }
 
       // 4. Success — clear cart, go to confetti screen.
-      cart.clear();
-      router.replace(`/order/success?orderNumber=${encodeURIComponent(order.orderNumber)}&orderId=${order.id}`);
+      goToSuccess(order);
     } catch (e) {
       Alert.alert(t('Payment.paymentFailed'), (e as Error).message);
     } finally {
@@ -130,9 +158,14 @@ export default function PaymentScreen() {
         <View className="bg-background-secondary rounded-2xl p-4">
           <Text className="font-urbanist-bold text-text-primary mb-2">{t('Checkout.summary')}</Text>
           <View className="flex-row items-start">
-            <Ionicons name="location" size={16} color="#EC2828" style={{ marginTop: 2 }} />
+            <Ionicons
+              name={isPickup ? 'storefront' : 'location'}
+              size={16}
+              color="#EC2828"
+              style={{ marginTop: 2 }}
+            />
             <Text className="ml-2 flex-1 font-urbanist text-text-secondary">
-              {cart.delivery?.address}
+              {isPickup ? t('Checkout.pickupAtSpot') : cart.delivery?.address}
             </Text>
           </View>
           <Text className="font-urbanist text-text-secondary mt-1">
@@ -144,25 +177,52 @@ export default function PaymentScreen() {
           {discount > 0 ? (
             <SummaryRow label={t('Checkout.discount')} value={`−${zl(discount)}`} />
           ) : null}
-          <SummaryRow
-            label={t('Checkout.delivery')}
-            value={deliveryFee === 0 ? t('Checkout.free') : zl(deliveryFee)}
-          />
+          {!isPickup && (
+            <SummaryRow
+              label={t('Checkout.delivery')}
+              value={deliveryFee === 0 ? t('Checkout.free') : zl(deliveryFee)}
+            />
+          )}
           <View className="flex-row justify-between mt-2">
             <Text className="font-urbanist-bold text-text-primary text-lg">{t('Checkout.total')}</Text>
             <Text className="font-urbanist-bold text-text-primary text-lg">{zl(total)}</Text>
           </View>
         </View>
 
-        <View className="mt-6 flex-row items-center flex-wrap justify-center">
-          <PayBadge icon="card-outline" label={t('Payment.card')} />
-          <PayBadge icon="logo-apple" label="Apple Pay" />
-          <PayBadge icon="logo-google" label="Google Pay" />
-          <PayBadge icon="cash-outline" label="BLIK" />
-        </View>
-        <Text className="font-urbanist text-text-tertiary text-center text-xs mt-2">
-          {t('Payment.securedByStripe')}
-        </Text>
+        {/* Payment method: pickup can choose pay-now or pay-at-spot; delivery pays now. */}
+        {isPickup ? (
+          <View className="mt-6">
+            <Text className="font-urbanist-bold text-text-primary mb-2">
+              {t('Payment.howToPay')}
+            </Text>
+            <PayOption
+              icon="card-outline"
+              title={t('Payment.payOnline')}
+              subtitle={t('Payment.payOnlineHint')}
+              active={payChoice === 'online'}
+              onPress={() => setPayChoice('online')}
+            />
+            <PayOption
+              icon="cash-outline"
+              title={t('Payment.payAtSpot')}
+              subtitle={t('Payment.payAtSpotHint')}
+              active={payChoice === 'cash'}
+              onPress={() => setPayChoice('cash')}
+            />
+          </View>
+        ) : (
+          <>
+            <View className="mt-6 flex-row items-center flex-wrap justify-center">
+              <PayBadge icon="card-outline" label={t('Payment.card')} />
+              <PayBadge icon="logo-apple" label="Apple Pay" />
+              <PayBadge icon="logo-google" label="Google Pay" />
+              <PayBadge icon="cash-outline" label="BLIK" />
+            </View>
+            <Text className="font-urbanist text-text-tertiary text-center text-xs mt-2">
+              {t('Payment.securedByStripe')}
+            </Text>
+          </>
+        )}
       </ScrollView>
 
       <View className="border-t border-gray-200 px-6 pt-3" style={{ paddingBottom: insets.bottom + 12 }}>
@@ -175,7 +235,7 @@ export default function PaymentScreen() {
             <ActivityIndicator color="white" />
           ) : (
             <Text className="text-white font-urbanist-bold text-base">
-              {t('Payment.payNow')} · {zl(total)}
+              {cash ? t('Payment.placeOrder') : t('Payment.payNow')} · {zl(total)}
             </Text>
           )}
         </Pressable>
@@ -196,4 +256,36 @@ const PayBadge = ({ icon, label }: { icon: any; label: string }) => (
     <Ionicons name={icon} size={16} color="#212121" />
     <Text className="ml-1.5 font-urbanist-semibold text-text-primary text-xs">{label}</Text>
   </View>
+);
+
+const PayOption = ({
+  icon,
+  title,
+  subtitle,
+  active,
+  onPress,
+}: {
+  icon: any;
+  title: string;
+  subtitle: string;
+  active: boolean;
+  onPress: () => void;
+}) => (
+  <Pressable
+    onPress={onPress}
+    className={`flex-row items-center rounded-2xl border px-4 py-3 mb-3 ${
+      active ? 'border-accent bg-accent/5' : 'border-gray-200'
+    }`}
+  >
+    <Ionicons name={icon} size={22} color={active ? '#EC2828' : '#6B7280'} />
+    <View className="flex-1 ml-3">
+      <Text className="font-urbanist-bold text-text-primary">{title}</Text>
+      <Text className="font-urbanist text-text-tertiary text-xs mt-0.5">{subtitle}</Text>
+    </View>
+    <Ionicons
+      name={active ? 'radio-button-on' : 'radio-button-off'}
+      size={20}
+      color={active ? '#EC2828' : '#9CA3AF'}
+    />
+  </Pressable>
 );

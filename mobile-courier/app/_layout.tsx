@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { StripeProvider } from '@stripe/stripe-react-native'
 import { onSessionExpired } from '@/shared/api-client/src/session'
 import { CartProvider } from '@/hooks/useCart'
+import { ToastProvider } from '@/components/organisms/ToastProvider'
 import { config } from '@/config'
 import '../translations'
 import './global.css'
@@ -45,13 +46,16 @@ export default function RootLayout() {
           merchantIdentifier="merchant.com.konradhopek.gelato.courier"
         >
           <CartProvider>
+          <ToastProvider>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="apply-spot" options={{ headerShown: false }} />
+            <Stack.Screen name="selfie/index" options={{ headerShown: false }} />
             <Stack.Screen name="delivery" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" options={{ headerShown: true }} />
           </Stack>
+          </ToastProvider>
           </CartProvider>
         </StripeProvider>
       </SafeAreaProvider>

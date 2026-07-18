@@ -1,4 +1,5 @@
 import {
+  City,
   NewsComment,
   NewsItem,
   commentNews,
@@ -7,22 +8,49 @@ import {
   likeNews,
 } from '@repo/api-client';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
-import { useCallback, useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCities } from './useTastes';
+
+// Match a stored city display name against a City's name/localized names.
+const matchesCity = (city: City, selected: string) => {
+  const local = typeof city.nameLocal === 'object' && city.nameLocal ? city.nameLocal : {};
+  return [city.name, (local as any).pl, (local as any).en, (local as any).ua]
+    .filter(Boolean)
+    .some((n: string) => n.toLowerCase() === selected.toLowerCase());
+};
 
 /**
- * News feed (city-scoped) with optimistic like toggling.
+ * News feed for the currently-selected city (spot-authored + global news),
+ * with optimistic like toggling.
  */
 export const useNewsFeed = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCityName, setSelectedCityName] = useState<string | null>(null);
+
+  const { data: cities } = useCities();
+  const cityId = useMemo(() => {
+    if (!cities || !selectedCityName) return null;
+    return cities.find((c) => matchesCity(c, selectedCityName))?.id ?? null;
+  }, [cities, selectedCityName]);
+
+  // Re-read the selected city each time the screen regains focus, so changing
+  // the city (e.g. in Settings) refreshes the feed when you return.
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem('selectedCity').then(setSelectedCityName);
+    }, []),
+  );
 
   const load = useCallback(async () => {
     const token = await safeGetItem('access_token');
-    // The backend infers city from targetCityIds; pass null = all-city news.
-    const res = await getNewsFeed(null, { token: token ?? undefined });
+    // cityId null = show all/global news until a city is chosen.
+    const res = await getNewsFeed(cityId, { token: token ?? undefined });
     if (res.success && res.data) setNews(res.data);
     setLoading(false);
-  }, []);
+  }, [cityId]);
 
   useEffect(() => {
     load();
@@ -74,12 +102,15 @@ export const useNewsComments = (newsId: string | null) => {
   }, [load]);
 
   const post = useCallback(
-    async (content: string) => {
+    async (content: string, parentId?: string | null) => {
       if (!newsId || !content.trim()) return;
       setPosting(true);
       try {
         const token = await safeGetItem('access_token');
-        const res = await commentNews(newsId, content.trim(), { token: token ?? undefined });
+        const res = await commentNews(newsId, content.trim(), {
+          token: token ?? undefined,
+          parentId: parentId ?? null,
+        });
         if (res.success && res.data) setComments((prev) => [...prev, res.data as NewsComment]);
       } finally {
         setPosting(false);

@@ -18,13 +18,17 @@ import { PromoCodeResolver } from './resolvers/PromoCodeResolver';
 import { NotificationResolver } from './resolvers/NotificationResolver';
 import { SubscriptionResolver } from './resolvers/SubscriptionResolver';
 import { TasteResolver } from './resolvers/TasteResolver';
-import { OrderResolver } from './resolvers/OrderResolver';
+import { OrderResolver, OrderItemResolver } from './resolvers/OrderResolver';
 import { CourierResolver, CourierApplicationResolver } from './resolvers/CourierResolver';
 import { PointsResolver } from './resolvers/PointsResolver';
 import { NewsResolver, NewsCommentResolver } from './resolvers/NewsResolver';
 import { PaymentResolver } from './resolvers/PaymentResolver';
 import { PrizeResolver } from './resolvers/PrizeResolver';
 import { QuestResolver } from './resolvers/QuestResolver';
+import { PointTemplateResolver } from './resolvers/PointTemplateResolver';
+import { SpotCourierResolver } from './resolvers/SpotCourierResolver';
+import { SpotDashboardResolver } from './resolvers/SpotDashboardResolver';
+import { ComplaintResolver } from './resolvers/ComplaintResolver';
 import { ReviewResolver } from './resolvers/ReviewResolver';
 import { AdminResolver } from './resolvers/AdminResolver';
 import { authMiddleware, authChecker } from './middleware/authMiddleware';
@@ -33,6 +37,7 @@ import { StripeService } from './services/StripeService';
 import uploadRoutes from './routes/upload';
 import stripeWebhookRoutes from './routes/stripe-webhook';
 import authRoutes from './routes/authRoutes';
+import reportRoutes from './routes/reports';
 
 dotenv.config();
 
@@ -54,7 +59,26 @@ async function startServer() {
   app.use('/stripe/webhook', express.raw({ type: 'application/json' }), stripeWebhookRoutes);
 
   // Middleware
-  app.use(cors());
+  // Explicit origin allowlist — required because clients send credentials
+  // ('credentials: include'), which browsers reject with a wildcard origin.
+  // Extra dev/prod origins can be added via CORS_ORIGINS (comma-separated).
+  const allowedOrigins = [
+    'http://localhost:3000', // landing page
+    'http://localhost:5173', // admin web
+    'http://localhost:8081', // expo web default
+    'http://localhost:8083', // spot app (web/tablet)
+    ...(process.env.CORS_ORIGINS?.split(',').map((o) => o.trim()).filter(Boolean) ?? []),
+  ];
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        // Allow non-browser clients (no Origin header) and allowlisted origins.
+        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error(`Origin not allowed by CORS: ${origin}`));
+      },
+      credentials: true,
+    })
+  );
   app.use(express.json());
   app.use(authMiddleware);
 
@@ -68,6 +92,9 @@ async function startServer() {
 
   // Upload routes (REST API for file uploads)
   app.use('/upload', uploadRoutes);
+
+  // Report routes (PDF exports: courier / daily orders / points)
+  app.use('/reports', reportRoutes);
 
   // Build GraphQL schema
   const schema = await buildSchema({
@@ -83,6 +110,7 @@ async function startServer() {
       ProductResolver,
       PromoCodeResolver,
       OrderResolver,
+      OrderItemResolver,
       CourierResolver,
       CourierApplicationResolver,
       PointsResolver,
@@ -91,6 +119,10 @@ async function startServer() {
       PaymentResolver,
       PrizeResolver,
       QuestResolver,
+      PointTemplateResolver,
+      SpotCourierResolver,
+      SpotDashboardResolver,
+      ComplaintResolver,
       ReviewResolver,
       AdminResolver,
     ],
@@ -170,7 +202,10 @@ async function startServer() {
   });
 
   await server.start();
-  server.applyMiddleware({ app, path: '/graphql' });
+  // cors:false → don't let Apollo apply its own wildcard CORS; the Express
+  // cors() allowlist above (with credentials) governs /graphql too. A wildcard
+  // origin is rejected by browsers when the request sends credentials.
+  server.applyMiddleware({ app, path: '/graphql', cors: false });
 
   httpServer.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);

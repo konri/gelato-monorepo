@@ -70,6 +70,9 @@ export class UserType {
   @Field()
   phoneVerified!: boolean;
 
+  @Field({ nullable: true })
+  loyaltyCode?: string;
+
   @Field(() => RegistrationSource, { nullable: true })
   registrationSource?: RegistrationSource;
 

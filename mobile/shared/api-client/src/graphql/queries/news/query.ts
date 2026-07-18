@@ -12,6 +12,11 @@ export const NEWS_FEED_QUERY = gql`
       isLiked
       publishedAt
       createdAt
+      spot {
+        id
+        name
+        logoUrl
+      }
     }
   }
 `;
@@ -21,9 +26,11 @@ export const NEWS_COMMENTS_QUERY = gql`
     newsComments(newsId: $newsId, limit: $limit) {
       id
       userId
+      parentId
       content
       userName
       userAvatar
+      isSpotReply
       createdAt
     }
   }
@@ -36,13 +43,15 @@ export const LIKE_NEWS_MUTATION = gql`
 `;
 
 export const COMMENT_NEWS_MUTATION = gql`
-  mutation CommentNews($newsId: ID!, $content: String!) {
-    commentNews(newsId: $newsId, content: $content) {
+  mutation CommentNews($newsId: ID!, $content: String!, $parentId: ID) {
+    commentNews(newsId: $newsId, content: $content, parentId: $parentId) {
       id
       userId
+      parentId
       content
       userName
       userAvatar
+      isSpotReply
       createdAt
     }
   }

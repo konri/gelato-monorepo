@@ -37,4 +37,18 @@ export class CodeGenerator {
   static generateSecureToken(): string {
     return this.generateRandomString(64);
   }
+
+  /**
+   * Generate a short, human-typeable loyalty/account code.
+   * Format: GL-XXXXXXXX using an unambiguous alphabet (no 0/O/1/I) so staff
+   * can read it off a screen and type it without confusion.
+   */
+  static generateLoyaltyCode(): string {
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let body = '';
+    for (let i = 0; i < 8; i++) {
+      body += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+    }
+    return `GL-${body}`;
+  }
 }

@@ -1,20 +1,21 @@
 const ENV = process.env.EXPO_PUBLIC_ENV || 'dev'; // 'dev' or 'prod'
 
 export const config = {
-  // API Configuration
+  // API Configuration. Dev fallback is port 4002 (the Gelato backend) — NOT
+  // 4000 — so a missing env var doesn't silently point at the wrong port.
   API_URL: ENV === 'prod'
     ? (process.env.EXPO_PUBLIC_BACKEND_API_URL_PROD || 'https://api.bonapka.pl')
-    : (process.env.EXPO_PUBLIC_BACKEND_API_URL_DEV || 'http://localhost:4000'),
+    : (process.env.EXPO_PUBLIC_BACKEND_API_URL_DEV || 'http://localhost:4002'),
 
   // REST API URL (separate from GraphQL)
   REST_API_URL: ENV === 'prod'
     ? (process.env.EXPO_PUBLIC_BACKEND_REST_API_URL_PROD || 'https://api.bonapka.pl')
-    : (process.env.EXPO_PUBLIC_BACKEND_REST_API_URL_DEV || 'http://localhost:4000'),
+    : (process.env.EXPO_PUBLIC_BACKEND_REST_API_URL_DEV || 'http://localhost:4002'),
 
   // GraphQL API URL
   GRAPHQL_API_URL: ENV === 'prod'
     ? (process.env.EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_PROD || 'https://api.bonapka.pl/graphql')
-    : (process.env.EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_DEV || 'http://localhost:4000/graphql'),
+    : (process.env.EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_DEV || 'http://localhost:4002/graphql'),
 
   // Google Sign-In Configuration
   GOOGLE_WEB_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '549326700978-nn5h5eqvon1c2fkl1b96ja0n640grr59.apps.googleusercontent.com',

@@ -7,6 +7,7 @@ export const MY_ORDERS_QUERY = gql`
       id
       orderNumber
       status
+      fulfillmentType
       total
       createdAt
       deliveryAddress
@@ -29,16 +30,21 @@ export const ORDER_DETAIL_QUERY = gql`
       id
       orderNumber
       status
+      fulfillmentType
       subtotal
       discount
       deliveryFee
       total
       paymentStatus
+      paymentMethod
       deliveryAddress
       deliveryLatitude
       deliveryLongitude
       scheduledFor
       createdAt
+      courierName
+      courierPhoto
+      deliveryPin
       spot {
         id
         name

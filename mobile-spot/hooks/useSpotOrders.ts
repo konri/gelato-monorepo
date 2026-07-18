@@ -5,7 +5,7 @@ import {
   updateOrderStatus as updateOrderStatusApi,
   type SpotOrder,
 } from '@repo/api-client';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const SPOT_CTX_KEY = 'spotContext';
 
@@ -38,7 +38,9 @@ export async function getStoredSpotContext(): Promise<{
 }
 
 // Fetch spot orders for a given status filter (null = all).
-export function useSpotOrders(status: string | null) {
+// `pollMs` adds a polling fallback (default 30s) so the queue stays fresh even
+// if the websocket subscription drops — set to 0 to disable.
+export function useSpotOrders(status: string | null, pollMs = 30000) {
   const [orders, setOrders] = useState<SpotOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [spotId, setSpotId] = useState<string | null>(null);
@@ -60,6 +62,15 @@ export function useSpotOrders(status: string | null) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Polling fallback — refetch every `pollMs` while mounted.
+  const loadRef = useRef(load);
+  loadRef.current = load;
+  useEffect(() => {
+    if (!pollMs) return;
+    const id = setInterval(() => void loadRef.current(), pollMs);
+    return () => clearInterval(id);
+  }, [pollMs]);
 
   return { orders, loading, spotId, refetch: load, setOrders };
 }

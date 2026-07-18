@@ -12,16 +12,63 @@ const prisma = new PrismaClient();
 // 15-minute email verification window.
 const EMAIL_CODE_TTL_MS = 15 * 60 * 1000;
 
+/**
+ * Branded one-time-code email (Gelato red), shared by the verification and
+ * password-reset flows for both the client and courier apps.
+ */
+const codeEmailHtml = (opts: {
+  heading: string;
+  intro: string;
+  code: string;
+  expiry: string;
+}) => `<!DOCTYPE html>
+<html>
+  <body style="margin:0;padding:0;background:#fef2f2;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fef2f2;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 8px 30px rgba(236,40,40,0.12);">
+            <!-- Header -->
+            <tr>
+              <td style="background:linear-gradient(135deg,#EC2828 0%,#B91C1C 100%);padding:36px 32px;text-align:center;">
+                <div style="font-size:40px;line-height:1;">🍦</div>
+                <h1 style="margin:12px 0 0;color:#ffffff;font-size:24px;font-weight:800;">${opts.heading}</h1>
+              </td>
+            </tr>
+            <!-- Body -->
+            <tr>
+              <td style="padding:32px;text-align:center;color:#3f1414;">
+                <p style="margin:0 0 24px;font-size:16px;line-height:1.5;color:#6b2b2b;">${opts.intro}</p>
+                <!-- Code -->
+                <div style="display:inline-block;background:#fef2f2;border:2px dashed rgba(236,40,40,0.3);border-radius:16px;padding:18px 28px;margin-bottom:24px;">
+                  <span style="font-size:34px;font-weight:800;letter-spacing:10px;color:#B91C1C;">${opts.code}</span>
+                </div>
+                <p style="margin:0;font-size:13px;color:#9ca3af;">${opts.expiry}</p>
+              </td>
+            </tr>
+            <!-- Footer -->
+            <tr>
+              <td style="background:#fef2f2;padding:20px 32px;text-align:center;">
+                <p style="margin:0;font-size:12px;color:#9ca3af;">Made with ❤️ for ice cream lovers · Gelato</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
 const sendEmailVerificationCode = async (email: string, code: string) => {
   await EmailService.sendEmail({
     to: email,
     subject: 'Your Gelato verification code',
-    html: `<div style="font-family:sans-serif;text-align:center;padding:24px">
-      <h2 style="color:#EC2828">Welcome to Gelato! 🍦</h2>
-      <p>Your verification code is:</p>
-      <p style="font-size:32px;font-weight:800;letter-spacing:6px">${code}</p>
-      <p style="color:#888">This code expires in 15 minutes.</p>
-    </div>`,
+    html: codeEmailHtml({
+      heading: 'Welcome to Gelato! 🍦',
+      intro: 'Your verification code is:',
+      code,
+      expiry: 'This code expires in 15 minutes.',
+    }),
     text: `Your Gelato verification code is ${code}. It expires in 15 minutes.`,
   });
 };
@@ -94,6 +141,28 @@ router.post('/login', async (req, res) => {
         const sa = await prisma.spotAdminProfile.findFirst({ where: { userId: user.id } });
         if (sa) spotId = sa.spotId;
       }
+
+      // Record the staff login for the spot's session log + report.
+      const primaryRole =
+        user.roles.find((r) =>
+          ['SUPER_ADMIN', 'SPOTS_ADMIN', 'SPOT_ADMIN', 'EMPLOYEE'].includes(r),
+        ) ?? 'EMPLOYEE';
+      const forwarded = req.headers['x-forwarded-for'];
+      const ipAddress =
+        (Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(',')[0]?.trim()) ||
+        req.socket?.remoteAddress ||
+        null;
+      await prisma.staffLoginSession
+        .create({
+          data: {
+            userId: user.id,
+            spotId,
+            role: primaryRole,
+            ipAddress,
+            userAgent: (req.headers['user-agent'] as string) ?? null,
+          },
+        })
+        .catch((e: unknown) => console.error('Failed to record staff login session:', e));
     }
 
     console.log(`✅ User logged in: ${user.email}`);
@@ -856,12 +925,12 @@ router.post('/admin/forgot-password', async (req, res) => {
       await EmailService.sendEmail({
         to: user.email,
         subject: 'Your Gelato admin password reset code',
-        html: `<div style="font-family:sans-serif;text-align:center;padding:24px">
-          <h2 style="color:#EC2828">Password reset</h2>
-          <p>Your reset code is:</p>
-          <p style="font-size:32px;font-weight:800;letter-spacing:6px">${code}</p>
-          <p style="color:#888">This code expires in 15 minutes.</p>
-        </div>`,
+        html: codeEmailHtml({
+          heading: 'Password reset 🔒',
+          intro: 'Your password reset code is:',
+          code,
+          expiry: 'This code expires in 15 minutes.',
+        }),
         text: `Your Gelato admin password reset code is ${code}. It expires in 15 minutes.`,
       });
     }

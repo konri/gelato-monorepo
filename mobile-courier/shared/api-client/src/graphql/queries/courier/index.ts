@@ -15,6 +15,7 @@ import {
   START_WORK_SESSION_MUTATION,
   UPDATE_COURIER_LOCATION_MUTATION,
   UPDATE_DELIVERY_STATUS_MUTATION,
+  REPORT_DELIVERY_INCIDENT_MUTATION,
 } from './query';
 import {
   AcceptDeliveryResponse,
@@ -147,13 +148,25 @@ export const acceptDelivery = async (
 export const updateDeliveryStatus = async (
   orderId: string,
   status: string,
-  options: ApolloServerConfig = {},
+  options: ApolloServerConfig & { code?: string } = {},
 ): Promise<GraphQLResult<boolean>> => {
+  const { code, ...apollo } = options;
   const res = await executeGraphQLQuery<UpdateDeliveryStatusResponse>(
     UPDATE_DELIVERY_STATUS_MUTATION,
-    { ...options, variables: { orderId, status } },
+    { ...apollo, variables: { orderId, status, code: code ?? null } },
   );
   return { ...res, data: res.data ? res.data.updateDeliveryStatus : null };
+};
+
+export const reportDeliveryIncident = async (
+  input: { orderId: string; incidentType: string; note?: string; photoUrl?: string; cancel?: boolean },
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<boolean>> => {
+  const res = await executeGraphQLQuery<{ reportDeliveryIncident: boolean }>(
+    REPORT_DELIVERY_INCIDENT_MUTATION,
+    { ...options, variables: input },
+  );
+  return { ...res, data: res.data ? res.data.reportDeliveryIncident : null };
 };
 
 export const updateCourierLocation = async (

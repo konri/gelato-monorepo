@@ -170,6 +170,12 @@ export const SET_USER_LOGIN_DISABLED = gql`
   }
 `;
 
+export const RESEND_ADMIN_INVITE = gql`
+  mutation ResendAdminInvite($userId: ID!) {
+    resendAdminInvite(userId: $userId)
+  }
+`;
+
 export const INVITE_SPOT_ADMIN = gql`
   mutation InviteSpotAdmin($spotId: ID!, $email: String!, $name: String!) {
     inviteSpotAdmin(spotId: $spotId, email: $email, name: $name) {

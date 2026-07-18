@@ -170,9 +170,30 @@ export const ACCEPT_DELIVERY_MUTATION = gql`
 `;
 
 // Courier updates delivery lifecycle status (PICKED_UP, IN_TRANSIT, DELIVERED).
+// `code` = spot pickup code for PICKED_UP, client 4-digit PIN for DELIVERED.
 export const UPDATE_DELIVERY_STATUS_MUTATION = gql`
-  mutation UpdateDeliveryStatus($orderId: ID!, $status: OrderStatus!) {
-    updateDeliveryStatus(orderId: $orderId, status: $status)
+  mutation UpdateDeliveryStatus($orderId: ID!, $status: OrderStatus!, $code: String) {
+    updateDeliveryStatus(orderId: $orderId, status: $status, code: $code)
+  }
+`;
+
+// Courier reports an incident (and, by default, cancels the delivery so the
+// spot can reassign). photoUrl comes from POST /upload/delivery-incident/:id.
+export const REPORT_DELIVERY_INCIDENT_MUTATION = gql`
+  mutation ReportDeliveryIncident(
+    $orderId: ID!
+    $incidentType: String!
+    $note: String
+    $photoUrl: String
+    $cancel: Boolean
+  ) {
+    reportDeliveryIncident(
+      orderId: $orderId
+      incidentType: $incidentType
+      note: $note
+      photoUrl: $photoUrl
+      cancel: $cancel
+    )
   }
 `;
 

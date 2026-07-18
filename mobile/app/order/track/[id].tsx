@@ -1,17 +1,21 @@
-import { STATUS_STYLE, TRACKING_STEPS, isTerminal } from '@/components/ordering/orderStatus';
+import { STATUS_STYLE, trackingSteps, isTerminal } from '@/components/ordering/orderStatus';
 import { useOrderTracking } from '@/hooks/useOrders';
 import { staticMapUrl } from '@/services/googlePlaces';
+import { createComplaint } from '@repo/api-client';
+import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Image,
   Linking,
+  Modal,
   Pressable,
   ScrollView,
   Text,
+  TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -25,19 +29,26 @@ export default function OrderTrackingScreen() {
   const { width } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { order, loading } = useOrderTracking(id ?? null);
+  const [complaintOpen, setComplaintOpen] = useState(false);
 
+  const isPickup = order?.fulfillmentType === 'PICKUP';
   const mapUrl = useMemo(() => {
     if (!order?.spot?.latitude || !order?.spot?.longitude) return null;
     return staticMapUrl({
       spot: { latitude: order.spot.latitude, longitude: order.spot.longitude },
-      destination: { latitude: order.deliveryLatitude, longitude: order.deliveryLongitude },
-      courier: order.courierLocation
-        ? { latitude: order.courierLocation.latitude, longitude: order.courierLocation.longitude }
-        : null,
+      // Pickup has no delivery destination/courier — just show the spot.
+      destination:
+        !isPickup && order.deliveryLatitude != null && order.deliveryLongitude != null
+          ? { latitude: order.deliveryLatitude, longitude: order.deliveryLongitude }
+          : null,
+      courier:
+        !isPickup && order.courierLocation
+          ? { latitude: order.courierLocation.latitude, longitude: order.courierLocation.longitude }
+          : null,
       width: width - 32,
       height: 200,
     });
-  }, [order, width]);
+  }, [order, width, isPickup]);
 
   if (loading && !order) {
     return (
@@ -55,7 +66,8 @@ export default function OrderTrackingScreen() {
   }
 
   const style = STATUS_STYLE[order.status];
-  const currentStep = TRACKING_STEPS.indexOf(order.status);
+  const steps = trackingSteps(order.fulfillmentType);
+  const currentStep = steps.indexOf(order.status);
   const cancelled = order.status === 'CANCELLED' || order.status === 'FAILED';
 
   return (
@@ -97,7 +109,7 @@ export default function OrderTrackingScreen() {
             <Text className="font-urbanist-bold text-text-primary mb-3">
               {t('Ordering.tracking.steps')}
             </Text>
-            {TRACKING_STEPS.map((step, idx) => {
+            {steps.map((step, idx) => {
               const done = idx <= currentStep;
               const active = idx === currentStep;
               return (
@@ -119,23 +131,62 @@ export default function OrderTrackingScreen() {
           </View>
         ) : null}
 
-        {/* Spot + destination + courier */}
+        {/* Spot + (delivery: destination + courier | pickup: collection note) */}
         <View className="mt-4 bg-background-secondary rounded-2xl p-4">
           <InfoRow icon="storefront" iconColor="#EC2828" label={t('Ordering.tracking.spot')} value={order.spot?.name} />
           <View className="h-px bg-gray-200 my-3" />
-          <InfoRow icon="location" iconColor="#212121" label={t('Ordering.tracking.destination')} value={order.deliveryAddress} />
-          {order.status === 'IN_TRANSIT' || order.status === 'PICKED_UP' || order.status === 'COURIER_ASSIGNED' ? (
+          {isPickup ? (
+            <InfoRow
+              icon="bag-check"
+              iconColor="#EC2828"
+              label={t('Ordering.tracking.collection')}
+              value={order.spot?.address ?? t('Checkout.pickupHint')}
+            />
+          ) : (
             <>
-              <View className="h-px bg-gray-200 my-3" />
-              <InfoRow
-                icon="bicycle"
-                iconColor="#16A34A"
-                label={t('Ordering.tracking.courier')}
-                value={order.courierLocation ? t('Ordering.tracking.etaLine') : t('Ordering.tracking.noCourierYet')}
-              />
+              <InfoRow icon="location" iconColor="#212121" label={t('Ordering.tracking.destination')} value={order.deliveryAddress} />
+              {order.status === 'IN_TRANSIT' || order.status === 'PICKED_UP' || order.status === 'COURIER_ASSIGNED' ? (
+                <>
+                  <View className="h-px bg-gray-200 my-3" />
+                  {/* Courier identity: avatar + name (fallback to a status line). */}
+                  <View className="flex-row items-center">
+                    <View className="w-10 h-10 rounded-full bg-gray-200 items-center justify-center overflow-hidden mr-3">
+                      {order.courierName && (order as any).courierPhoto ? (
+                        <Image source={{ uri: (order as any).courierPhoto }} style={{ width: 40, height: 40 }} />
+                      ) : (
+                        <Ionicons name="bicycle" size={20} color="#16A34A" />
+                      )}
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-xs font-urbanist text-text-tertiary">{t('Ordering.tracking.courier')}</Text>
+                      <Text className="font-urbanist-semibold text-text-primary">
+                        {order.courierName
+                          ? order.courierName
+                          : order.courierLocation
+                            ? t('Ordering.tracking.etaLine')
+                            : t('Ordering.tracking.noCourierYet')}
+                      </Text>
+                    </View>
+                  </View>
+                </>
+              ) : null}
             </>
-          ) : null}
+          )}
         </View>
+
+        {/* Delivery PIN — read this out to the courier so they can confirm delivery. */}
+        {!isPickup &&
+        order.deliveryPin &&
+        (order.status === 'IN_TRANSIT' || order.status === 'PICKED_UP' || order.status === 'COURIER_ASSIGNED') ? (
+          <View className="mt-4 bg-accent/5 border border-accent/20 rounded-2xl p-4 items-center">
+            <Text className="text-xs font-urbanist text-text-secondary text-center">
+              {t('Ordering.tracking.pinHint')}
+            </Text>
+            <Text className="text-3xl font-urbanist-bold tracking-[8px] text-accent mt-2">
+              {order.deliveryPin}
+            </Text>
+          </View>
+        ) : null}
 
         {/* Call spot */}
         {order.spot?.phone ? (
@@ -155,19 +206,125 @@ export default function OrderTrackingScreen() {
           </Text>
           <SummaryRow label={t('Checkout.subtotal')} value={zl(order.subtotal)} />
           {order.discount > 0 ? <SummaryRow label={t('Checkout.discount')} value={`−${zl(order.discount)}`} /> : null}
-          <SummaryRow
-            label={t('Checkout.delivery')}
-            value={order.deliveryFee === 0 ? t('Checkout.free') : zl(order.deliveryFee)}
-          />
+          {!isPickup && (
+            <SummaryRow
+              label={t('Checkout.delivery')}
+              value={order.deliveryFee === 0 ? t('Checkout.free') : zl(order.deliveryFee)}
+            />
+          )}
           <View className="flex-row justify-between mt-2">
             <Text className="font-urbanist-bold text-text-primary">{t('Checkout.total')}</Text>
             <Text className="font-urbanist-bold text-text-primary">{zl(order.total)}</Text>
           </View>
         </View>
+
+        {/* Report a problem */}
+        <Pressable
+          className="mt-4 flex-row items-center justify-center py-3.5"
+          onPress={() => setComplaintOpen(true)}
+        >
+          <Ionicons name="alert-circle-outline" size={18} color="#6B7280" />
+          <Text className="ml-2 font-urbanist-semibold text-text-secondary">
+            {t('Complaint.report')}
+          </Text>
+        </Pressable>
       </ScrollView>
+
+      {complaintOpen && order ? (
+        <ComplaintModal orderId={order.id} orderNumber={order.orderNumber} onClose={() => setComplaintOpen(false)} />
+      ) : null}
     </View>
   );
 }
+
+const ComplaintModal = ({
+  orderId,
+  orderNumber,
+  onClose,
+}: {
+  orderId: string;
+  orderNumber: string;
+  onClose: () => void;
+}) => {
+  const { t } = useTranslation();
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState(false);
+
+  const submit = async () => {
+    if (!subject.trim() || !message.trim()) return;
+    setBusy(true);
+    setError(false);
+    const token = (await safeGetItem('access_token')) ?? undefined;
+    const res = await createComplaint(orderId, subject.trim(), message.trim(), { token });
+    setBusy(false);
+    if (res.error) setError(true);
+    else setDone(true);
+  };
+
+  return (
+    <Modal transparent animationType="slide" onRequestClose={onClose}>
+      <View className="flex-1 justify-end bg-black/40">
+        <View className="rounded-t-3xl bg-white p-6">
+          <View className="flex-row items-center justify-between mb-2">
+            <Text className="font-urbanist-bold text-lg text-text-primary">{t('Complaint.title')}</Text>
+            <Pressable onPress={onClose} hitSlop={8}>
+              <Ionicons name="close" size={24} color="#374151" />
+            </Pressable>
+          </View>
+          <Text className="font-urbanist text-text-secondary mb-4">#{orderNumber}</Text>
+
+          {done ? (
+            <View className="items-center py-4">
+              <Ionicons name="checkmark-circle" size={48} color="#16A34A" />
+              <Text className="mt-3 text-center font-urbanist text-text-secondary">{t('Complaint.sent')}</Text>
+              <Pressable className="mt-5 rounded-2xl px-6 py-3" style={{ backgroundColor: '#EC2828' }} onPress={onClose}>
+                <Text className="font-urbanist-bold text-white">{t('Common.close')}</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View className="gap-3">
+              {error ? (
+                <View className="rounded-xl bg-red-50 px-4 py-3">
+                  <Text className="font-urbanist text-red-700">{t('Complaint.error')}</Text>
+                </View>
+              ) : null}
+              <TextInput
+                className="rounded-xl border border-gray-300 px-4 py-3 font-urbanist"
+                placeholder={t('Complaint.subject')}
+                value={subject}
+                onChangeText={setSubject}
+              />
+              <TextInput
+                className="rounded-xl border border-gray-300 px-4 py-3 font-urbanist"
+                placeholder={t('Complaint.message')}
+                value={message}
+                onChangeText={setMessage}
+                multiline
+                numberOfLines={4}
+                style={{ minHeight: 96, textAlignVertical: 'top' }}
+              />
+              <Pressable
+                className="items-center rounded-2xl py-4"
+                style={{ backgroundColor: busy || !subject.trim() || !message.trim() ? '#F4A3A3' : '#EC2828' }}
+                onPress={submit}
+                disabled={busy || !subject.trim() || !message.trim()}
+              >
+                {busy ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text className="font-urbanist-bold text-white">{t('Complaint.send')}</Text>
+                )}
+              </Pressable>
+            </View>
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
+};
 
 const InfoRow = ({
   icon,

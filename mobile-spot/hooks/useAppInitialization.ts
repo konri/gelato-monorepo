@@ -1,14 +1,11 @@
 import { isLanguageSupported } from '@/constants/supportedLanguages'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { getLocales } from 'expo-localization'
-import { router, useRootNavigationState } from 'expo-router'
 import i18n from 'i18next'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export const useAppInitialization = () => {
   const [isLoading, setIsLoading] = useState(true)
-  const navigationState = useRootNavigationState()
-  const pendingRoute = useRef<string | null>(null)
 
   useEffect(() => {
     const init = async () => {
@@ -21,23 +18,15 @@ export const useAppInitialization = () => {
         await i18n.changeLanguage(languageToSet.toLowerCase())
       }
 
-      const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding')
-      if (!hasSeenOnboarding) {
-        pendingRoute.current = '/onboarding'
-      }
-      // Remove the else block - auth check is now in app/index.tsx
+      // The spot app has no onboarding flow; auth-based routing (tabs vs
+      // login) is handled in app/index.tsx, so there's nothing to redirect
+      // to here.
 
       setIsLoading(false)
     }
 
     init()
   }, [])
-
-  useEffect(() => {
-    if (!navigationState?.key || !pendingRoute.current) return
-    router.replace(pendingRoute.current as any)
-    pendingRoute.current = null
-  }, [navigationState?.key])
 
   return { isLoading }
 }

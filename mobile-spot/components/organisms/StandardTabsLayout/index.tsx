@@ -1,6 +1,10 @@
 import { colors } from "@/constants/colors";
 import { TAB_BAR_STYLE } from "@/constants/tabBarStyles";
 import { useTabsConfig } from "@/hooks/useTabsConfig";
+import { useBreakpoint } from "@/hooks/useBreakpoint";
+import { useRole } from "@/hooks/useRole";
+import { SpotSidebar } from "@/components/organisms/SpotNav/SpotSidebar";
+import { visibleNavItems } from "@/components/organisms/SpotNav/navItems";
 import type { BottomTabNavigationOptions } from "@react-navigation/bottom-tabs";
 import { Tabs } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -25,8 +29,15 @@ export const StandardTabsLayout = ({
                                    }: StandardTabsLayoutProps = {}) => {
     const { t } = useTranslation();
     const { config: fetchedConfig } = useTabsConfig(!externalConfig);
+    const { isWide } = useBreakpoint();
+    const { isAdmin } = useRole();
 
     const config = externalConfig ?? fetchedConfig;
+
+    // On tablet/web, hide admin-only tabs from employees and drive the layout
+    // from the left sidebar instead of the bottom bar.
+    const allowedNames = new Set(visibleNavItems(isAdmin).map((i) => i.name));
+    const wideTabs = config.tabs.filter((tabItem) => allowedNames.has(tabItem.name));
 
     const getOptionsForTab = (
         tabName: string
@@ -74,6 +85,21 @@ export const StandardTabsLayout = ({
             tabBarItemStyle: STANDARD_TAB_ITEM_STYLE,
         };
     };
+
+    if (isWide) {
+        // Tablet/web: left sidebar nav, no bottom bar.
+        const tabs = wideTabs.length ? wideTabs : config.tabs;
+        return (
+            <Tabs
+                screenOptions={{ headerShown: false, tabBarPosition: "left" }}
+                tabBar={(props) => <SpotSidebar {...props} />}
+            >
+                {tabs.map((tab) => (
+                    <Tabs.Screen key={tab.name} name={tab.name} options={{}} />
+                ))}
+            </Tabs>
+        );
+    }
 
     return (
         <Tabs screenOptions={SCREEN_OPTIONS}>

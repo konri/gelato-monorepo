@@ -57,9 +57,17 @@ export type OrderFormDraft = {
   promo: PromoDraft | null;
 };
 
+// How the customer will receive this order.
+export type FulfillmentType = 'delivery' | 'pickup';
+
+// How the customer will pay: online now (Stripe) or in cash at the spot.
+// Pay-at-spot is only offered for pickup orders.
+export type PaymentChoice = 'online' | 'cash';
+
 type CartState = {
   spotId: string | null;
   items: CartItem[];
+  fulfillmentType: FulfillmentType;
   delivery: DeliveryDraft | null;
   form: OrderFormDraft | null;
 };
@@ -67,6 +75,7 @@ type CartState = {
 type CartContextValue = {
   spotId: string | null;
   items: CartItem[];
+  fulfillmentType: FulfillmentType;
   delivery: DeliveryDraft | null;
   form: OrderFormDraft | null;
   count: number;
@@ -81,6 +90,7 @@ type CartContextValue = {
   setQuantity: (kind: CartItemKind, refId: string, quantity: number) => void;
   // Adjust/remove any line by its lineKey (works for box + non-box).
   setLineQuantity: (key: string, quantity: number) => void;
+  setFulfillmentType: (type: FulfillmentType) => void;
   setDelivery: (delivery: DeliveryDraft | null) => void;
   setForm: (form: OrderFormDraft | null) => void;
   clear: () => void;
@@ -97,6 +107,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, setState] = useState<CartState>({
     spotId: null,
     items: [],
+    fulfillmentType: 'delivery',
     delivery: null,
     form: null,
   });
@@ -135,8 +146,8 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       setState((prev) => {
         const differentSpot = prev.spotId && prev.spotId !== item.spotId;
         const base: CartState = differentSpot
-          ? { spotId: item.spotId, items: [], delivery: null, form: null }
-          : { spotId: item.spotId, items: [...prev.items], delivery: prev.delivery, form: prev.form };
+          ? { spotId: item.spotId, items: [], fulfillmentType: prev.fulfillmentType, delivery: null, form: null }
+          : { spotId: item.spotId, items: [...prev.items], fulfillmentType: prev.fulfillmentType, delivery: prev.delivery, form: prev.form };
         const k = keyOf(item.kind, item.refId);
         const existing = base.items.find((i) => keyOf(i.kind, i.refId) === k);
         if (existing) {
@@ -155,8 +166,8 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         boxLineCounter += 1;
         const lineId = `box-${prev.items.length}-${boxLineCounter}`;
         const base: CartState = differentSpot
-          ? { spotId: item.spotId, items: [], delivery: null, form: null }
-          : { spotId: item.spotId, items: [...prev.items], delivery: prev.delivery, form: prev.form };
+          ? { spotId: item.spotId, items: [], fulfillmentType: prev.fulfillmentType, delivery: null, form: null }
+          : { spotId: item.spotId, items: [...prev.items], fulfillmentType: prev.fulfillmentType, delivery: prev.delivery, form: prev.form };
         base.items.push({ ...item, lineId, quantity });
         return base;
       });
@@ -168,13 +179,22 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
           .map((i) => (lineKeyOf(i) === key ? { ...i, quantity } : i))
           .filter((i) => i.quantity > 0);
         return items.length
-          ? { spotId: prev.spotId, items, delivery: prev.delivery, form: prev.form }
-          : { spotId: null, items, delivery: null, form: null };
+          ? { spotId: prev.spotId, items, fulfillmentType: prev.fulfillmentType, delivery: prev.delivery, form: prev.form }
+          : { spotId: null, items, fulfillmentType: 'delivery', delivery: null, form: null };
       });
     };
 
     const setQuantity: CartContextValue['setQuantity'] = (kind, refId, quantity) => {
       setLineQuantity(keyOf(kind, refId), quantity);
+    };
+
+    // Switching to pickup drops any delivery address (it no longer applies).
+    const setFulfillmentType: CartContextValue['setFulfillmentType'] = (type) => {
+      setState((prev) => ({
+        ...prev,
+        fulfillmentType: type,
+        delivery: type === 'pickup' ? null : prev.delivery,
+      }));
     };
 
     const setDelivery: CartContextValue['setDelivery'] = (delivery) => {
@@ -185,11 +205,13 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       setState((prev) => ({ ...prev, form }));
     };
 
-    const clear = () => setState({ spotId: null, items: [], delivery: null, form: null });
+    const clear = () =>
+      setState({ spotId: null, items: [], fulfillmentType: 'delivery', delivery: null, form: null });
 
     return {
       spotId: state.spotId,
       items: state.items,
+      fulfillmentType: state.fulfillmentType,
       delivery: state.delivery,
       form: state.form,
       count,
@@ -201,6 +223,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       addBox,
       setQuantity,
       setLineQuantity,
+      setFulfillmentType,
       setDelivery,
       setForm,
       clear,

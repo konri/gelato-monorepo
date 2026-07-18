@@ -49,11 +49,12 @@ export const likeNews = async (
 export const commentNews = async (
   newsId: string,
   content: string,
-  options: ApolloServerConfig = {},
+  options: ApolloServerConfig & { parentId?: string | null } = {},
 ): Promise<GraphQLResult<NewsComment>> => {
+  const { parentId, ...apollo } = options;
   const res = await executeGraphQLQuery<{ commentNews: NewsComment }>(COMMENT_NEWS_MUTATION, {
-    ...options,
-    variables: { newsId, content },
+    ...apollo,
+    variables: { newsId, content, parentId: parentId ?? null },
   });
   return { ...res, data: res.data ? res.data.commentNews : null };
 };

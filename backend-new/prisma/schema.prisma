@@ -47,13 +47,20 @@ enum AccountType {
 enum OrderStatus {
   PENDING        // Order placed, waiting for spot to accept
   PREPARING      // Spot is preparing the order
-  READY          // Order is ready for pickup by courier
+  READY          // Order is ready for pickup by courier / collection by customer
   COURIER_ASSIGNED // Courier has been assigned
   PICKED_UP      // Courier picked up the package
   IN_TRANSIT     // Courier is delivering
   DELIVERED      // Successfully delivered
+  COLLECTED      // Pickup order collected by the customer at the spot
   CANCELLED      // Order was cancelled
   FAILED         // Delivery failed
+}
+
+// How the customer receives the order.
+enum FulfillmentType {
+  DELIVERY       // Courier delivers to an address
+  PICKUP         // Customer collects at the spot
 }
 
 enum TasteType {
@@ -115,6 +122,10 @@ model User {
   emailVerificationExpires DateTime?
   phoneVerified          Boolean              @default(false)
 
+  // Short, human-typeable loyalty/account number shown on the client's QR card.
+  // Spot staff can scan the QR or type this code to award points.
+  loyaltyCode            String?              @unique
+
   // Location preferences
   preferredCityId        String?
   preferredCity          City?                @relation(fields: [preferredCityId], references: [id])
@@ -156,6 +167,7 @@ model User {
   newsComments           NewsComment[]
   tasteLikes             TasteLike[]
   tasteComments          TasteComment[]
+  staffLoginSessions     StaffLoginSession[]
 
   // Identity is unique per account type, not globally — so the same email/phone
   // can register once in the client app and once in the courier app.
@@ -265,6 +277,7 @@ model Spot {
   favoriteByUsers     FavoriteSpot[]
   pointTemplates      PointTemplate[]
   reviews             Review[]
+  news                News[]
 }
 
 model FavoriteSpot {
@@ -395,10 +408,13 @@ model Order {
 
   status            OrderStatus @default(PENDING)
 
-  // Address
-  deliveryAddress   String
-  deliveryLatitude  Float
-  deliveryLongitude Float
+  // How the customer receives this order.
+  fulfillmentType   FulfillmentType @default(DELIVERY)
+
+  // Address (only for DELIVERY orders; null for PICKUP)
+  deliveryAddress   String?
+  deliveryLatitude  Float?
+  deliveryLongitude Float?
   buildingType      String?     // "house" or "apartment"
   apartmentNumber   String?
   floor             String?
@@ -411,8 +427,13 @@ model Order {
 
   // Payment
   paymentIntentId   String?     // Stripe payment intent ID
-  paymentMethod     String?     // "card", "apple_pay", "google_pay", "blik"
+  paymentMethod     String?     // "card", "apple_pay", "google_pay", "blik", "cash"
   paymentStatus     String      @default("pending")
+
+  // Loyalty points guard: set once points have been credited for this order,
+  // so pay-now (on Stripe success) and pay-at-spot (on collection) can't both
+  // award, and neither double-awards.
+  pointsAwarded     Boolean     @default(false)
 
   // Invoice (optional)
   invoiceRequested  Boolean     @default(false)
@@ -442,7 +463,21 @@ model Order {
   readyAt           DateTime?
   pickedUpAt        DateTime?
   deliveredAt       DateTime?
+  collectedAt       DateTime?
   cancelledAt       DateTime?
+
+  // Handover confirmation codes (delivery orders).
+  // Spot shows pickupCode → courier enters it to confirm PICKED_UP.
+  // Client shows deliveryPin → courier enters it to confirm DELIVERED.
+  pickupCode        String?
+  deliveryPin       String?
+
+  // Delivery incident (courier-reported: bike damage, lost address, etc.)
+  incidentType      String?    // e.g. "bike_broken", "address_not_found", "customer_unreachable", "other"
+  incidentNote      String?    @db.Text
+  incidentPhotoUrl  String?
+  incidentReportedAt DateTime?
+  cancelReason      String?    // free-text reason when a courier cancels
 
   // Tracking
   statusHistory     Json        @default("[]") // Array of {status, timestamp, by}
@@ -503,6 +538,30 @@ model Review {
   @@index([userId, createdAt])
 }
 
+// A customer complaint about an order, resolved by spot staff. FKs are stored
+// as scalars (no relations) to keep the model self-contained.
+model Complaint {
+  id          String   @id @default(uuid())
+  orderId     String
+  userId      String
+  spotId      String
+  courierId   String?
+
+  subject     String
+  message     String   @db.Text
+
+  status      String   @default("open") // open, resolved
+  resolution  String?  @db.Text
+  resolvedBy  String?  // staff user id
+  resolvedAt  DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([spotId, status, createdAt])
+  @@index([userId, createdAt])
+}
+
 // ============================================================================
 // COURIER SYSTEM
 // ============================================================================
@@ -546,6 +605,23 @@ model WorkSession {
   endedAt         DateTime? // null = currently active
 
   @@index([courierId, startedAt])
+}
+
+// A staff (spot admin / employee) login event, for the spot's session log +
+// report. Recorded at each successful ADMIN-namespace login.
+model StaffLoginSession {
+  id          String   @id @default(uuid())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  // The spot the staff member belongs to at login time (for spot-scoped logs).
+  spotId      String?
+  role        String   // primary staff role at login: SPOT_ADMIN / EMPLOYEE / ...
+  ipAddress   String?
+  userAgent   String?
+  loginAt     DateTime @default(now())
+
+  @@index([spotId, loginAt])
+  @@index([userId, loginAt])
 }
 
 model CourierApplication {
@@ -599,9 +675,13 @@ model CourierEarning {
   courierId   String
   amount      Float
   description String
+  // Spot the delivery originated from — lets a spot see courier earnings.
+  spotId      String?
+  orderId     String?
   date        DateTime @default(now())
 
   @@index([courierId, date])
+  @@index([spotId, date])
 }
 
 // ============================================================================
@@ -784,6 +864,10 @@ model News {
 
   images           String[] // Array of image URLs for carousel
 
+  // Authoring spot (null = global/admin-authored, not tied to a spot).
+  spot             Spot?    @relation(fields: [spotId], references: [id])
+  spotId           String?
+
   // Targeting
   targetCityIds    String[] // Empty = all cities
 
@@ -799,6 +883,8 @@ model News {
 
   likes            NewsLike[]
   comments         NewsComment[]
+
+  @@index([spotId])
 }
 
 model NewsLike {
@@ -821,7 +907,17 @@ model NewsComment {
   content   String   @db.Text
   createdAt DateTime @default(now())
 
+  // When set, the comment is posted "as the spot" (an official reply from the
+  // spot's staff) and displays the spot's name + logo instead of the author.
+  asSpotId  String?
+
+  // Optional reply threading: a reply points at the comment it answers.
+  parent    NewsComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId  String?
+  replies   NewsComment[] @relation("CommentReplies")
+
   @@index([newsId, createdAt])
+  @@index([parentId])
 }
 
 // ============================================================================

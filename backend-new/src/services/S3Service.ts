@@ -31,7 +31,10 @@ export class S3Service {
     const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
     const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY || process.env.AWS_SECRET_KEY;
     const bucketName = process.env.AWS_S3_BUCKET_NAME || process.env.AWS_BUCKET_NAME;
-    const region = process.env.AWS_REGION || 'eu-central-1';
+    // Guard against a stray/exported AWS_REGION=global (dotenv doesn't override
+    // shell env), which yields the invalid host "<bucket>.s3.global.amazonaws.com".
+    const rawRegion = process.env.AWS_REGION;
+    const region = !rawRegion || rawRegion === 'global' ? 'eu-central-1' : rawRegion;
     // Custom S3 endpoint (e.g. an S3-compatible provider). If it's a bare AWS
     // regional endpoint we let the SDK derive it, so only set for non-AWS.
     const endpoint = process.env.AWS_S3_SERVER_ENDPOINT || process.env.AWS_S3_ENDPOINT;
@@ -43,12 +46,14 @@ export class S3Service {
 
     const isCustomEndpoint = !!endpoint && !endpoint.includes('amazonaws.com');
 
+    // Only pass an explicit `endpoint` for genuinely custom (non-AWS) providers.
+    // Passing a standard AWS regional endpoint (e.g. s3.eu-central-1.amazonaws.com)
+    // makes the SDK lose region derivation and sign with region 'global', which
+    // AWS rejects ("the region 'global' is wrong; expecting 'eu-central-1'").
     this.client = new S3Client({
       region,
       credentials: { accessKeyId, secretAccessKey },
-      ...(endpoint ? { endpoint } : {}),
-      // Non-AWS/custom endpoints usually need path-style addressing.
-      ...(isCustomEndpoint ? { forcePathStyle: true } : {}),
+      ...(isCustomEndpoint ? { endpoint, forcePathStyle: true } : {}),
     });
 
     this.bucketName = bucketName;

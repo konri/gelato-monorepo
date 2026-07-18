@@ -7,6 +7,7 @@ import {
   MY_ADMIN_SPOTS,
   SPOT_ADMINS,
   SET_USER_LOGIN_DISABLED,
+  RESEND_ADMIN_INVITE,
   type AdminSpot,
   type SpotAdmin,
 } from '../graphql/spots';
@@ -166,6 +167,18 @@ function SpotAdminsSection({ spotId }: { spotId: string }) {
   const [setDisabled] = useMutation(SET_USER_LOGIN_DISABLED, {
     refetchQueries: [{ query: SPOT_ADMINS, variables: { spotId } }],
   });
+  const [resendInvite] = useMutation(RESEND_ADMIN_INVITE);
+  const [resent, setResent] = useState<Record<string, 'sending' | 'sent' | 'error'>>({});
+
+  const resend = async (userId: string) => {
+    setResent((r) => ({ ...r, [userId]: 'sending' }));
+    try {
+      await resendInvite({ variables: { userId } });
+      setResent((r) => ({ ...r, [userId]: 'sent' }));
+    } catch {
+      setResent((r) => ({ ...r, [userId]: 'error' }));
+    }
+  };
 
   const admins = data?.spotAdmins ?? [];
 
@@ -173,7 +186,7 @@ function SpotAdminsSection({ spotId }: { spotId: string }) {
     <div className="mt-8">
       <h2 className="mb-3 text-lg font-semibold text-gray-900">Spot admins</h2>
       <p className="mb-4 text-sm text-gray-500">
-        Disable an admin's login if they no longer manage this spot.
+        Resend a set-password code, or disable an admin's login if they no longer manage this spot.
       </p>
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
         <table className="w-full text-sm">
@@ -182,7 +195,7 @@ function SpotAdminsSection({ spotId }: { spotId: string }) {
               <th className="px-5 py-3">Name</th>
               <th className="px-5 py-3">Email</th>
               <th className="px-5 py-3">Status</th>
-              <th className="px-5 py-3 text-right">Login</th>
+              <th className="px-5 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -198,33 +211,51 @@ function SpotAdminsSection({ spotId }: { spotId: string }) {
                 </td>
               </tr>
             )}
-            {admins.map((a) => (
-              <tr key={a.id}>
-                <td className="px-5 py-3 font-medium text-gray-900">{a.name || '—'}</td>
-                <td className="px-5 py-3 text-gray-600">{a.email}</td>
-                <td className="px-5 py-3">
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                      a.loginDisabled ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-                    }`}
-                  >
-                    {a.loginDisabled ? 'Disabled' : 'Active'}
-                  </span>
-                </td>
-                <td className="px-5 py-3 text-right">
-                  <button
-                    onClick={() => setDisabled({ variables: { userId: a.id, disabled: !a.loginDisabled } })}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
-                      a.loginDisabled
-                        ? 'bg-brand text-white hover:bg-brand-dark'
-                        : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    {a.loginDisabled ? 'Enable login' : 'Disable login'}
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {admins.map((a) => {
+              const state = resent[a.id];
+              return (
+                <tr key={a.id}>
+                  <td className="px-5 py-3 font-medium text-gray-900">{a.name || '—'}</td>
+                  <td className="px-5 py-3 text-gray-600">{a.email}</td>
+                  <td className="px-5 py-3">
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        a.loginDisabled ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                      }`}
+                    >
+                      {a.loginDisabled ? 'Disabled' : 'Active'}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => resend(a.id)}
+                        disabled={state === 'sending'}
+                        className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                      >
+                        {state === 'sending'
+                          ? 'Sending…'
+                          : state === 'sent'
+                            ? 'Code sent ✓'
+                            : state === 'error'
+                              ? 'Failed — retry'
+                              : 'Resend code'}
+                      </button>
+                      <button
+                        onClick={() => setDisabled({ variables: { userId: a.id, disabled: !a.loginDisabled } })}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                          a.loginDisabled
+                            ? 'bg-brand text-white hover:bg-brand-dark'
+                            : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {a.loginDisabled ? 'Enable login' : 'Disable login'}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

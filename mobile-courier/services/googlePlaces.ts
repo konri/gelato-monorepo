@@ -145,7 +145,8 @@ export const reverseGeocode = async (
  */
 export const staticMapUrl = (opts: {
   spot: { latitude: number; longitude: number };
-  destination: { latitude: number; longitude: number };
+  // Drop-off; omit/null before the address is unlocked (spot pin only).
+  destination?: { latitude: number; longitude: number } | null;
   courier?: { latitude: number; longitude: number } | null;
   width: number;
   height: number;
@@ -159,16 +160,20 @@ export const staticMapUrl = (opts: {
     key: KEY,
     language: 'pl',
   });
-  // Spot pin (brand red 'S') + destination pin ('D'), path between them.
+  // Spot pin (brand red 'S'); destination pin ('D') + path only when known.
   params.append('markers', `color:0xEC2828|label:S|${spot.latitude},${spot.longitude}`);
-  params.append('markers', `color:0x212121|label:D|${destination.latitude},${destination.longitude}`);
+  if (destination) {
+    params.append('markers', `color:0x212121|label:D|${destination.latitude},${destination.longitude}`);
+  }
   if (courier) {
     // Courier pin (green 'C').
     params.append('markers', `color:0x16A34A|label:C|${courier.latitude},${courier.longitude}`);
   }
-  params.append(
-    'path',
-    `color:0xEC282880|weight:3|${spot.latitude},${spot.longitude}|${destination.latitude},${destination.longitude}`,
-  );
+  if (destination) {
+    params.append(
+      'path',
+      `color:0xEC282880|weight:3|${spot.latitude},${spot.longitude}|${destination.latitude},${destination.longitude}`,
+    );
+  }
   return `https://maps.googleapis.com/maps/api/staticmap?${params.toString()}`;
 };

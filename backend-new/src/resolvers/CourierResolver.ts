@@ -656,6 +656,9 @@ export class CourierResolver {
   async updateDeliveryStatus(
     @Arg('orderId', () => ID) orderId: string,
     @Arg('status', () => OrderStatus) status: OrderStatus,
+    // Handover code: the spot's pickup code for PICKED_UP, the customer's
+    // 4-digit PIN for DELIVERED. Required for those transitions.
+    @Arg('code', () => String, { nullable: true }) code: string | undefined,
     @Ctx() { req, prisma }: Context
   ): Promise<boolean> {
     const user = req.user!;
@@ -672,7 +675,15 @@ export class CourierResolver {
     // Get order and verify courier is assigned
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      select: { courierId: true, status: true, deliveryFee: true, orderNumber: true },
+      select: {
+        courierId: true,
+        status: true,
+        deliveryFee: true,
+        orderNumber: true,
+        spotId: true,
+        pickupCode: true,
+        deliveryPin: true,
+      },
     });
 
     if (!order) {
@@ -681,6 +692,19 @@ export class CourierResolver {
 
     if (order.courierId !== profile.id) {
       throw new Error('You are not assigned to this order');
+    }
+
+    // Confirm the in-person handover code before advancing.
+    const entered = (code ?? '').trim().toUpperCase();
+    if (status === OrderStatus.PICKED_UP && order.pickupCode) {
+      if (entered !== order.pickupCode.toUpperCase()) {
+        throw new Error('Incorrect pickup code');
+      }
+    }
+    if (status === OrderStatus.DELIVERED && order.deliveryPin) {
+      if (entered !== order.deliveryPin.toUpperCase()) {
+        throw new Error('Incorrect delivery PIN');
+      }
     }
 
     // Update order status with timestamps
@@ -709,6 +733,8 @@ export class CourierResolver {
                 courierId: profile.id,
                 amount: earning,
                 description: `Delivery ${order.orderNumber}`,
+                spotId: order.spotId,
+                orderId,
               },
             });
           }
@@ -728,6 +754,128 @@ export class CourierResolver {
     console.log(`✅ Order ${orderId} status updated by courier: ${status}`);
 
     return true;
+  }
+
+  /**
+   * A courier cancels an active delivery and/or reports an incident (bike
+   * damage, lost address, customer unreachable). Optionally attaches a photo
+   * (uploaded first via POST /upload/delivery-incident/:orderId → incidentPhotoUrl).
+   * Sets the order back so the spot can reassign, and notifies the spot admin.
+   */
+  @Authorized([Role.COURIER])
+  @Mutation(() => Boolean)
+  async reportDeliveryIncident(
+    @Arg('orderId', () => ID) orderId: string,
+    @Arg('incidentType', () => String) incidentType: string,
+    @Arg('note', () => String, { nullable: true }) note: string | undefined,
+    @Arg('photoUrl', () => String, { nullable: true }) photoUrl: string | undefined,
+    @Arg('cancel', () => Boolean, { nullable: true }) cancel: boolean | undefined,
+    @Ctx() { req, prisma }: Context
+  ): Promise<boolean> {
+    const user = req.user!;
+    const profile = await prisma.courierProfile.findUnique({ where: { userId: user.id } });
+    if (!profile) throw new Error('Courier profile not found');
+
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: { courierId: true, status: true, orderNumber: true, spotId: true },
+    });
+    if (!order) throw new Error('Order not found');
+    if (order.courierId !== profile.id) throw new Error('You are not assigned to this order');
+
+    const doCancel = cancel !== false; // default: an incident cancels the delivery
+    const updated = await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        incidentType,
+        incidentNote: note ?? null,
+        incidentPhotoUrl: photoUrl ?? null,
+        incidentReportedAt: new Date(),
+        ...(doCancel
+          ? {
+              status: OrderStatus.READY, // hand back to the spot to reassign
+              cancelReason: note ?? incidentType,
+              // Release the courier assignment.
+              courierId: null,
+              courierAssignedAt: null,
+            }
+          : {}),
+      },
+      include: { items: true },
+    });
+
+    await PubSubService.publishOrderStatusChanged(updated);
+
+    // Notify the spot (subscription + push + persisted notification).
+    await PubSubService.publishDeliveryIncident(order.spotId, {
+      orderId,
+      orderNumber: order.orderNumber,
+      incidentType,
+      note: note ?? null,
+      photoUrl: photoUrl ?? null,
+      cancelled: doCancel,
+    });
+    await this.notifySpotOfIncident(
+      order.spotId,
+      order.orderNumber,
+      incidentType,
+      note ?? null,
+      photoUrl ?? null,
+      prisma,
+    );
+
+    console.log(`⚠️ Delivery incident on ${order.orderNumber} (${incidentType}, cancel=${doCancel})`);
+    return true;
+  }
+
+  /**
+   * Notify a spot's admins + employees of a courier incident: FCM push + a
+   * persisted in-app Notification (with the incident photo, if any).
+   */
+  private async notifySpotOfIncident(
+    spotId: string,
+    orderNumber: string,
+    incidentType: string,
+    note: string | null,
+    photoUrl: string | null,
+    prisma: any
+  ): Promise<void> {
+    try {
+      const [admins, employees] = await Promise.all([
+        prisma.spotAdminProfile.findMany({ where: { spotId }, select: { userId: true } }),
+        prisma.employeeProfile.findMany({ where: { spotId }, select: { userId: true } }),
+      ]);
+      const userIds = Array.from(
+        new Set<string>([...admins.map((a: any) => a.userId), ...employees.map((e: any) => e.userId)])
+      );
+      if (userIds.length === 0) return;
+
+      const title = `Delivery issue · #${orderNumber}`;
+      const body = note ? `${incidentType}: ${note}` : incidentType;
+
+      // Persist an in-app notification per recipient (carries the photo).
+      await prisma.notification.createMany({
+        data: userIds.map((uid) => ({
+          userId: uid,
+          title,
+          body,
+          imageUrl: photoUrl ?? undefined,
+          type: 'DELIVERY_INCIDENT',
+          data: { orderNumber, incidentType },
+        })),
+      });
+
+      const { FCMService, NotificationType } = await import('../services/FCMService');
+      await FCMService.sendToUsers(
+        userIds,
+        NotificationType.ORDER_CANCELLED,
+        { orderNumber },
+        { kind: 'DELIVERY_INCIDENT', incidentType },
+        prisma
+      ).catch(() => {});
+    } catch (e) {
+      console.error('Failed to notify spot of delivery incident:', e);
+    }
   }
 
   // ==========================================================================

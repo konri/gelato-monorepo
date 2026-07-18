@@ -7,6 +7,7 @@ export type UserData = {
   roles: string[];
   firstName: string;
   surname: string;
+  loyaltyCode?: string | null;
   phone: string;
   birthDate: string;
   birthdayCompleted: boolean;

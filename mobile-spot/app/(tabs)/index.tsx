@@ -1,7 +1,9 @@
 import Logo from '@/assets/images/logo.svg';
 import { Typography } from '@/components/atoms/Typography';
 import { SpotOrderCard } from '@/components/molecules/SpotOrderCard';
+import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
 import { TAB_BAR_TOTAL_HEIGHT } from '@/constants/tabBarStyles';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { useSpotOrderSubscription } from '@/hooks/useSpotOrderSubscription';
 import {
   advanceOrderStatus,
@@ -25,6 +27,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function SpotOrdersScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { isWide } = useBreakpoint();
   // Active orders = anything not yet ready/delivered. We fetch all and filter.
   const { orders, loading, refetch, setOrders } = useSpotOrders(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -83,36 +86,48 @@ export default function SpotOrdersScreen() {
   const preparing = orders.filter((o) => o.status === 'PREPARING');
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
-        <View className="flex-row items-center">
-          <Logo width={30} height={30} />
-          <View className="ml-2">
-            <Typography variant="body-lg-bold" className="text-text-primary leading-5">
-              Gelato
-            </Typography>
-            <Typography variant="body-very-small-medium" style={{ color: '#EC2828', letterSpacing: 2 }}>
-              SPOT
-            </Typography>
+    <View className="flex-1 bg-gray-50" style={{ paddingTop: isWide ? 0 : insets.top }}>
+      <View className="border-b border-gray-200 bg-white px-6 py-4">
+        <ResponsiveContainer>
+          <View className="flex-row items-center justify-between">
+            {/* Logo hidden on wide layout — the sidebar already shows the brand. */}
+            {isWide ? (
+              <Typography variant="heading-32-bold" className="text-text-primary">
+                {t('SpotTabs.orders')}
+              </Typography>
+            ) : (
+              <View className="flex-row items-center">
+                <Logo width={30} height={30} />
+                <View className="ml-2">
+                  <Typography variant="body-lg-bold" className="text-text-primary leading-5">
+                    Gelato
+                  </Typography>
+                  <Typography variant="body-very-small-medium" style={{ color: '#EC2828', letterSpacing: 2 }}>
+                    SPOT
+                  </Typography>
+                </View>
+              </View>
+            )}
+            {pending.length > 0 && (
+              <View className="flex-row items-center rounded-full bg-brand px-3 py-1" style={{ backgroundColor: '#EC2828' }}>
+                <Ionicons name="notifications" size={14} color="#fff" />
+                <Typography variant="body-small-bold" className="ml-1 text-white">
+                  {pending.length}
+                </Typography>
+              </View>
+            )}
           </View>
-        </View>
-        {pending.length > 0 && (
-          <View className="flex-row items-center rounded-full bg-brand px-3 py-1" style={{ backgroundColor: '#EC2828' }}>
-            <Ionicons name="notifications" size={14} color="#fff" />
-            <Typography variant="body-small-bold" className="ml-1 text-white">
-              {pending.length}
-            </Typography>
-          </View>
-        )}
+        </ResponsiveContainer>
       </View>
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_TOTAL_HEIGHT + 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: (isWide ? 24 : TAB_BAR_TOTAL_HEIGHT) + 16 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#EC2828" colors={['#EC2828']} />
         }
       >
+        <ResponsiveContainer>
         {loading && orders.length === 0 ? (
           <View className="py-10 items-center">
             <ActivityIndicator color="#EC2828" />
@@ -165,6 +180,7 @@ export default function SpotOrdersScreen() {
             )}
           </>
         )}
+        </ResponsiveContainer>
       </ScrollView>
     </View>
   );

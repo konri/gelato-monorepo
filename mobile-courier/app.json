@@ -18,6 +18,15 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Ta aplikacja potrzebuje dost\u0119pu do lokalizacji, aby pokazywa\u0107 odpowiednie oferty w Twojej okolicy.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Ta aplikacja potrzebuje dost\u0119pu do lokalizacji, aby pokazywa\u0107 odpowiednie oferty w Twojej okolicy.",
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true,
+          "NSExceptionDomains": {
+            "192.168.1.27": {
+              "NSExceptionAllowsInsecureHTTPLoads": true,
+              "NSIncludesSubdomains": true
+            }
+          }
+        },
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [
