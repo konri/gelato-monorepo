@@ -44,3 +44,11 @@ export const UPDATE_ORDER_STATUS_MUTATION = gql`
     updateOrderStatus(id: $id, status: $status)
   }
 `;
+
+// Terminate an order (out of stock / closing): refunds the customer, keeps
+// their loyalty points, sets status TERMINATED.
+export const TERMINATE_ORDER_MUTATION = gql`
+  mutation TerminateOrder($id: ID!, $reason: String) {
+    terminateOrder(id: $id, reason: $reason)
+  }
+`;

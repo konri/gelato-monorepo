@@ -637,6 +637,11 @@ export default {
       COLLECTED: 'Odebrane',
       CANCELLED: 'Anulowane',
       FAILED: 'Nieudane',
+      TERMINATED: 'Anulowane przez lokal',
+    },
+    terminated: {
+      title: 'Zamówienie anulowane',
+      body: 'Bardzo nam przykro — lokal musiał anulować to zamówienie. Zwrot pieniędzy jest w drodze i dotrze najszybciej jak to możliwe. Punkty lojalnościowe za to zamówienie zostały zachowane.',
     },
     tracking: {
       title: 'Śledzenie zamówienia',

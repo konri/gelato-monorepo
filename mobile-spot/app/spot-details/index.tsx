@@ -14,6 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
+import { goBackOr } from '@/utils/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -204,7 +205,7 @@ export default function SpotDetailsScreen() {
   return (
     <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
       <View className="flex-row items-center border-b border-gray-200 bg-white px-4 py-4">
-        <Pressable onPress={() => router.back()} hitSlop={8} className="pr-2">
+        <Pressable onPress={() => goBackOr()} hitSlop={8} className="pr-2">
           <Ionicons name="arrow-back" size={22} color="#212121" />
         </Pressable>
         <Typography variant="body-lg-bold" className="text-text-primary">

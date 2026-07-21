@@ -634,6 +634,11 @@ export default {
       COLLECTED: 'Collected',
       CANCELLED: 'Cancelled',
       FAILED: 'Failed',
+      TERMINATED: 'Cancelled by spot',
+    },
+    terminated: {
+      title: 'Order cancelled',
+      body: "We're deeply sorry — the spot had to cancel this order. Your refund is on its way and will arrive as soon as possible. Your loyalty points for this order have been kept.",
     },
     tracking: {
       title: 'Order tracking',

@@ -7,6 +7,7 @@ import {
   getSpotStaffEmployees,
   getSpotStaffSessions,
   createSpotStaff,
+  inviteSpotStaff,
   adminResetStaffPassword,
   setStaffLoginDisabled,
   type StaffMember,
@@ -15,6 +16,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { goBackOr } from '@/utils/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -45,8 +47,10 @@ export default function StaffScreen() {
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Create form
+  // Create form. `mode` toggles between handing over a temp password and
+  // emailing a set-password invite (branded with the spot's logo/details).
   const [form, setForm] = useState({ email: '', name: '', password: '', role: 'EMPLOYEE' as 'EMPLOYEE' | 'SPOT_ADMIN' });
+  const [mode, setMode] = useState<'invite' | 'password'>('invite');
 
   const load = useCallback(async () => {
     if (!spotId) {
@@ -73,25 +77,32 @@ export default function StaffScreen() {
   }, [load]);
 
   const create = async () => {
-    if (!spotId || !form.email.trim() || !form.name.trim() || !form.password.trim()) return;
+    if (!spotId || !form.email.trim() || !form.name.trim()) return;
+    if (mode === 'password' && !form.password.trim()) return;
     setBusy(true);
     setError(null);
     setNotice(null);
     try {
       const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
-      const res = await createSpotStaff(
-        {
-          spotId,
-          email: form.email.trim(),
-          name: form.name.trim(),
-          password: form.password,
-          role: form.role,
-        },
-        { token },
-      );
+      const res =
+        mode === 'invite'
+          ? await inviteSpotStaff(
+              { spotId, email: form.email.trim(), name: form.name.trim(), role: form.role },
+              { token },
+            )
+          : await createSpotStaff(
+              {
+                spotId,
+                email: form.email.trim(),
+                name: form.name.trim(),
+                password: form.password,
+                role: form.role,
+              },
+              { token },
+            );
       if (res.error || !res.data) throw new Error(res.error?.message || t('Staff.createError'));
       setForm({ email: '', name: '', password: '', role: 'EMPLOYEE' });
-      setNotice(t('Staff.created'));
+      setNotice(mode === 'invite' ? t('Staff.invited', { email: res.data.email }) : t('Staff.created'));
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : t('Staff.createError'));
@@ -179,19 +190,23 @@ export default function StaffScreen() {
         <Typography variant="body-base-regular" className="mt-3 text-center text-gray-500">
           {t('Staff.adminOnly')}
         </Typography>
-        <Pressable onPress={() => router.back()} className="mt-5 rounded-xl px-6 py-3" style={{ backgroundColor: '#EC2828' }}>
+        <Pressable onPress={() => goBackOr()} className="mt-5 rounded-xl px-6 py-3" style={{ backgroundColor: '#EC2828' }}>
           <Typography variant="body-base-bold" className="text-white">{t('Staff.back')}</Typography>
         </Pressable>
       </View>
     );
   }
 
-  const canCreate = !!form.email.trim() && !!form.name.trim() && form.password.length >= 8 && !busy;
+  const canCreate =
+    !!form.email.trim() &&
+    !!form.name.trim() &&
+    (mode === 'invite' || form.password.length >= 8) &&
+    !busy;
 
   return (
     <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
       <View className="flex-row items-center border-b border-gray-200 bg-white px-4 py-4">
-        <Pressable onPress={() => router.back()} hitSlop={8} className="pr-2">
+        <Pressable onPress={() => goBackOr()} hitSlop={8} className="pr-2">
           <Ionicons name="arrow-back" size={22} color="#212121" />
         </Pressable>
         <Typography variant="body-lg-bold" className="text-text-primary">{t('Staff.title')}</Typography>
@@ -213,6 +228,26 @@ export default function StaffScreen() {
           {/* Create staff */}
           <View className="mb-6 rounded-2xl bg-white p-4">
             <Typography variant="body-base-bold" className="mb-3 text-text-primary">{t('Staff.addMember')}</Typography>
+
+            {/* Invite by email vs. hand over a temporary password. */}
+            <View className="mb-3 flex-row rounded-xl bg-gray-100 p-1">
+              {(['invite', 'password'] as const).map((m) => {
+                const active = mode === m;
+                return (
+                  <Pressable
+                    key={m}
+                    onPress={() => setMode(m)}
+                    className="flex-1 items-center rounded-lg py-2"
+                    style={{ backgroundColor: active ? '#fff' : 'transparent' }}
+                  >
+                    <Typography variant="body-small-bold" style={{ color: active ? '#EC2828' : '#6B7280' }}>
+                      {t(m === 'invite' ? 'Staff.modeInvite' : 'Staff.modePassword')}
+                    </Typography>
+                  </Pressable>
+                );
+              })}
+            </View>
+
             <View className="mb-3 flex-row rounded-xl bg-gray-100 p-1">
               {(['EMPLOYEE', 'SPOT_ADMIN'] as const).map((r) => {
                 const active = form.role === r;
@@ -244,13 +279,19 @@ export default function StaffScreen() {
               autoCapitalize="none"
               keyboardType="email-address"
             />
-            <TextInput
-              className={inputCls}
-              placeholder={t('Staff.tempPassword')}
-              value={form.password}
-              onChangeText={(v) => setForm((f) => ({ ...f, password: v }))}
-              autoCapitalize="none"
-            />
+            {mode === 'password' ? (
+              <TextInput
+                className={inputCls}
+                placeholder={t('Staff.tempPassword')}
+                value={form.password}
+                onChangeText={(v) => setForm((f) => ({ ...f, password: v }))}
+                autoCapitalize="none"
+              />
+            ) : (
+              <Typography variant="body-small-regular" className="text-gray-500">
+                {t('Staff.inviteHint')}
+              </Typography>
+            )}
             <Pressable
               onPress={create}
               disabled={!canCreate}
@@ -260,7 +301,9 @@ export default function StaffScreen() {
               {busy ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Typography variant="body-base-bold" className="text-white">{t('Staff.create')}</Typography>
+                <Typography variant="body-base-bold" className="text-white">
+                  {t(mode === 'invite' ? 'Staff.sendInvite' : 'Staff.create')}
+                </Typography>
               )}
             </Pressable>
           </View>

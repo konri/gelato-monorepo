@@ -8,6 +8,7 @@ export const MY_NOTIFICATIONS_QUERY = gql`
       body
       imageUrl
       type
+      data
       isRead
       createdAt
     }

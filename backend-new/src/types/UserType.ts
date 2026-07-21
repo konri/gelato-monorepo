@@ -70,6 +70,10 @@ export class UserType {
   @Field()
   phoneVerified!: boolean;
 
+  // Whether an admin has revoked this staff member's login (spot staff mgmt).
+  @Field({ nullable: true })
+  loginDisabled?: boolean;
+
   @Field({ nullable: true })
   loyaltyCode?: string;
 

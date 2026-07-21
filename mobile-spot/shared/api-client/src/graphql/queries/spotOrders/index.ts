@@ -4,6 +4,7 @@ import {
   CLAIM_ORDER_MUTATION,
   SPOT_ORDERS_QUERY,
   UPDATE_ORDER_STATUS_MUTATION,
+  TERMINATE_ORDER_MUTATION,
 } from './query';
 import {
   ClaimOrderResponse,
@@ -46,4 +47,16 @@ export const updateOrderStatus = async (
     { ...options, variables: { id, status } },
   );
   return { ...res, data: res.data ? res.data.updateOrderStatus : null };
+};
+
+export const terminateOrder = async (
+  id: string,
+  reason: string | undefined,
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<boolean>> => {
+  const res = await executeGraphQLQuery<{ terminateOrder: boolean }>(
+    TERMINATE_ORDER_MUTATION,
+    { ...options, variables: { id, reason } },
+  );
+  return { ...res, data: res.data ? res.data.terminateOrder : null };
 };

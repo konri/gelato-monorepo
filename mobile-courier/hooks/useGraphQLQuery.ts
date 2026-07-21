@@ -25,6 +25,12 @@ export const useGraphQLQuery = <T>(
 
   const fetchData = useCallback(async () => {
     try {
+      // Skip the request entirely when disabled (e.g. before login) so we don't
+      // fire authed queries without a valid token and trip session-expiry.
+      if (options?.enabled === false) {
+        setState({ data: null, loading: false, error: null });
+        return;
+      }
       setState(prev => ({ ...prev, loading: true, error: null }));
 
       const token = await safeGetItem('access_token');

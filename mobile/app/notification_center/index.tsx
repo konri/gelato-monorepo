@@ -6,13 +6,29 @@ import { CustomSafeAreaView } from '@/components/CustomSafeAreaView';
 import { HeaderWithBackButton } from '@/components/HeaderWithBackButton';
 import { Typography } from '@/components/atoms/Typography';
 import { useNotificationsList } from '@/hooks/useNotificationsList';
-import { markNotificationAsRead, AppNotification, NotificationCategory } from '@repo/api-client';
+import { markNotificationRead, AppNotification } from '@repo/api-client';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
 
-const categoryIcon: Record<NotificationCategory, keyof typeof Ionicons.glyphMap> = {
-  PROMOTIONS: 'pricetag-outline',
-  GENERAL: 'notifications-outline',
-  SECURITY: 'shield-checkmark-outline',
+// Map a notification's `type` (backend FCMService.NotificationType) to a
+// bell-list icon. Unknown/new types fall back to a generic bell below.
+const typeIcon: Record<string, keyof typeof Ionicons.glyphMap> = {
+  ORDER_PLACED: 'receipt-outline',
+  ORDER_CONFIRMED: 'checkmark-circle-outline',
+  ORDER_PREPARING: 'time-outline',
+  ORDER_READY: 'bag-check-outline',
+  ORDER_PICKED_UP: 'bicycle-outline',
+  ORDER_OUT_FOR_DELIVERY: 'bicycle-outline',
+  ORDER_DELIVERED: 'checkmark-done-outline',
+  ORDER_CANCELLED: 'close-circle-outline',
+  COURIER_ASSIGNED: 'person-outline',
+  COURIER_NEARBY: 'navigate-outline',
+  POINTS_EARNED: 'star-outline',
+  POINTS_REDEEMED: 'star-outline',
+  PRIZE_AVAILABLE: 'gift-outline',
+  QUEST_COMPLETED: 'trophy-outline',
+  NEWS_PUBLISHED: 'newspaper-outline',
+  SPOT_ANNOUNCEMENT: 'megaphone-outline',
+  REFERRAL_REWARD: 'people-outline',
 };
 
 export default function NotificationCenterScreen() {
@@ -43,7 +59,7 @@ export default function NotificationCenterScreen() {
     );
 
     const token = await safeGetItem('access_token');
-    const result = await markNotificationAsRead({
+    const result = await markNotificationRead({
       notificationId: notification.id,
       token: token ?? undefined,
     });
@@ -66,7 +82,7 @@ export default function NotificationCenterScreen() {
         {item.imageUrl ? (
           <Image source={{ uri: item.imageUrl }} className="w-11 h-11 rounded-full" />
         ) : (
-          <Ionicons name={categoryIcon[item.category] ?? 'notifications-outline'} size={22} color="#EC2828" />
+          <Ionicons name={typeIcon[item.type] ?? 'notifications-outline'} size={22} color="#EC2828" />
         )}
       </View>
 
@@ -78,7 +94,7 @@ export default function NotificationCenterScreen() {
           {item.title}
         </Typography>
         <Typography variant="body-small-regular" className="text-gray-600 mt-1">
-          {item.message}
+          {item.body}
         </Typography>
         <Typography variant="body-very-small-regular" className="text-gray-400 mt-1">
           {new Date(item.createdAt).toLocaleDateString()}

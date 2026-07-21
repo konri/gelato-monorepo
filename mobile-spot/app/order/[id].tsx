@@ -1,14 +1,16 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
 import { staticMapUrl } from '@/services/googlePlaces';
-import { getOrderById, type OrderDetail } from '@repo/api-client';
+import { getOrderById, terminateOrder, type OrderDetail } from '@repo/api-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
+import { goBackOr } from '@/utils/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Linking,
   Pressable,
@@ -28,6 +30,7 @@ export default function OrderTrackScreen() {
   const { width } = useWindowDimensions();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [terminating, setTerminating] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const load = useCallback(async () => {
@@ -37,6 +40,33 @@ export default function OrderTrackScreen() {
     setOrder(res.data ?? null);
     setLoading(false);
   }, [id]);
+
+  // Orders that can still be terminated (not already finished).
+  const canTerminate =
+    !!order &&
+    !['DELIVERED', 'COLLECTED', 'CANCELLED', 'FAILED', 'TERMINATED'].includes(String(order.status));
+
+  const doTerminate = useCallback(async () => {
+    if (!id) return;
+    setTerminating(true);
+    try {
+      const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
+      const res = await terminateOrder(id, undefined, { token });
+      if (res.error) throw new Error(res.error.message);
+      await load();
+    } catch (e) {
+      Alert.alert(t('OrderTrack.terminateFailed'), e instanceof Error ? e.message : '');
+    } finally {
+      setTerminating(false);
+    }
+  }, [id, load, t]);
+
+  const confirmTerminate = useCallback(() => {
+    Alert.alert(t('OrderTrack.terminateTitle'), t('OrderTrack.terminateConfirm'), [
+      { text: t('OrderTrack.terminateCancel'), style: 'cancel' },
+      { text: t('OrderTrack.terminateConfirmCta'), style: 'destructive', onPress: () => void doTerminate() },
+    ]);
+  }, [t, doTerminate]);
 
   useEffect(() => {
     void load();
@@ -79,7 +109,7 @@ export default function OrderTrackScreen() {
   return (
     <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
       <View className="flex-row items-center border-b border-gray-200 bg-white px-4 py-4">
-        <Pressable onPress={() => router.back()} hitSlop={8} className="pr-2">
+        <Pressable onPress={() => goBackOr()} hitSlop={8} className="pr-2">
           <Ionicons name="arrow-back" size={22} color="#212121" />
         </Pressable>
         <Typography variant="body-lg-bold" className="text-text-primary">
@@ -170,16 +200,40 @@ export default function OrderTrackScreen() {
               </View>
             ) : null}
 
-            {/* Call spot */}
-            {order.spot?.phone && (
+            {/* Call the courier once one is assigned (calling the spot itself is
+                pointless — we ARE the spot). Falls back to nothing if the
+                courier has no phone on file. */}
+            {order.courierPhone && (
               <Pressable
-                onPress={() => Linking.openURL(`tel:${order.spot!.phone}`)}
+                onPress={() => Linking.openURL(`tel:${order.courierPhone}`)}
                 className="mt-4 flex-row items-center justify-center rounded-xl border border-gray-200 bg-white py-3.5"
               >
                 <Ionicons name="call" size={18} color="#EC2828" />
                 <Typography variant="body-base-semibold" className="ml-2" style={{ color: '#EC2828' }}>
-                  {t('OrderTrack.callSpot')}
+                  {t('OrderTrack.callCourier')}
                 </Typography>
+              </Pressable>
+            )}
+
+            {/* Terminate — refunds the customer, keeps their points. Only while
+                the order is still in progress. */}
+            {canTerminate && (
+              <Pressable
+                onPress={confirmTerminate}
+                disabled={terminating}
+                className="mt-4 flex-row items-center justify-center rounded-xl border py-3.5"
+                style={{ borderColor: '#DC2626' }}
+              >
+                {terminating ? (
+                  <ActivityIndicator color="#DC2626" />
+                ) : (
+                  <>
+                    <Ionicons name="close-circle-outline" size={18} color="#DC2626" />
+                    <Typography variant="body-base-semibold" className="ml-2" style={{ color: '#DC2626' }}>
+                      {t('OrderTrack.terminate')}
+                    </Typography>
+                  </>
+                )}
               </Pressable>
             )}
           </ResponsiveContainer>

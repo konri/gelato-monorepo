@@ -23,6 +23,30 @@ export default {
       skip: 'Skip',
       continue: 'Continue',
       getStarted: 'Get Started'
+    },
+    profile: {
+      title: 'Tell us your name',
+      subtitle: 'Spots and customers see your name when you take their order.',
+      firstName: 'First name',
+      firstNamePlaceholder: 'John',
+      surname: 'Surname',
+      surnamePlaceholder: 'Doe',
+      continue: 'Continue',
+      nameRequired: 'Please enter your first name and surname.',
+      saveFailed: 'Could not save your name. Try again.'
+    },
+    phone: {
+      title: 'Verify your phone',
+      subtitle: 'Spots reach you on this number. We\'ll text you a code to confirm it.',
+      number: 'Phone number',
+      code: 'Verification code',
+      send: 'Send code',
+      verify: 'Verify',
+      resend: 'Resend code',
+      numberRequired: 'Please enter your phone number.',
+      codeRequired: 'Please enter the code from the text message.',
+      sendFailed: 'Could not send the code. Check the number and try again.',
+      verifyFailed: 'That code is invalid or expired. Try again.'
     }
   },
   Main: {
@@ -514,6 +538,9 @@ export default {
     confirm: 'Use this photo',
     permission: 'Camera access is needed to take a selfie.',
     error: 'Could not upload your photo. Try again.',
+    chooseFromGallery: 'Choose from gallery',
+    galleryPermission: 'Photo library access is needed to choose a photo.',
+    uploading: 'Uploading your photo…',
   },
   Courier: {
     homeTitle: 'Ready to ride',

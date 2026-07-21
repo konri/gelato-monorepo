@@ -1,4 +1,5 @@
 import { Typography } from '@/components/atoms/Typography';
+import { HeaderWithBackButton } from '@/components/HeaderWithBackButton';
 import {
   applyToSpot,
   useCities,
@@ -66,16 +67,9 @@ export default function ApplySpotScreen() {
   const selectedCity = cities?.find((c) => c.id === cityId) ?? null;
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-4 border-b border-gray-200 bg-white">
-        <Pressable onPress={() => router.back()} className="p-1 mr-2">
-          <Ionicons name="chevron-back" size={26} color="#212121" />
-        </Pressable>
-        <Typography variant="body-lg-bold" className="text-text-primary">
-          {t('Courier.applyTitle')}
-        </Typography>
-      </View>
+    <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top + 8 }}>
+      {/* Floating card header (matches the client app's look). */}
+      <HeaderWithBackButton title={t('Courier.applyTitle')} variant="card" />
 
       <ScrollView
         className="flex-1"

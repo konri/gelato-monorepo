@@ -21,6 +21,36 @@ import { OrderPointsService } from '../services/OrderPointsService';
 import { CodeGenerator } from '../shared/utils/CodeGenerator';
 
 /**
+ * Persist an in-app notification for every staff member of a spot when a new
+ * order lands, so the spot's notification bell populates (the pubsub event only
+ * drives the live queue modal — it doesn't survive a reload). Best-effort.
+ */
+export async function persistNewOrderNotification(
+  spotId: string,
+  order: { id: string; orderNumber: string },
+  prisma: Context['prisma'],
+): Promise<void> {
+  const [admins, employees] = await Promise.all([
+    prisma.spotAdminProfile.findMany({ where: { spotId }, select: { userId: true } }),
+    prisma.employeeProfile.findMany({ where: { spotId }, select: { userId: true } }),
+  ]);
+  const userIds = Array.from(
+    new Set<string>([...admins.map((a) => a.userId), ...employees.map((e) => e.userId)]),
+  );
+  if (userIds.length === 0) return;
+
+  await prisma.notification.createMany({
+    data: userIds.map((uid) => ({
+      userId: uid,
+      title: 'New order',
+      body: `Order #${order.orderNumber} is waiting to be claimed.`,
+      type: 'order',
+      data: { orderId: order.id, orderNumber: order.orderNumber },
+    })),
+  });
+}
+
+/**
  * Resolves human-readable names for order line items so spot staff can see
  * what to prepare (taste titles / product names / box scoop choices).
  */
@@ -202,6 +232,18 @@ export class OrderResolver {
   ): Promise<string | null> {
     const courier = await this.courierUser(order, prisma);
     return courier?.profilePicture ?? null;
+  }
+
+  /**
+   * Assigned courier's phone (so the spot can call the courier, not itself).
+   */
+  @FieldResolver(() => String, { nullable: true })
+  async courierPhone(
+    @Root() order: OrderType,
+    @Ctx() { prisma }: Context
+  ): Promise<string | null> {
+    const courier = await this.courierUser(order, prisma);
+    return courier?.phone ?? null;
   }
 
   /**
@@ -481,6 +523,9 @@ export class OrderResolver {
     // we don't disturb the spot before the customer has paid.
     if (order.paymentMethod === 'cash') {
       await PubSubService.publishNewOrderNotification(input.spotId, order);
+      await persistNewOrderNotification(input.spotId, order, prisma).catch((e) =>
+        console.error('Failed to persist new-order notification:', e),
+      );
     }
 
     return order as OrderType;
@@ -792,6 +837,113 @@ export class OrderResolver {
 
     console.log(`✅ Order ${id} status updated: ${order.status} -> ${status}`);
 
+    return true;
+  }
+
+  /**
+   * Terminate an order from the spot side (e.g. run out of a flavor, closing).
+   * Unlike a plain cancel: the customer is refunded (if they paid online) but
+   * KEEPS any loyalty points for the order, sees an apologetic message, and the
+   * order shows the distinct TERMINATED status. Spot staff of the order's spot
+   * (or global admins) only.
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN, Role.EMPLOYEE])
+  @Mutation(() => Boolean)
+  async terminateOrder(
+    @Arg('id', () => ID) id: string,
+    @Arg('reason', () => String, { nullable: true }) reason: string | undefined,
+    @Ctx() { req, prisma }: Context
+  ): Promise<boolean> {
+    const user = req.user!;
+    const order = await prisma.order.findUnique({
+      where: { id },
+      select: {
+        spotId: true,
+        userId: true,
+        status: true,
+        orderNumber: true,
+        total: true,
+        paymentIntentId: true,
+        paymentStatus: true,
+      },
+    });
+    if (!order) throw new Error('Order not found');
+
+    // Already finished orders can't be terminated.
+    const finished: OrderStatus[] = [
+      OrderStatus.DELIVERED,
+      OrderStatus.COLLECTED,
+      OrderStatus.CANCELLED,
+      OrderStatus.FAILED,
+      OrderStatus.TERMINATED,
+    ];
+    if (finished.includes(order.status)) {
+      throw new Error('This order can no longer be terminated');
+    }
+
+    // Permission: global admins pass; otherwise must manage the order's spot.
+    if (!user.roles.includes(Role.SUPER_ADMIN) && !user.roles.includes(Role.SPOTS_ADMIN)) {
+      const [spotAdmin, employee] = await Promise.all([
+        prisma.spotAdminProfile.findFirst({ where: { userId: user.id, spotId: order.spotId } }),
+        prisma.employeeProfile.findFirst({ where: { userId: user.id, spotId: order.spotId } }),
+      ]);
+      if (!spotAdmin && !employee) throw new Error('You can only terminate orders for your spots');
+    }
+
+    // Refund online payments (best-effort — don't block termination on Stripe).
+    let refundedAt: Date | null = null;
+    if (order.paymentIntentId && order.paymentStatus !== 'refunded') {
+      try {
+        const { StripeService } = await import('../services/StripeService');
+        await StripeService.createRefund(order.paymentIntentId, undefined, 'requested_by_customer');
+        refundedAt = new Date();
+      } catch (e) {
+        console.error(`Refund failed for terminated order ${order.orderNumber}:`, e);
+      }
+    }
+
+    const updated = await prisma.order.update({
+      where: { id },
+      data: {
+        status: OrderStatus.TERMINATED,
+        terminatedAt: new Date(),
+        terminationReason: reason ?? null,
+        cancelledAt: new Date(),
+        ...(refundedAt ? { refundedAt, paymentStatus: 'refunded' } : {}),
+      },
+      include: { items: true, user: true },
+    });
+
+    // Customer keeps loyalty points for the order (per spec) — award if not yet.
+    await OrderPointsService.awardOrderPointsIfNeeded(id, prisma).catch((e) =>
+      console.error('Point award on termination failed:', e),
+    );
+
+    // Tell the client (live status + persisted notification + push + email).
+    await PubSubService.publishOrderStatusChanged(updated);
+    await prisma.notification.create({
+      data: {
+        userId: order.userId,
+        title: 'Order cancelled',
+        body: `We're sorry — order #${order.orderNumber} was cancelled by the spot. Your refund is on its way, and your loyalty points have been kept.`,
+        type: 'order',
+        data: { orderId: id, orderNumber: order.orderNumber, terminated: true },
+      },
+    });
+    try {
+      const { FCMService, NotificationType } = await import('../services/FCMService');
+      await FCMService.sendToUser(
+        order.userId,
+        NotificationType.ORDER_CANCELLED,
+        { orderId: order.orderNumber },
+        { kind: 'TERMINATED', orderId: id },
+        prisma,
+      );
+    } catch (e) {
+      console.error('Termination push failed:', e);
+    }
+
+    console.log(`🛑 Order ${order.orderNumber} terminated by ${user.email} (refunded=${!!refundedAt})`);
     return true;
   }
 

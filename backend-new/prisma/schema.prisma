@@ -55,6 +55,7 @@ enum OrderStatus {
   COLLECTED      // Pickup order collected by the customer at the spot
   CANCELLED      // Order was cancelled
   FAILED         // Delivery failed
+  TERMINATED     // Spot terminated the order (refund issued, loyalty points kept)
 }
 
 // How the customer receives the order.
@@ -477,7 +478,13 @@ model Order {
   incidentNote      String?    @db.Text
   incidentPhotoUrl  String?
   incidentReportedAt DateTime?
+  incidentReportedBy String?    // CourierProfile id of the reporter (can't re-accept)
   cancelReason      String?    // free-text reason when a courier cancels
+
+  // Spot termination (out of stock / closing) — refund issued, points kept.
+  terminatedAt      DateTime?
+  terminationReason String?    @db.Text
+  refundedAt        DateTime?
 
   // Tracking
   statusHistory     Json        @default("[]") // Array of {status, timestamp, by}

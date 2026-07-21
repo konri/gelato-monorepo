@@ -10,6 +10,7 @@ export const WHO_AM_I_QUERY = gql`
       firstName
       surname
       phone
+      phoneVerified
       birthDate
       birthdayCompleted
       profilePicture

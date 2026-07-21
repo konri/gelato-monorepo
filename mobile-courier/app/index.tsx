@@ -6,8 +6,6 @@ import { ActivityIndicator, View } from 'react-native';
 
 export default function Index() {
   const { isLoggedIn, isLoading } = useAuthState();
-  // Only meaningful once logged in; couriers must have a selfie on file.
-  const { data: me, loading: meLoading } = useWhoAmI();
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -15,6 +13,11 @@ export default function Index() {
       setIsReady(true);
     }
   }, [isLoading]);
+
+  // Only fetch the profile once we're sure the user is logged in (and the
+  // token has been read). Firing `me` before that would look like an expired
+  // session and log the user out.
+  const { data: me, loading: meLoading } = useWhoAmI(isReady && isLoggedIn);
 
   if (!isReady) {
     return (
@@ -33,8 +36,11 @@ export default function Index() {
         </View>
       );
     }
-    // A courier with no profile photo must take a selfie first.
-    if (me && !me.profilePicture) {
+    // A courier with a loaded profile must finish onboarding first: name +
+    // surname, a verified phone (skipped for phone signups), and a photo. If
+    // the profile failed to load (me is null), fall through to tabs rather than
+    // blocking — the gate is a nudge, not a hard wall.
+    if (me && (!me.firstName || !me.surname || !me.phoneVerified || !me.profilePicture)) {
       return <Redirect href={'/selfie' as any} />;
     }
     return <Redirect href="/(tabs)" />;

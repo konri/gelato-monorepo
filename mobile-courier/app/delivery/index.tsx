@@ -33,6 +33,10 @@ export default function ActiveDeliveryScreen() {
   const { location } = useCurrentLocation();
   const [busy, setBusy] = useState(false);
   const [incidentOpen, setIncidentOpen] = useState(false);
+  // Which handover code the courier must enter next (null = no modal open).
+  // Must stay above the early returns below — a hook called conditionally
+  // triggers "Rendered more hooks than during the previous render".
+  const [codePrompt, setCodePrompt] = useState<null | 'PICKED_UP' | 'DELIVERED'>(null);
 
   // Ping GPS every 60s while a delivery is active.
   useCourierLocationPing(delivery?.id ?? null);
@@ -91,9 +95,6 @@ export default function ActiveDeliveryScreen() {
         longitude: delivery.spotLongitude,
         label: delivery.spotName,
       };
-
-  // Which handover code the courier must enter next (null = no modal open).
-  const [codePrompt, setCodePrompt] = useState<null | 'PICKED_UP' | 'DELIVERED'>(null);
 
   const advance = async (next: 'PICKED_UP' | 'DELIVERED', code?: string) => {
     setBusy(true);

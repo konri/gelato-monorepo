@@ -50,6 +50,17 @@ export const CREATE_SPOT_STAFF_MUTATION = gql`
   }
 `;
 
+// Invite a staff member by email (branded set-password email) — no temp password.
+export const INVITE_SPOT_STAFF_MUTATION = gql`
+  mutation InviteSpotStaff($spotId: ID!, $email: String!, $name: String!, $role: String!) {
+    inviteSpotStaff(spotId: $spotId, email: $email, name: $name, role: $role) {
+      id
+      email
+      roles
+    }
+  }
+`;
+
 export const ADMIN_RESET_STAFF_PASSWORD_MUTATION = gql`
   mutation AdminResetStaffPassword($userId: ID!, $newPassword: String!) {
     adminResetStaffPassword(userId: $userId, newPassword: $newPassword)

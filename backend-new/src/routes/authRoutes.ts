@@ -1,7 +1,7 @@
 import express from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import { PrismaClient, Language } from '@prisma/client';
-import { generateAccessToken, generateRefreshToken, hashPassword, validatePassword } from '../auth/PasswordUtil';
+import { generateAccessToken, generateRefreshToken, hashPassword, validatePassword, verifyAccessToken } from '../auth/PasswordUtil';
 import { CodeGenerator } from '../shared/utils/CodeGenerator';
 import { TwilioService } from '../services/TwilioService';
 import { EmailService } from '../services/EmailService';
@@ -553,6 +553,59 @@ router.post('/phone/verify-code', async (req, res) => {
       success: false,
       error: 'Failed to verify code',
     });
+  }
+});
+
+/**
+ * Verify the CURRENTLY LOGGED-IN user's phone number (onboarding step for
+ * couriers who did NOT register by phone — e.g. Google/email signup). Unlike
+ * /phone/verify-code (which logs in/creates an account), this just confirms the
+ * OTP and marks the authed user's phone verified, storing the number they gave.
+ */
+router.post('/phone/verify-my-phone', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ success: false, error: 'Unauthorized' });
+
+    let userId: string;
+    try {
+      userId = verifyAccessToken(token).userId;
+    } catch {
+      return res.status(401).json({ success: false, error: 'Invalid token' });
+    }
+
+    const { phoneNumber, code } = req.body;
+    if (!phoneNumber || !code) {
+      return res.status(400).json({ success: false, error: 'Phone number and code are required' });
+    }
+
+    const verification = await TwilioService.verifyOTP(phoneNumber, code);
+    if (!verification.success) {
+      return res.status(400).json({ success: false, error: verification.message });
+    }
+
+    // Ensure the number isn't already tied to another account of the same type.
+    const me = await prisma.user.findUnique({ where: { id: userId }, select: { accountType: true } });
+    if (!me) return res.status(404).json({ success: false, error: 'User not found' });
+
+    const clash = await prisma.user.findFirst({
+      where: { phone: phoneNumber, accountType: me.accountType, NOT: { id: userId } },
+      select: { id: true },
+    });
+    if (clash) {
+      return res.status(409).json({ success: false, error: 'Phone number already in use' });
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { phone: phoneNumber, phoneVerified: true },
+    });
+
+    console.log(`✅ Phone verified for user ${userId}`);
+    return res.json({ success: true, message: 'Phone verified' });
+  } catch (error) {
+    console.error('Verify my phone error:', error);
+    return res.status(500).json({ success: false, error: 'Failed to verify phone' });
   }
 });
 

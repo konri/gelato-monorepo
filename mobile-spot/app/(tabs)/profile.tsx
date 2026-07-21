@@ -157,6 +157,19 @@ export default function ProfileScreen() {
           </Pressable>
         )}
 
+        {isAdmin && (
+          <Pressable
+            onPress={() => router.push('/history')}
+            className="mt-4 flex-row items-center rounded-2xl bg-white p-4 shadow-sm"
+          >
+            <Ionicons name="time-outline" size={20} color="#EC2828" />
+            <Typography variant="body-base-semibold" className="ml-3 flex-1 text-text-primary">
+              {t('History.title')}
+            </Typography>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+          </Pressable>
+        )}
+
         <Pressable
           onPress={handleLogout}
           className="mt-6 items-center rounded-xl border border-gray-200 bg-white py-3.5"

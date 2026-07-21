@@ -124,9 +124,9 @@ async function sendInviteCode(
                     Set your password
                   </a>
                 </div>
-                <p style="margin:0 0 4px;font-size:13px;color:#5c2a3d;">Or open the app at:</p>
+                <p style="margin:0 0 4px;font-size:13px;color:#5c2a3d;">Or copy this link into your browser:</p>
                 <p style="margin:0 0 20px;font-size:13px;">
-                  <a href="${baseUrl}" style="color:#c026a3;word-break:break-all;">${baseUrl}</a>
+                  <a href="${setPasswordUrl}" style="color:#c026a3;word-break:break-all;">${setPasswordUrl}</a>
                 </p>
                 <p style="margin:0;font-size:13px;color:#9a8a90;">This code expires in 24 hours.</p>
               </td>
@@ -144,6 +144,99 @@ async function sendInviteCode(
   </body>
 </html>`,
     text: `A Gelato admin account was created for you (${roleLabel}). Your set-password code is ${code} (expires in 24 hours). Set your password at ${setPasswordUrl}`,
+  });
+}
+
+/**
+ * Email a newly-invited spot staff member (SPOT_ADMIN / EMPLOYEE) their
+ * set-password code, branded for the specific spot: the spot's logo (if it has
+ * one) and its name/address/phone, so the invitee recognizes who invited them.
+ * The set-password link points at the spot app.
+ */
+async function sendSpotStaffInvite(opts: {
+  email: string;
+  code: string;
+  roleLabel: string;
+  spot: { name: string; address?: string | null; phone?: string | null; logoUrl?: string | null };
+}) {
+  const { email, code, roleLabel, spot } = opts;
+  const baseUrl = process.env.GELATO_SPOT_URL || 'http://localhost:8083';
+  const setPasswordUrl = `${baseUrl}/login?mode=reset&email=${encodeURIComponent(email)}`;
+
+  // Logo if the spot has one, else the ice-cream glyph (matches admin invite).
+  const brandMark = spot.logoUrl
+    ? `<img src="${spot.logoUrl}" alt="${spot.name}" width="64" height="64" style="width:64px;height:64px;border-radius:16px;object-fit:cover;display:block;margin:0 auto;" />`
+    : `<div style="font-size:40px;line-height:1;">🍦</div>`;
+
+  const detailRow = (label: string, value: string) =>
+    `<tr><td style="padding:2px 0;font-size:13px;color:#9a8a90;">${label}</td>` +
+    `<td style="padding:2px 0 2px 12px;font-size:13px;color:#3a1526;text-align:right;">${value}</td></tr>`;
+  const detailRows = [
+    detailRow('Spot', spot.name),
+    spot.address ? detailRow('Address', spot.address) : '',
+    spot.phone ? detailRow('Phone', spot.phone) : '',
+  ].join('');
+
+  await EmailService.sendEmail({
+    to: email,
+    subject: `You've been invited to ${spot.name} on Gelato`,
+    html: `<!DOCTYPE html>
+<html>
+  <body style="margin:0;padding:0;background:#fff8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fff8f0;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 8px 30px rgba(192,38,163,0.12);">
+            <!-- Header -->
+            <tr>
+              <td style="background:linear-gradient(135deg,#c026a3 0%,#8a1673 100%);padding:36px 32px;text-align:center;">
+                ${brandMark}
+                <h1 style="margin:12px 0 0;color:#ffffff;font-size:22px;font-weight:800;">${spot.name}</h1>
+              </td>
+            </tr>
+            <!-- Body -->
+            <tr>
+              <td style="padding:32px;text-align:center;color:#3a1526;">
+                <p style="margin:0 0 8px;font-size:16px;line-height:1.5;">
+                  You've been invited to join <b style="color:#c026a3;">${spot.name}</b> as <b style="color:#c026a3;">${roleLabel}</b>.
+                </p>
+                <!-- Spot details -->
+                <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:16px 0 20px;background:#fff8f0;border-radius:12px;padding:12px 16px;">
+                  ${detailRows}
+                </table>
+                <p style="margin:0 0 24px;font-size:15px;color:#5c2a3d;line-height:1.5;">
+                  Use this code in the Gelato Spot app to set your password:
+                </p>
+                <!-- Code -->
+                <div style="display:inline-block;background:#fff1e6;border:2px dashed rgba(192,38,163,0.3);border-radius:16px;padding:18px 28px;margin-bottom:24px;">
+                  <span style="font-size:34px;font-weight:800;letter-spacing:10px;color:#8a1673;">${code}</span>
+                </div>
+                <!-- CTA -->
+                <div style="margin:8px 0 20px;">
+                  <a href="${setPasswordUrl}" style="display:inline-block;background:#c026a3;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:14px 32px;border-radius:999px;">
+                    Set your password
+                  </a>
+                </div>
+                <p style="margin:0 0 4px;font-size:13px;color:#5c2a3d;">Or copy this link into your browser:</p>
+                <p style="margin:0 0 20px;font-size:13px;">
+                  <a href="${setPasswordUrl}" style="color:#c026a3;word-break:break-all;">${setPasswordUrl}</a>
+                </p>
+                <p style="margin:0;font-size:13px;color:#9a8a90;">This code expires in 24 hours.</p>
+              </td>
+            </tr>
+            <!-- Footer -->
+            <tr>
+              <td style="background:#fff1e6;padding:20px 32px;text-align:center;">
+                <p style="margin:0;font-size:12px;color:#9a8a90;">Made with ❤️ for ice cream lovers · Gelato</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`,
+    text: `You've been invited to ${spot.name} as ${roleLabel}. Use code ${code} in the Gelato Spot app to set your password (expires in 24 hours). Set it at ${setPasswordUrl}`,
   });
 }
 
@@ -495,6 +588,70 @@ export class AdminResolver {
     });
 
     console.log(`✅ Spot staff created: ${normalized} (${role}) -> spot ${spotId}`);
+    return created as UserType;
+  }
+
+  /**
+   * Invite a staff member (SPOT_ADMIN or EMPLOYEE) to a spot by email instead of
+   * handing over a temp password. Creates the account with a random unusable
+   * password + a 24h set-password code, then emails a spot-branded invite (spot
+   * logo + name/address/phone) so they can set their own password in the spot
+   * app. Works for a spot's own admin (not just global admins).
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN])
+  @Mutation(() => UserType)
+  async inviteSpotStaff(
+    @Arg('spotId', () => ID) spotId: string,
+    @Arg('email') email: string,
+    @Arg('name') name: string,
+    @Arg('role') role: string,
+    @Ctx() { req, prisma }: Context
+  ): Promise<UserType> {
+    const normalized = email.toLowerCase();
+    const wantAdmin = role === 'SPOT_ADMIN';
+    if (role !== 'SPOT_ADMIN' && role !== 'EMPLOYEE') {
+      throw new Error('Role must be SPOT_ADMIN or EMPLOYEE');
+    }
+
+    const spot = await prisma.spot.findUnique({ where: { id: spotId } });
+    if (!spot) throw new Error('Spot not found');
+
+    await assertManagesSpot(req.user!, spotId, prisma);
+
+    const existing = await prisma.user.findUnique({
+      where: { email_accountType: { email: normalized, accountType: 'ADMIN' } },
+    });
+    if (existing) throw new Error('An admin/employee with this email already exists');
+
+    const inviteCode = CodeGenerator.generateOTP();
+    const created = await prisma.user.create({
+      data: {
+        email: normalized,
+        name,
+        accountType: 'ADMIN',
+        // Unusable random password until they set their own via the emailed code.
+        password: await hashPassword(CodeGenerator.generateRandomString(32)),
+        roles: [wantAdmin ? Role.SPOT_ADMIN : Role.EMPLOYEE],
+        registrationSource: 'ADMIN_WEB',
+        emailVerified: true,
+        emailVerificationCode: inviteCode,
+        emailVerificationExpires: new Date(Date.now() + RESET_CODE_TTL_MS),
+        ...(wantAdmin
+          ? { spotAdminProfile: { create: { spotId } } }
+          : // Invited employees set their own password via the emailed code, so
+            // don't force another change on first login.
+            { employeeProfile: { create: { spotId, isFirstLogin: false } } }),
+      },
+    });
+
+    await sendSpotStaffInvite({
+      email: normalized,
+      code: inviteCode,
+      roleLabel: wantAdmin ? 'Spot Admin' : 'Employee',
+      spot: { name: spot.name, address: spot.address, phone: spot.phone, logoUrl: spot.logoUrl },
+    });
+
+    console.log(`✅ Spot staff invited: ${normalized} (${role}) -> spot ${spotId}`);
     return created as UserType;
   }
 

@@ -8,7 +8,8 @@ export type OrderStatus =
   | 'DELIVERED'
   | 'COLLECTED'
   | 'CANCELLED'
-  | 'FAILED';
+  | 'FAILED'
+  | 'TERMINATED';
 
 export type FulfillmentType = 'DELIVERY' | 'PICKUP';
 

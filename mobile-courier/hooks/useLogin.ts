@@ -15,7 +15,9 @@ export const useLogin = () => {
         if (result.isFirstTimeGoogleLogin) {
           router.replace("/location");
         } else {
-          router.replace("/(tabs)");
+          // Route through the root gate (app/index.tsx), which sends couriers
+          // with an incomplete profile to onboarding before the tabs.
+          router.replace("/");
         }
       }
     } catch (error) {

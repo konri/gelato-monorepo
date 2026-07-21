@@ -41,6 +41,7 @@ export const ORDER_DETAIL_QUERY = gql`
       createdAt
       courierName
       courierPhoto
+      courierPhone
       pickupCode
       spot {
         id

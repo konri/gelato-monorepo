@@ -11,13 +11,16 @@ import {
   getStoredSpotContext,
   useSpotOrders,
 } from '@/hooks/useSpotOrders';
+import { getSpotUnreadCount } from '@repo/api-client';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
+  Pressable,
   RefreshControl,
   ScrollView,
   View,
@@ -32,16 +35,24 @@ export default function SpotOrdersScreen() {
   const { orders, loading, refetch, setOrders } = useSpotOrders(null);
   const [refreshing, setRefreshing] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [unread, setUnread] = useState(0);
   const hasNew = useRef(false);
 
   useEffect(() => {
     void getStoredSpotContext().then((c) => setUserId(c.userId));
   }, []);
 
+  const loadUnread = useCallback(async () => {
+    const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
+    const res = await getSpotUnreadCount({ token });
+    setUnread(res.data ?? 0);
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       void refetch();
-    }, [refetch]),
+      void loadUnread();
+    }, [refetch, loadUnread]),
   );
 
   // Live: a new order arrives → refetch so it appears; a claim → refetch so it
@@ -84,6 +95,9 @@ export default function SpotOrdersScreen() {
   // Active queue: pending (need claiming) + preparing (in progress).
   const pending = orders.filter((o) => o.status === 'PENDING');
   const preparing = orders.filter((o) => o.status === 'PREPARING');
+  // Empty state is about the ACTIVE queue, not the raw fetch — otherwise a spot
+  // whose orders are all READY/on-the-way rendered a blank page (looked broken).
+  const noActive = pending.length === 0 && preparing.length === 0;
 
   return (
     <View className="flex-1 bg-gray-50" style={{ paddingTop: isWide ? 0 : insets.top }}>
@@ -108,14 +122,30 @@ export default function SpotOrdersScreen() {
                 </View>
               </View>
             )}
-            {pending.length > 0 && (
-              <View className="flex-row items-center rounded-full bg-brand px-3 py-1" style={{ backgroundColor: '#EC2828' }}>
-                <Ionicons name="notifications" size={14} color="#fff" />
-                <Typography variant="body-small-bold" className="ml-1 text-white">
-                  {pending.length}
-                </Typography>
-              </View>
-            )}
+            <View className="flex-row items-center gap-3">
+              {pending.length > 0 && (
+                <View className="flex-row items-center rounded-full px-3 py-1" style={{ backgroundColor: '#EC2828' }}>
+                  <Ionicons name="cart" size={14} color="#fff" />
+                  <Typography variant="body-small-bold" className="ml-1 text-white">
+                    {pending.length}
+                  </Typography>
+                </View>
+              )}
+              {/* Bell → notification center, with unread badge. */}
+              <Pressable onPress={() => router.push('/notifications')} hitSlop={8} className="relative">
+                <Ionicons name="notifications-outline" size={24} color="#212121" />
+                {unread > 0 && (
+                  <View
+                    className="absolute -right-1.5 -top-1.5 min-w-4 items-center justify-center rounded-full px-1"
+                    style={{ backgroundColor: '#EC2828' }}
+                  >
+                    <Typography variant="body-very-small-medium" className="text-white" style={{ fontSize: 10 }}>
+                      {unread > 9 ? '9+' : String(unread)}
+                    </Typography>
+                  </View>
+                )}
+              </Pressable>
+            </View>
           </View>
         </ResponsiveContainer>
       </View>
@@ -132,11 +162,16 @@ export default function SpotOrdersScreen() {
           <View className="py-10 items-center">
             <ActivityIndicator color="#EC2828" />
           </View>
-        ) : orders.length === 0 ? (
+        ) : noActive ? (
           <View className="items-center px-8 py-16">
-            <Ionicons name="cart-outline" size={48} color="#9CA3AF" />
-            <Typography variant="body-base-regular" className="mt-4 text-center text-gray-500">
-              {t('Spot.noOrders')}
+            <View className="h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm">
+              <Ionicons name="ice-cream-outline" size={40} color="#EC2828" />
+            </View>
+            <Typography variant="body-lg-bold" className="mt-5 text-center text-text-primary">
+              {t('Spot.noOrdersTitle')}
+            </Typography>
+            <Typography variant="body-base-regular" className="mt-2 text-center text-gray-500">
+              {t('Spot.noOrdersBody')}
             </Typography>
           </View>
         ) : (

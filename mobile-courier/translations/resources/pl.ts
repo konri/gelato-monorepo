@@ -23,6 +23,30 @@ export default {
       skip: 'Pomiń',
       continue: 'Dalej',
       getStarted: 'Rozpocznij'
+    },
+    profile: {
+      title: 'Podaj swoje imię',
+      subtitle: 'Lokale i klienci widzą Twoje imię, gdy przyjmujesz ich zamówienie.',
+      firstName: 'Imię',
+      firstNamePlaceholder: 'Jan',
+      surname: 'Nazwisko',
+      surnamePlaceholder: 'Kowalski',
+      continue: 'Dalej',
+      nameRequired: 'Podaj imię i nazwisko.',
+      saveFailed: 'Nie udało się zapisać danych. Spróbuj ponownie.'
+    },
+    phone: {
+      title: 'Zweryfikuj telefon',
+      subtitle: 'Lokale kontaktują się z Tobą pod tym numerem. Wyślemy SMS z kodem, aby go potwierdzić.',
+      number: 'Numer telefonu',
+      code: 'Kod weryfikacyjny',
+      send: 'Wyślij kod',
+      verify: 'Zweryfikuj',
+      resend: 'Wyślij ponownie',
+      numberRequired: 'Podaj numer telefonu.',
+      codeRequired: 'Wpisz kod z wiadomości SMS.',
+      sendFailed: 'Nie udało się wysłać kodu. Sprawdź numer i spróbuj ponownie.',
+      verifyFailed: 'Kod jest nieprawidłowy lub wygasł. Spróbuj ponownie.'
     }
   },
   Main: {
@@ -515,6 +539,9 @@ export default {
     confirm: 'Użyj tego zdjęcia',
     permission: 'Do zrobienia selfie potrzebny jest dostęp do aparatu.',
     error: 'Nie udało się przesłać zdjęcia. Spróbuj ponownie.',
+    chooseFromGallery: 'Wybierz z galerii',
+    galleryPermission: 'Do wyboru zdjęcia potrzebny jest dostęp do galerii.',
+    uploading: 'Przesyłanie zdjęcia…',
   },
   Courier: {
     homeTitle: 'Gotowy do jazdy',

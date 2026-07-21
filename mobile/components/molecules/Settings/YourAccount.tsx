@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Pressable, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { RoundedCard } from '@/components/atoms/RoundedCard';
 import { Typography } from '@/components/atoms/Typography';
 import { useWhoAmI } from '@/hooks/useWhoAmI';
@@ -12,7 +13,15 @@ interface YourAccountProps {
 }
 
 export const YourAccount = ({ onPress }: YourAccountProps) => {
-  const { data: user } = useWhoAmI();
+  const { data: user, refetch } = useWhoAmI();
+
+  // Refresh when returning to Settings (e.g. after editing the profile) so the
+  // name/avatar shown here reflect the latest saved values.
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
 
   const fullName = [user?.firstName, user?.surname].filter(Boolean).join(' ').trim();
   const displayName = fullName || user?.name || user?.email || '';

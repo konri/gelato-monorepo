@@ -57,6 +57,7 @@ export type OrderDetail = OrderListEntry & {
   // Assigned courier + the pickup code staff read out to the courier.
   courierName?: string | null;
   courierPhoto?: string | null;
+  courierPhone?: string | null;
   pickupCode?: string | null;
 };
 

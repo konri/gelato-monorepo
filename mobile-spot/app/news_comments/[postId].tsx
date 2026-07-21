@@ -2,6 +2,7 @@ import { Typography } from '@/components/atoms/Typography';
 import { useNewsComments } from '@/hooks/useNews';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
+import { goBackOr } from '@/utils/navigation';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -58,7 +59,7 @@ export default function SpotNewsCommentsScreen() {
         className="flex-row items-center border-b border-gray-200 bg-white px-4 py-3"
         style={{ paddingTop: insets.top + 12 }}
       >
-        <Pressable onPress={() => router.back()} hitSlop={8} className="mr-3">
+        <Pressable onPress={() => goBackOr()} hitSlop={8} className="mr-3">
           <Ionicons name="arrow-back" size={24} color="#212121" />
         </Pressable>
         <Typography variant="body-lg-bold" className="flex-1 text-text-primary">

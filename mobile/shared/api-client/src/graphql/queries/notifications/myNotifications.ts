@@ -1,28 +1,27 @@
 import { gql } from '@apollo/client';
 
 export const MY_NOTIFICATIONS = gql`
-  query MyNotifications($category: NotificationCategory) {
-    myNotifications(category: $category) {
+  query MyNotifications($unreadOnly: Boolean, $limit: Int) {
+    myNotifications(unreadOnly: $unreadOnly, limit: $limit) {
       id
-      category
-      type
       title
-      message
+      body
       imageUrl
+      type
       isRead
       createdAt
     }
   }
 `;
 
-export const UNREAD_NOTIFICATIONS_COUNT = gql`
-  query UnreadNotificationsCount($category: NotificationCategory) {
-    unreadNotificationsCount(category: $category)
+export const UNREAD_NOTIFICATION_COUNT = gql`
+  query UnreadNotificationCount {
+    unreadNotificationCount
   }
 `;
 
-export const MARK_NOTIFICATION_AS_READ = gql`
-  mutation MarkNotificationAsRead($notificationId: String!) {
-    markNotificationAsRead(notificationId: $notificationId)
+export const MARK_NOTIFICATION_READ = gql`
+  mutation MarkNotificationRead($id: ID!) {
+    markNotificationRead(id: $id)
   }
 `;

@@ -5,6 +5,7 @@ import { StripeService } from '../services/StripeService';
 import { PubSubService } from '../services/PubSubService';
 import { EmailService } from '../services/EmailService';
 import { OrderPointsService } from '../services/OrderPointsService';
+import { persistNewOrderNotification } from '../resolvers/OrderResolver';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -117,6 +118,9 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
   // Notify the user and the spot (client subscribes to order status; spot to new orders).
   await PubSubService.publishOrderStatusChanged(order);
   await PubSubService.publishNewOrderNotification(order.spotId, order);
+  await persistNewOrderNotification(order.spotId, order, prisma).catch((e) =>
+    console.error('Failed to persist new-order notification:', e),
+  );
 
   // Send order confirmation email. An item is either a taste or a product.
   await EmailService.sendOrderConfirmation({

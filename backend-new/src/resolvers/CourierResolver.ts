@@ -414,7 +414,66 @@ export class CourierResolver {
       console.log(`❌ Courier ${application.courierId} rejected for spot ${application.spotId}`);
     }
 
+    // Notify the courier of the decision (in-app bell + FCM push). courierId is
+    // a CourierProfile id, so resolve the underlying userId first.
+    await this.notifyCourierOfReview(
+      application.courierId,
+      application.spotId,
+      approved,
+      prisma,
+    );
+
     return true;
+  }
+
+  /**
+   * Notify a courier that their spot application was approved/rejected: persist
+   * an in-app notification and send an FCM push. Best-effort — never blocks the
+   * review from succeeding.
+   */
+  private async notifyCourierOfReview(
+    courierProfileId: string,
+    spotId: string,
+    approved: boolean,
+    prisma: any,
+  ): Promise<void> {
+    try {
+      const [profile, spot] = await Promise.all([
+        prisma.courierProfile.findUnique({
+          where: { id: courierProfileId },
+          select: { userId: true },
+        }),
+        prisma.spot.findUnique({ where: { id: spotId }, select: { name: true } }),
+      ]);
+      if (!profile?.userId) return;
+
+      const spotName = spot?.name ?? 'A spot';
+      const title = approved ? "You're approved! 🎉" : 'Application reviewed';
+      const body = approved
+        ? `${spotName} approved you as a courier. You can start delivering now.`
+        : `${spotName} did not approve your delivery application.`;
+
+      await prisma.notification.create({
+        data: {
+          userId: profile.userId,
+          title,
+          body,
+          type: approved ? 'COURIER_APPROVED' : 'COURIER_REJECTED',
+          data: { spotId, spotName },
+        },
+      });
+
+      const { FCMService, NotificationType } = await import('../services/FCMService');
+      await FCMService.sendToUser(
+        profile.userId,
+        approved ? NotificationType.COURIER_APPROVED : NotificationType.COURIER_REJECTED,
+        { spotName },
+        { kind: approved ? 'COURIER_APPROVED' : 'COURIER_REJECTED', spotId },
+        prisma,
+      ).catch(() => {});
+    } catch (e) {
+      console.error('Failed to notify courier of application review:', e);
+    }
   }
 
   /**
@@ -791,6 +850,7 @@ export class CourierResolver {
         incidentNote: note ?? null,
         incidentPhotoUrl: photoUrl ?? null,
         incidentReportedAt: new Date(),
+        incidentReportedBy: profile.id, // so this courier can't re-accept it
         ...(doCancel
           ? {
               status: OrderStatus.READY, // hand back to the spot to reassign
@@ -985,6 +1045,12 @@ export class CourierResolver {
 
     const order = await prisma.order.findUnique({ where: { id: orderId } });
     if (!order) throw new Error('Order not found');
+
+    // A courier who reported an incident on this order can't re-accept it — it
+    // must go to a different courier (avoids the same broken bike picking it up).
+    if (order.incidentReportedBy === profile.id) {
+      throw new Error('You reported an issue on this order — another courier must take it');
+    }
 
     // Must be approved for + selected this spot in the active session.
     const session = await prisma.workSession.findFirst({

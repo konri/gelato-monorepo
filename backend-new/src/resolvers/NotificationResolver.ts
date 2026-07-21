@@ -146,6 +146,7 @@ export class NotificationResolver {
       body: n.body,
       imageUrl: n.imageUrl ?? undefined,
       type: n.type,
+      data: n.data ?? undefined,
       isRead: n.isRead,
       createdAt: n.createdAt,
     }));

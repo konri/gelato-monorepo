@@ -1,4 +1,4 @@
-import { STATUS_STYLE, trackingSteps, isTerminal } from '@/components/ordering/orderStatus';
+import { STATUS_STYLE, trackingSteps, trackingStepIndex, isTerminal } from '@/components/ordering/orderStatus';
 import { useOrderTracking } from '@/hooks/useOrders';
 import { staticMapUrl } from '@/services/googlePlaces';
 import { createComplaint } from '@repo/api-client';
@@ -67,8 +67,9 @@ export default function OrderTrackingScreen() {
 
   const style = STATUS_STYLE[order.status];
   const steps = trackingSteps(order.fulfillmentType);
-  const currentStep = steps.indexOf(order.status);
-  const cancelled = order.status === 'CANCELLED' || order.status === 'FAILED';
+  const currentStep = trackingStepIndex(order.status, order.fulfillmentType);
+  const terminated = order.status === 'TERMINATED';
+  const cancelled = order.status === 'CANCELLED' || order.status === 'FAILED' || terminated;
 
   return (
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
@@ -90,8 +91,20 @@ export default function OrderTrackingScreen() {
           </Text>
         </View>
 
-        {/* Map */}
-        {mapUrl ? (
+        {/* Apology + refund note when the spot terminated the order. */}
+        {terminated && (
+          <View className="mt-4 rounded-2xl bg-red-50 px-4 py-4">
+            <Text className="font-urbanist-bold text-red-700 mb-1">
+              {t('Ordering.terminated.title')}
+            </Text>
+            <Text className="font-urbanist text-red-700 leading-5">
+              {t('Ordering.terminated.body')}
+            </Text>
+          </View>
+        )}
+
+        {/* Map (not for terminated orders — nothing to track) */}
+        {terminated ? null : mapUrl ? (
           <Image
             source={{ uri: mapUrl }}
             style={{ width: '100%', height: 200, borderRadius: 16, marginTop: 16 }}

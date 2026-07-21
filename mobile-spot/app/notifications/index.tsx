@@ -9,6 +9,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { goBackOr } from '@/utils/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -63,6 +64,11 @@ export default function NotificationsScreen() {
       await markSpotNotificationRead(n.id, { token });
       setItems((prev) => prev.map((x) => (x.id === n.id ? { ...x, isRead: true } : x)));
     }
+    // Deep-link to the related order when the payload carries an orderId.
+    const orderId = n.data?.orderId;
+    if (orderId) {
+      router.push(`/order/${orderId}` as never);
+    }
   };
 
   const markAll = async () => {
@@ -81,7 +87,7 @@ export default function NotificationsScreen() {
   return (
     <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
       <View className="flex-row items-center border-b border-gray-200 bg-white px-4 py-4">
-        <Pressable onPress={() => router.back()} hitSlop={8} className="pr-2">
+        <Pressable onPress={() => goBackOr()} hitSlop={8} className="pr-2">
           <Ionicons name="arrow-back" size={22} color="#212121" />
         </Pressable>
         <Typography variant="body-lg-bold" className="flex-1 text-text-primary">

@@ -18,6 +18,8 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Ta aplikacja potrzebuje dost\u0119pu do lokalizacji, aby pokazywa\u0107 odpowiednie oferty w Twojej okolicy.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Ta aplikacja potrzebuje dost\u0119pu do lokalizacji, aby pokazywa\u0107 odpowiednie oferty w Twojej okolicy.",
+        "NSCameraUsageDescription": "Aplikacja potrzebuje dost\u0119pu do aparatu, aby zrobi\u0107 zdj\u0119cie profilowe kuriera.",
+        "NSPhotoLibraryUsageDescription": "Aplikacja potrzebuje dost\u0119pu do galerii, aby wybra\u0107 zdj\u0119cie profilowe kuriera.",
         "NSAppTransportSecurity": {
           "NSAllowsLocalNetworking": true,
           "NSExceptionDomains": {

@@ -4,6 +4,7 @@ export type SpotNotification = {
   body: string;
   imageUrl?: string | null;
   type: string;
+  data?: { orderId?: string; [key: string]: unknown } | null;
   isRead: boolean;
   createdAt: string;
 };

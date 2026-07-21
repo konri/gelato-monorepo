@@ -125,6 +125,9 @@ export default function EditProfileScreen() {
           JSON.stringify({ ...JSON.parse(cached), ...result.data }),
         );
       }
+      // Refresh this screen's own profile data so the fields reflect what was
+      // saved (the settings list refetches on focus — see YourAccount).
+      await refetch();
       Alert.alert(t('Common.success'), t('Settings.profileUpdated'));
       router.back();
     } catch (error) {

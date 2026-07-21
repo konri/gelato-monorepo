@@ -224,9 +224,13 @@ export default function CourierHomeScreen() {
   const receivingCount = activeSession?.selectedSpotIds.length ?? 0;
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
+    <View className="flex-1 bg-gray-50">
+      {/* Header — carries the safe-area top padding so the status-bar area is
+          white (was gray, which made the top look two-toned). */}
+      <View
+        className="flex-row items-center justify-between px-6 py-4 border-b border-gray-200 bg-white"
+        style={{ paddingTop: insets.top + 12 }}
+      >
         <View className="flex-row items-center">
           <Logo width={32} height={32} />
           <View className="ml-2">

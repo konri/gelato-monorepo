@@ -286,6 +286,7 @@ type Mutation {
   deleteUser(userId: ID!): Boolean!
   endWorkSession: Boolean!
   inviteSpotAdmin(email: String!, name: String!, spotId: ID!): UserType!
+  inviteSpotStaff(email: String!, name: String!, role: String!, spotId: ID!): UserType!
   likeNews(newsId: ID!): Boolean!
   login(email: String!, password: String!): AuthResponse!
   loginWithGoogle(idToken: String!): AuthResponse!
@@ -310,6 +311,7 @@ type Mutation {
   setStaffLoginDisabled(disabled: Boolean!, userId: ID!): Boolean!
   setUserLoginDisabled(disabled: Boolean!, userId: ID!): Boolean!
   startWorkSession(spotIds: [ID!]!): WorkSessionType!
+  terminateOrder(id: ID!, reason: String): Boolean!
   toggleFavoriteSpot(spotId: ID!): Boolean!
   updateCity(country: String, id: ID!, isActive: Boolean, latitude: Float, longitude: Float, name: String, nameLocal: JSON): City!
   updateCourierLocation(accuracy: Float, latitude: Float!, longitude: Float!, orderId: ID): Boolean!
@@ -373,6 +375,7 @@ type NewsType {
 type NotificationType {
   body: String!
   createdAt: DateTime!
+  data: JSON
   id: ID!
   imageUrl: String
   isRead: Boolean!
@@ -429,6 +432,7 @@ enum OrderStatus {
   PICKED_UP
   PREPARING
   READY
+  TERMINATED
 }
 
 type OrderType {
@@ -442,6 +446,7 @@ type OrderType {
   courierId: ID
   courierLocation: OrderCourierLocation
   courierName: String
+  courierPhone: String
   courierPhoto: String
   createdAt: DateTime!
   customerName: String
@@ -940,6 +945,7 @@ type UserType {
   id: ID!
   language: Language!
   locationPermission: Boolean!
+  loginDisabled: Boolean
   loyaltyCode: String
   name: String
   notificationPermission: Boolean!

@@ -15,6 +15,8 @@ export enum NotificationType {
   ORDER_CANCELLED = 'ORDER_CANCELLED',
   COURIER_ASSIGNED = 'COURIER_ASSIGNED',
   COURIER_NEARBY = 'COURIER_NEARBY',
+  COURIER_APPROVED = 'COURIER_APPROVED',
+  COURIER_REJECTED = 'COURIER_REJECTED',
   POINTS_EARNED = 'POINTS_EARNED',
   POINTS_REDEEMED = 'POINTS_REDEEMED',
   PRIZE_AVAILABLE = 'PRIZE_AVAILABLE',
@@ -180,6 +182,34 @@ const notificationTemplates: Record<
     ua: {
       title: 'Нова доставка!',
       body: 'Вам призначено нове замовлення з {spotName}.',
+    },
+  },
+  [NotificationType.COURIER_APPROVED]: {
+    pl: {
+      title: 'Zostałeś zatwierdzony! 🎉',
+      body: '{spotName} zatwierdził Cię jako kuriera. Możesz już rozpocząć dostawy.',
+    },
+    en: {
+      title: "You're approved! 🎉",
+      body: '{spotName} approved you as a courier. You can start delivering now.',
+    },
+    ua: {
+      title: 'Вас схвалено! 🎉',
+      body: '{spotName} схвалив вас як кур\'єра. Можете починати доставляти.',
+    },
+  },
+  [NotificationType.COURIER_REJECTED]: {
+    pl: {
+      title: 'Wniosek rozpatrzony',
+      body: '{spotName} nie zatwierdził Twojego wniosku o dostawy.',
+    },
+    en: {
+      title: 'Application reviewed',
+      body: '{spotName} did not approve your delivery application.',
+    },
+    ua: {
+      title: 'Заявку розглянуто',
+      body: '{spotName} не схвалив вашу заявку на доставки.',
     },
   },
   [NotificationType.POINTS_EARNED]: {

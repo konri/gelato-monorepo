@@ -55,7 +55,7 @@ export const LoginForm = ({}: LoginFormProps) => {
       form={form}
       onSubmit={handleSubmit}
       onError={handleError}
-      successRoute="/(tabs)"
+      successRoute="/"
       submitButtonText={t("SignIn.signIn")}
       submitButtonStyle={{ width: "100%", height: 56 }}
     >

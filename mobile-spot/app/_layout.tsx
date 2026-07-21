@@ -49,6 +49,7 @@ export default function RootLayout() {
             <Stack.Screen name="news/index" options={{ headerShown: false }} />
             <Stack.Screen name="news_comments/[postId]" options={{ headerShown: false }} />
             <Stack.Screen name="staff/index" options={{ headerShown: false }} />
+            <Stack.Screen name="history/index" options={{ headerShown: false }} />
             <Stack.Screen name="notifications/index" options={{ headerShown: false }} />
             <Stack.Screen name="order/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" options={{ headerShown: true }} />

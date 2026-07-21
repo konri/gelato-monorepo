@@ -5,6 +5,7 @@ import {
   SPOT_EMPLOYEES_QUERY,
   SPOT_STAFF_SESSIONS_QUERY,
   CREATE_SPOT_STAFF_MUTATION,
+  INVITE_SPOT_STAFF_MUTATION,
   ADMIN_RESET_STAFF_PASSWORD_MUTATION,
   SET_STAFF_LOGIN_DISABLED_MUTATION,
 } from './query';
@@ -63,6 +64,17 @@ export const createSpotStaff = async (
     { ...options, variables: input },
   );
   return { ...res, data: res.data ? res.data.createSpotStaff : null };
+};
+
+export const inviteSpotStaff = async (
+  input: { spotId: string; email: string; name: string; role: 'SPOT_ADMIN' | 'EMPLOYEE' },
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<{ id: string; email: string; roles: string[] } | null>> => {
+  const res = await executeGraphQLQuery<{ inviteSpotStaff: { id: string; email: string; roles: string[] } }>(
+    INVITE_SPOT_STAFF_MUTATION,
+    { ...options, variables: input },
+  );
+  return { ...res, data: res.data ? res.data.inviteSpotStaff : null };
 };
 
 export const adminResetStaffPassword = async (

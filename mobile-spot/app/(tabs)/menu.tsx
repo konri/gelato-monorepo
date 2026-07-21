@@ -56,8 +56,13 @@ export default function MenuScreen() {
   };
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: isWide ? 0 : insets.top }}>
-      <View className="border-b border-gray-200 bg-white px-6 py-4">
+    <View className="flex-1 bg-gray-50">
+      {/* Header carries the safe-area top padding so the status-bar strip is
+          white, not the gray page background (avoids a two-toned top). */}
+      <View
+        className="border-b border-gray-200 bg-white px-6 py-4"
+        style={{ paddingTop: isWide ? 16 : insets.top + 12 }}
+      >
         <ResponsiveContainer>
           <View className="flex-row items-center justify-between">
             <View>

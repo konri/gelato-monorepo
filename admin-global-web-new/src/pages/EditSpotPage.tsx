@@ -89,7 +89,10 @@ export function EditSpotPage() {
   if (!data?.spot) return <div className="p-8 text-sm text-gray-500">Spot not found.</div>;
 
   return (
-    <div className="mx-auto w-full max-w-2xl p-6 sm:p-8">
+    <div className="mx-auto w-full max-w-2xl p-6 sm:p-8 lg:max-w-4xl">
+      {/* Keep the form narrow/readable; the admins table below spans the full
+          (wider on lg) container so it isn't clipped. */}
+      <div className="lg:max-w-2xl">
       <button onClick={() => navigate('/spots')} className="mb-4 text-sm text-gray-500 hover:text-brand">
         ← Back to spots
       </button>
@@ -152,6 +155,7 @@ export function EditSpotPage() {
           {saving ? 'Saving…' : 'Save changes'}
         </button>
       </form>
+      </div>
 
       {/* Spot admins */}
       <SpotAdminsSection spotId={spotId!} />
@@ -188,8 +192,10 @@ function SpotAdminsSection({ spotId }: { spotId: string }) {
       <p className="mb-4 text-sm text-gray-500">
         Resend a set-password code, or disable an admin's login if they no longer manage this spot.
       </p>
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-        <table className="w-full text-sm">
+      {/* overflow-x-auto lets the table scroll horizontally on narrow viewports
+          instead of clipping the Actions column; min-w keeps columns legible. */}
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+        <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
             <tr>
               <th className="px-5 py-3">Name</th>
@@ -231,7 +237,7 @@ function SpotAdminsSection({ spotId }: { spotId: string }) {
                       <button
                         onClick={() => resend(a.id)}
                         disabled={state === 'sending'}
-                        className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                        className="whitespace-nowrap rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
                       >
                         {state === 'sending'
                           ? 'Sending…'
@@ -243,7 +249,7 @@ function SpotAdminsSection({ spotId }: { spotId: string }) {
                       </button>
                       <button
                         onClick={() => setDisabled({ variables: { userId: a.id, disabled: !a.loginDisabled } })}
-                        className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                        className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold ${
                           a.loginDisabled
                             ? 'bg-brand text-white hover:bg-brand-dark'
                             : 'border border-gray-300 text-gray-700 hover:bg-gray-50'

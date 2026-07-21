@@ -8,6 +8,7 @@ export type UserData = {
   firstName: string;
   surname: string;
   phone: string;
+  phoneVerified: boolean;
   birthDate: string;
   birthdayCompleted: boolean;
   profilePicture: string;

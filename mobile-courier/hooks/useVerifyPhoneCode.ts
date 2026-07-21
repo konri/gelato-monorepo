@@ -67,7 +67,9 @@ export const useVerifyPhoneCode = () => {
         // New user → post-registration flow (location → city select → notifications).
         router.replace('/location');
       } else {
-        router.replace('/(tabs)');
+        // Route through the root gate (app/index.tsx) so couriers with an
+        // incomplete profile finish onboarding before reaching the tabs.
+        router.replace('/');
       }
     } catch (error) {
       logger.error('[Phone Verify] Unexpected error:', error);

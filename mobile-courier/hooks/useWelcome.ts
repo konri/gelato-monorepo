@@ -22,7 +22,9 @@ export const useWelcome = () => {
         if (result.isFirstTimeGoogleLogin) {
           router.replace('/signup-details');
         } else {
-          router.replace('/(tabs)');
+          // Route through the root gate (app/index.tsx) so couriers with an
+          // incomplete profile finish onboarding before reaching the tabs.
+          router.replace('/');
         }
       }
     } catch (error) {

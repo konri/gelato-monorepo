@@ -49,6 +49,18 @@ export async function verifyPhoneCode(
   });
 }
 
+// Verify the currently logged-in user's phone (onboarding step for couriers
+// who didn't register by phone). apiPost auto-attaches the auth token.
+export async function verifyMyPhone(
+  phoneNumber: string,
+  code: string
+): Promise<ApiResponse<{ success: boolean; message?: string }>> {
+  return apiPost<{ success: boolean; message?: string }>(
+    "/authorization/phone/verify-my-phone",
+    { phoneNumber, code }
+  );
+}
+
 export async function verifyCode(
   request: VerifyCodeRequest
 ): Promise<ApiResponse<any>> {
