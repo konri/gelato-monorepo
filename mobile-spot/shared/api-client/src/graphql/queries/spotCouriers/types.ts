@@ -4,12 +4,25 @@ export type SpotCourier = {
   name: string;
   email?: string | null;
   phone?: string | null;
+  photo?: string | null;
+  firstName?: string | null;
+  surname?: string | null;
   isOnline: boolean;
   isAvailable: boolean;
   totalDeliveries: number;
   totalEarnings: number;
   averageRating?: number | null;
   activeHere: boolean;
+};
+
+export type SpotCourierDelivery = {
+  id: string;
+  orderNumber: string;
+  status: string;
+  total: number;
+  deliveryAddress?: string | null;
+  deliveredAt?: string | null;
+  createdAt: string;
 };
 
 export type SpotCourierApplication = {
@@ -38,3 +51,4 @@ export type SpotCourierEarningsSummary = {
 export type SpotCouriersResponse = { spotCouriers: SpotCourier[] };
 export type SpotCourierApplicationsResponse = { spotCourierApplications: SpotCourierApplication[] };
 export type SpotCourierEarningsResponse = { spotCourierEarnings: SpotCourierEarningsSummary };
+export type SpotCourierDeliveriesResponse = { spotCourierDeliveries: SpotCourierDelivery[] };

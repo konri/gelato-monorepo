@@ -158,10 +158,25 @@ async function sendSpotStaffInvite(opts: {
   code: string;
   roleLabel: string;
   spot: { name: string; address?: string | null; phone?: string | null; logoUrl?: string | null };
+  // 'invite' = brand-new member; 'reset' = existing member resetting password.
+  variant?: 'invite' | 'reset';
 }) {
-  const { email, code, roleLabel, spot } = opts;
+  const { email, code, roleLabel, spot, variant = 'invite' } = opts;
+  const isReset = variant === 'reset';
   const baseUrl = process.env.GELATO_SPOT_URL || 'http://localhost:8083';
   const setPasswordUrl = `${baseUrl}/login?mode=reset&email=${encodeURIComponent(email)}`;
+  const subject = isReset
+    ? `Reset your password for ${spot.name} on Gelato`
+    : `You've been invited to ${spot.name} on Gelato`;
+  const introHtml = isReset
+    ? `A password reset was requested for your <b style="color:#c026a3;">${spot.name}</b> account (<b style="color:#c026a3;">${roleLabel}</b>).`
+    : `You've been invited to join <b style="color:#c026a3;">${spot.name}</b> as <b style="color:#c026a3;">${roleLabel}</b>.`;
+  const codeIntro = isReset
+    ? 'Use this code in the Gelato Spot app to set a new password:'
+    : 'Use this code in the Gelato Spot app to set your password:';
+  const introText = isReset
+    ? `A password reset was requested for your ${spot.name} account (${roleLabel}).`
+    : `You've been invited to ${spot.name} as ${roleLabel}.`;
 
   // Logo if the spot has one, else the ice-cream glyph (matches admin invite).
   const brandMark = spot.logoUrl
@@ -179,7 +194,7 @@ async function sendSpotStaffInvite(opts: {
 
   await EmailService.sendEmail({
     to: email,
-    subject: `You've been invited to ${spot.name} on Gelato`,
+    subject,
     html: `<!DOCTYPE html>
 <html>
   <body style="margin:0;padding:0;background:#fff8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
@@ -198,14 +213,14 @@ async function sendSpotStaffInvite(opts: {
             <tr>
               <td style="padding:32px;text-align:center;color:#3a1526;">
                 <p style="margin:0 0 8px;font-size:16px;line-height:1.5;">
-                  You've been invited to join <b style="color:#c026a3;">${spot.name}</b> as <b style="color:#c026a3;">${roleLabel}</b>.
+                  ${introHtml}
                 </p>
                 <!-- Spot details -->
                 <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:16px 0 20px;background:#fff8f0;border-radius:12px;padding:12px 16px;">
                   ${detailRows}
                 </table>
                 <p style="margin:0 0 24px;font-size:15px;color:#5c2a3d;line-height:1.5;">
-                  Use this code in the Gelato Spot app to set your password:
+                  ${codeIntro}
                 </p>
                 <!-- Code -->
                 <div style="display:inline-block;background:#fff1e6;border:2px dashed rgba(192,38,163,0.3);border-radius:16px;padding:18px 28px;margin-bottom:24px;">
@@ -236,7 +251,7 @@ async function sendSpotStaffInvite(opts: {
     </table>
   </body>
 </html>`,
-    text: `You've been invited to ${spot.name} as ${roleLabel}. Use code ${code} in the Gelato Spot app to set your password (expires in 24 hours). Set it at ${setPasswordUrl}`,
+    text: `${introText} Use code ${code} in the Gelato Spot app to set ${isReset ? 'a new' : 'your'} password (expires in 24 hours). Set it at ${setPasswordUrl}`,
   });
 }
 
@@ -657,15 +672,16 @@ export class AdminResolver {
 
   /**
    * Admin-initiated password reset for a staff member of a spot the caller
-   * manages. Sets a new password directly (admin hands it over) and invalidates
-   * existing sessions via tokenVersion. For employees, forces a first-login
-   * change again.
+   * manages. Instead of setting a password directly, this emails the staff
+   * member a set-password code (branded for their spot) so THEY choose their
+   * own password via the Gelato Spot app (same flow as the invite). Existing
+   * sessions are invalidated immediately (tokenVersion bump) so the old
+   * password can't be used while they set a new one.
    */
   @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN])
   @Mutation(() => Boolean)
   async adminResetStaffPassword(
     @Arg('userId', () => ID) targetUserId: string,
-    @Arg('newPassword') newPassword: string,
     @Ctx() { req, prisma }: Context
   ): Promise<boolean> {
     const target = await prisma.user.findUnique({
@@ -692,26 +708,49 @@ export class AdminResolver {
       if (!managed) throw new Error('You can only reset passwords for your spot staff');
     }
 
-    let hashed: string;
-    try {
-      hashed = await hashPassword(newPassword);
-    } catch (err) {
-      throw new Error(err instanceof Error ? err.message : 'Invalid password');
+    // Pick the spot to brand the email with (the managed one for a spot admin,
+    // else the staff member's first spot).
+    let brandSpotId = targetSpotIds[0];
+    if (!isGlobalAdmin) {
+      const managed = await prisma.spotAdminProfile.findFirst({
+        where: { userId: caller.id, spotId: { in: targetSpotIds } },
+      });
+      if (managed) brandSpotId = managed.spotId;
     }
+    const spot = await prisma.spot.findUnique({ where: { id: brandSpotId } });
 
+    // Generate a set-password code (reuses the emailVerification* fields) and
+    // invalidate current sessions so the old password stops working now.
+    const code = CodeGenerator.generateOTP();
     await prisma.user.update({
       where: { id: targetUserId },
-      data: { password: hashed, tokenVersion: { increment: 1 } },
+      data: {
+        emailVerificationCode: code,
+        emailVerificationExpires: new Date(Date.now() + RESET_CODE_TTL_MS),
+        tokenVersion: { increment: 1 },
+      },
     });
-    // Employees must change it again on next login.
+    // Employees must set a fresh password (clear any forced-first-login state;
+    // they'll set the password themselves via the code, no double prompt).
     if (target.employeeProfile.length) {
       await prisma.employeeProfile.updateMany({
         where: { userId: targetUserId },
-        data: { isFirstLogin: true },
+        data: { isFirstLogin: false },
       });
     }
 
-    console.log(`✅ Admin ${caller.id} reset password for staff ${targetUserId}`);
+    const isAdminRole = target.roles.includes(Role.SPOT_ADMIN);
+    await sendSpotStaffInvite({
+      email: target.email,
+      code,
+      roleLabel: isAdminRole ? 'Spot Admin' : 'Employee',
+      spot: spot
+        ? { name: spot.name, address: spot.address, phone: spot.phone, logoUrl: spot.logoUrl }
+        : { name: 'Gelato' },
+      variant: 'reset',
+    });
+
+    console.log(`✅ Admin ${caller.id} emailed password-reset code to staff ${targetUserId}`);
     return true;
   }
 

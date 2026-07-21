@@ -384,9 +384,13 @@ export class OrderResolver {
     // 4. Calculate pricing from each item's own price.
     let subtotal = 0;
     const orderItems = input.items.map((item) => {
-      const pricePerUnit = item.tasteId
-        ? tasteMap.get(item.tasteId)!.price
-        : productMap.get(item.productId as string)!.price;
+      const menuItem = item.tasteId
+        ? tasteMap.get(item.tasteId)!
+        : productMap.get(item.productId as string)!;
+      const pricePerUnit = menuItem.price;
+      // Snapshot the item's loyalty points now, so later menu edits don't
+      // change what this order earns when it's eventually paid.
+      const pointsPerUnit = (menuItem as { loyaltyPoints?: number }).loyaltyPoints ?? 0;
       const total = pricePerUnit * item.quantity;
       subtotal += total;
 
@@ -396,6 +400,7 @@ export class OrderResolver {
         boxTasteIds: item.boxTasteIds ?? [],
         quantity: item.quantity,
         pricePerUnit,
+        pointsPerUnit,
         total,
       };
     });
@@ -648,12 +653,62 @@ export class OrderResolver {
       where.status = status;
     }
 
+    // Never surface a pay-online order to the spot until Stripe confirms
+    // payment. Card orders start paymentStatus:'pending' and only the webhook
+    // flips them to 'paid' — so a failed-then-retried card checkout no longer
+    // dumps a duplicate unpaid order into the queue. Cash / pay-at-spot orders
+    // (paymentMethod:'cash') commit immediately and are always shown.
+    where.OR = [
+      { paymentMethod: 'cash' },
+      { paymentStatus: 'paid' },
+      { paymentStatus: 'refunded' },
+    ];
+
     return prisma.order.findMany({
       where,
       include: {
         items: true,
       },
       orderBy: { createdAt: 'desc' },
+    }) as Promise<OrderType[]>;
+  }
+
+  /**
+   * Orders that need spot attention in the last 24h: terminated / cancelled /
+   * failed, plus delivery orders currently HELD by a courier incident (the
+   * courier reported a problem and the spot must contact the client, refund, or
+   * re-dispatch a fresh pack). Distinct from the live prepare queue.
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN, Role.EMPLOYEE])
+  @Query(() => [OrderType])
+  async spotAttentionOrders(
+    @Arg('spotId', () => ID) spotId: string,
+    @Ctx() { req, prisma }: Context
+  ): Promise<OrderType[]> {
+    await this.assertCanManageSpot(req.user!, spotId, prisma);
+
+    // 24h window (updatedAt keeps recently-actioned orders visible).
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    return prisma.order.findMany({
+      where: {
+        spotId,
+        updatedAt: { gte: since },
+        OR: [
+          { status: { in: [OrderStatus.TERMINATED, OrderStatus.CANCELLED, OrderStatus.FAILED] } },
+          // Incident-held: reported by a courier and not yet re-dispatched
+          // (still PREPARING, no courier assigned) — needs a spot decision.
+          {
+            incidentReportedAt: { not: null },
+            status: OrderStatus.PREPARING,
+            courierId: null,
+          },
+        ],
+      },
+      include: {
+        items: true,
+      },
+      orderBy: { updatedAt: 'desc' },
     }) as Promise<OrderType[]>;
   }
 
@@ -944,6 +999,48 @@ export class OrderResolver {
     }
 
     console.log(`🛑 Order ${order.orderNumber} terminated by ${user.email} (refunded=${!!refundedAt})`);
+    return true;
+  }
+
+  /**
+   * Re-dispatch a delivery order after a courier incident. The spot has
+   * prepared a fresh pack, so we clear the incident hold and put the order back
+   * in the courier pool (status → READY). The courier who reported the incident
+   * still can't re-accept it (incidentReportedBy is preserved).
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN, Role.EMPLOYEE])
+  @Mutation(() => Boolean)
+  async redispatchOrder(
+    @Arg('id', () => ID) id: string,
+    @Ctx() { req, prisma }: Context
+  ): Promise<boolean> {
+    const order = await prisma.order.findUnique({
+      where: { id },
+      select: { spotId: true, status: true, orderNumber: true, fulfillmentType: true, courierId: true },
+    });
+    if (!order) throw new Error('Order not found');
+    if (order.fulfillmentType !== FulfillmentType.DELIVERY) {
+      throw new Error('Only delivery orders are dispatched to couriers');
+    }
+    // Only an order that's been pulled from a courier (held after an incident)
+    // and isn't currently assigned should be re-dispatched.
+    if (order.status !== OrderStatus.PREPARING || order.courierId) {
+      throw new Error('This order is not awaiting re-dispatch');
+    }
+    await this.assertCanManageSpot(req.user!, order.spotId, prisma);
+
+    const updated = await prisma.order.update({
+      where: { id },
+      data: { status: OrderStatus.READY, readyAt: new Date() },
+      include: { items: true },
+    });
+
+    // Back in the pool → notify online couriers + drive the live queue.
+    await PubSubService.publishOrderStatusChanged(updated);
+    await PubSubService.publishDeliveryBroadcast(order.spotId, updated);
+    await this.notifyOnlineCouriersOfDelivery(updated, prisma);
+
+    console.log(`🔁 Order ${order.orderNumber} re-dispatched to couriers`);
     return true;
   }
 

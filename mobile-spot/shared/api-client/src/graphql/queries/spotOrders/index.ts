@@ -3,13 +3,16 @@ import { ApolloServerConfig, GraphQLResult } from '../../types';
 import {
   CLAIM_ORDER_MUTATION,
   SPOT_ORDERS_QUERY,
+  SPOT_ATTENTION_ORDERS_QUERY,
   UPDATE_ORDER_STATUS_MUTATION,
   TERMINATE_ORDER_MUTATION,
+  REDISPATCH_ORDER_MUTATION,
 } from './query';
 import {
   ClaimOrderResponse,
   SpotOrder,
   SpotOrdersResponse,
+  SpotAttentionOrdersResponse,
   UpdateOrderStatusResponse,
 } from './types';
 
@@ -25,6 +28,16 @@ export const getSpotOrders = async (
     (data) => data.spotOrders,
     'Failed to load orders',
   )({ ...options, variables: { spotId, status: status || undefined } });
+
+export const getSpotAttentionOrders = async (
+  spotId: string,
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<SpotOrder[]>> =>
+  createGraphQLFunction<SpotAttentionOrdersResponse, SpotOrder[]>(
+    SPOT_ATTENTION_ORDERS_QUERY,
+    (data) => data.spotAttentionOrders,
+    'Failed to load attention orders',
+  )({ ...options, variables: { spotId } });
 
 export const claimOrder = async (
   orderId: string,
@@ -59,4 +72,17 @@ export const terminateOrder = async (
     { ...options, variables: { id, reason } },
   );
   return { ...res, data: res.data ? res.data.terminateOrder : null };
+};
+
+// Return an incident-held delivery order to the courier pool (READY) after the
+// spot prepares a fresh pack.
+export const redispatchOrder = async (
+  id: string,
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<boolean>> => {
+  const res = await executeGraphQLQuery<{ redispatchOrder: boolean }>(
+    REDISPATCH_ORDER_MUTATION,
+    { ...options, variables: { id } },
+  );
+  return { ...res, data: res.data ? res.data.redispatchOrder : null };
 };

@@ -1,8 +1,9 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { AttentionOrderCard } from '@/components/organisms/AttentionOrderCard';
 import { TAB_BAR_TOTAL_HEIGHT } from '@/constants/tabBarStyles';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { useSpotOrders } from '@/hooks/useSpotOrders';
+import { useSpotOrders, useSpotAttentionOrders } from '@/hooks/useSpotOrders';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -24,22 +25,28 @@ export default function PreparedScreen() {
   const { isWide } = useBreakpoint();
   // All orders; we show today's that this spot has moved past preparation.
   const { orders, loading, refetch } = useSpotOrders(null);
+  // Orders needing attention in the last 24h (cancelled / terminated / held).
+  const {
+    orders: attention,
+    refetch: refetchAttention,
+  } = useSpotAttentionOrders();
   const [refreshing, setRefreshing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       void refetch();
-    }, [refetch]),
+      void refetchAttention();
+    }, [refetch, refetchAttention]),
   );
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await refetch();
+      await Promise.all([refetch(), refetchAttention()]);
     } finally {
       setRefreshing(false);
     }
-  }, [refetch]);
+  }, [refetch, refetchAttention]);
 
   const prepared = orders.filter(
     (o) =>
@@ -51,8 +58,11 @@ export default function PreparedScreen() {
   );
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: isWide ? 0 : insets.top }}>
-      <View className="border-b border-gray-200 bg-white px-6 py-4">
+    <View className="flex-1 bg-gray-50">
+      <View
+        className="border-b border-gray-200 bg-white px-6 pb-4"
+        style={{ paddingTop: (isWide ? 0 : insets.top) + 16 }}
+      >
         <ResponsiveContainer>
           <Typography variant={isWide ? 'heading-32-bold' : 'body-lg-bold'} className="text-text-primary">
             {t('Spot.preparedTitle')}
@@ -68,6 +78,24 @@ export default function PreparedScreen() {
         }
       >
         <ResponsiveContainer>
+        {attention.length > 0 && (
+          <View className="mb-5">
+            <View className="mb-1 flex-row items-center">
+              <Ionicons name="alert-circle" size={18} color="#DC2626" />
+              <Typography variant="body-base-bold" className="ml-2 text-text-primary">
+                {t('SpotAttention.title')}
+              </Typography>
+            </View>
+            <Typography variant="body-small-regular" className="mb-3 text-gray-500">
+              {t('SpotAttention.subtitle')}
+            </Typography>
+            <View className="gap-3">
+              {attention.map((o) => (
+                <AttentionOrderCard key={o.id} order={o} onChanged={refetchAttention} />
+              ))}
+            </View>
+          </View>
+        )}
         {loading && orders.length === 0 ? (
           <View className="py-10 items-center">
             <ActivityIndicator color="#EC2828" />

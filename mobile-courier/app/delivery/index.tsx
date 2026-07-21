@@ -18,7 +18,9 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   TextInput,
@@ -295,7 +297,10 @@ function CodeEntryModal({
 
   return (
     <Modal transparent animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 justify-end bg-black/40">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        className="flex-1 justify-end bg-black/40"
+      >
         <View className="rounded-t-3xl bg-white p-6" style={{ paddingBottom: insets.bottom + 16 }}>
           <View className="flex-row items-center justify-between mb-1">
             <Typography variant="body-lg-bold" className="text-text-primary">
@@ -339,7 +344,7 @@ function CodeEntryModal({
             )}
           </Pressable>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -411,7 +416,10 @@ function IncidentModal({
 
   return (
     <Modal transparent animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 justify-end bg-black/40">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        className="flex-1 justify-end bg-black/40"
+      >
         <View className="rounded-t-3xl bg-white p-6" style={{ paddingBottom: insets.bottom + 16 }}>
           <View className="flex-row items-center justify-between mb-1">
             <Typography variant="body-lg-bold" className="text-text-primary">
@@ -518,7 +526,7 @@ function IncidentModal({
             )}
           </Pressable>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

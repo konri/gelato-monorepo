@@ -13,14 +13,19 @@ import { PubSubService } from './PubSubService';
  * flag (first-writer-wins), so concurrent callers can't double-award.
  */
 export class OrderPointsService {
-  // Points earned per order = subtotal (1 point per 1 PLN of items subtotal).
+  // Legacy fallback: 1 point per 1 PLN of items subtotal. Used only when no
+  // order item carries an explicit per-item points value.
   static computeOrderPoints(subtotal: number): number {
     return Math.floor(subtotal);
   }
 
   /**
    * Award order points once. Returns the number of points awarded (0 if the
-   * order already had points, wasn't found, or the subtotal rounds to 0).
+   * order already had points, wasn't found, or the total rounds to 0).
+   *
+   * Points = Σ(item.pointsPerUnit × quantity) from the snapshot taken at order
+   * time (so later menu edits don't change a past order). If NO item defines
+   * points, falls back to the legacy 1-point-per-PLN-of-subtotal rule.
    */
   static async awardOrderPointsIfNeeded(
     orderId: string,
@@ -28,11 +33,21 @@ export class OrderPointsService {
   ): Promise<number> {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      select: { id: true, userId: true, subtotal: true, pointsAwarded: true },
+      select: {
+        id: true,
+        userId: true,
+        subtotal: true,
+        pointsAwarded: true,
+        items: { select: { pointsPerUnit: true, quantity: true } },
+      },
     });
     if (!order || order.pointsAwarded) return 0;
 
-    const points = this.computeOrderPoints(order.subtotal);
+    const itemPoints = order.items.reduce(
+      (sum, it) => sum + (it.pointsPerUnit ?? 0) * it.quantity,
+      0,
+    );
+    const points = itemPoints > 0 ? itemPoints : this.computeOrderPoints(order.subtotal);
 
     // Claim the award slot first (first-writer-wins). If another path already
     // flipped the flag, `count` is 0 and we stop — no double award.

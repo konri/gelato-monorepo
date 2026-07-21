@@ -4,15 +4,18 @@ import {
   SPOT_COURIERS_QUERY,
   SPOT_COURIER_APPLICATIONS_QUERY,
   SPOT_COURIER_EARNINGS_QUERY,
+  SPOT_COURIER_DELIVERIES_QUERY,
   REVIEW_COURIER_APPLICATION_MUTATION,
 } from './query';
 import {
   SpotCourier,
   SpotCourierApplication,
   SpotCourierEarningsSummary,
+  SpotCourierDelivery,
   SpotCouriersResponse,
   SpotCourierApplicationsResponse,
   SpotCourierEarningsResponse,
+  SpotCourierDeliveriesResponse,
 } from './types';
 
 export * from './types';
@@ -51,6 +54,19 @@ export const getSpotCourierEarnings = async (
     { ...options, variables: { spotId, year, month }, fetchPolicy: 'network-only' },
   );
   return { ...res, data: res.data ? res.data.spotCourierEarnings : null };
+};
+
+export const getSpotCourierDeliveries = async (
+  spotId: string,
+  courierId: string,
+  limit: number | undefined,
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<SpotCourierDelivery[]>> => {
+  const res = await executeGraphQLQuery<SpotCourierDeliveriesResponse>(
+    SPOT_COURIER_DELIVERIES_QUERY,
+    { ...options, variables: { spotId, courierId, limit }, fetchPolicy: 'network-only' },
+  );
+  return { ...res, data: res.data ? res.data.spotCourierDeliveries : null };
 };
 
 export const reviewCourierApplication = async (

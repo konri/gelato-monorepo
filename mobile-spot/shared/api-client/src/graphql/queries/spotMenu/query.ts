@@ -11,6 +11,7 @@ export const SPOT_TASTES_QUERY = gql`
       type
       imageUrl
       price
+      loyaltyPoints
       ingredients
       allergens
       kcalPerPortion
@@ -30,6 +31,7 @@ export const SPOT_PRODUCTS_QUERY = gql`
       type
       imageUrl
       price
+      loyaltyPoints
       isBox
       maxTastes
       weightGrams
@@ -54,6 +56,7 @@ export const CREATE_TASTE_MUTATION = gql`
     $kcalPerPortion: Float
     $kcalPer100g: Float
     $allergens: [String!]
+    $loyaltyPoints: Int
   ) {
     createTaste(
       spotId: $spotId
@@ -65,6 +68,7 @@ export const CREATE_TASTE_MUTATION = gql`
       kcalPerPortion: $kcalPerPortion
       kcalPer100g: $kcalPer100g
       allergens: $allergens
+      loyaltyPoints: $loyaltyPoints
     ) {
       id
     }
@@ -83,6 +87,7 @@ export const UPDATE_TASTE_MUTATION = gql`
     $kcalPerPortion: Float
     $kcalPer100g: Float
     $allergens: [String!]
+    $loyaltyPoints: Int
   ) {
     updateTaste(
       id: $id
@@ -95,6 +100,7 @@ export const UPDATE_TASTE_MUTATION = gql`
       kcalPerPortion: $kcalPerPortion
       kcalPer100g: $kcalPer100g
       allergens: $allergens
+      loyaltyPoints: $loyaltyPoints
     ) {
       id
     }
@@ -130,6 +136,7 @@ export const CREATE_PRODUCT_MUTATION = gql`
     $kcalPerPortion: Float
     $kcalPer100g: Float
     $allergens: [String!]
+    $loyaltyPoints: Int
   ) {
     createProduct(
       spotId: $spotId
@@ -145,6 +152,7 @@ export const CREATE_PRODUCT_MUTATION = gql`
       kcalPerPortion: $kcalPerPortion
       kcalPer100g: $kcalPer100g
       allergens: $allergens
+      loyaltyPoints: $loyaltyPoints
     ) {
       id
     }
@@ -164,6 +172,7 @@ export const UPDATE_PRODUCT_MUTATION = gql`
     $kcalPerPortion: Float
     $kcalPer100g: Float
     $allergens: [String!]
+    $loyaltyPoints: Int
   ) {
     updateProduct(
       id: $id
@@ -177,6 +186,7 @@ export const UPDATE_PRODUCT_MUTATION = gql`
       kcalPerPortion: $kcalPerPortion
       kcalPer100g: $kcalPer100g
       allergens: $allergens
+      loyaltyPoints: $loyaltyPoints
     ) {
       id
     }

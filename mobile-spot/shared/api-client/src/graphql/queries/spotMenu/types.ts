@@ -7,6 +7,7 @@ export type MenuTaste = {
   type: string;
   imageUrl?: string | null;
   price: number;
+  loyaltyPoints: number;
   ingredients?: string | null;
   allergens: string[];
   kcalPerPortion?: number | null;
@@ -22,6 +23,7 @@ export type MenuProduct = {
   type: string;
   imageUrl?: string | null;
   price: number;
+  loyaltyPoints: number;
   isBox: boolean;
   maxTastes?: number | null;
   weightGrams?: number | null;
@@ -40,6 +42,7 @@ export type MenuItem = {
   type: string;
   imageUrl?: string | null;
   price: number;
+  loyaltyPoints: number;
   allergens: string[];
   isAvailable: boolean;
   // Box (ice cream pack) fields — product kind only.

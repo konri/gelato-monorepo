@@ -40,6 +40,9 @@ export class ProductGraphQLType {
   @Field(() => Float)
   price!: number;
 
+  @Field(() => Int)
+  loyaltyPoints!: number;
+
   @Field()
   isBox!: boolean;
 

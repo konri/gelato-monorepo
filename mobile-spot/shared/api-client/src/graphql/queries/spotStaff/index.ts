@@ -77,14 +77,15 @@ export const inviteSpotStaff = async (
   return { ...res, data: res.data ? res.data.inviteSpotStaff : null };
 };
 
+// Triggers an emailed set-password code so the staff member sets their own
+// password (no password passed from the admin).
 export const adminResetStaffPassword = async (
   userId: string,
-  newPassword: string,
   options: ApolloServerConfig = {},
 ): Promise<GraphQLResult<boolean>> => {
   const res = await executeGraphQLQuery<{ adminResetStaffPassword: boolean }>(
     ADMIN_RESET_STAFF_PASSWORD_MUTATION,
-    { ...options, variables: { userId, newPassword } },
+    { ...options, variables: { userId } },
   );
   return { ...res, data: res.data ? res.data.adminResetStaffPassword : null };
 };

@@ -44,6 +44,9 @@ export class TasteType {
   @Field(() => Float)
   price!: number;
 
+  @Field(() => Int)
+  loyaltyPoints!: number;
+
   @Field(() => Float, { nullable: true })
   kcalPerPortion?: number;
 

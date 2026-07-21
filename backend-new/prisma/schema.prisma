@@ -311,6 +311,7 @@ model Taste {
   type               TasteType  @default(OTHER)
   imageUrl           String?
   price              Float      @default(0) // Price per portion (PLN)
+  loyaltyPoints      Int        @default(0) // Loyalty points earned per unit (paid orders)
 
   // Nutritional info
   kcalPerPortion     Float?
@@ -374,6 +375,7 @@ model Product {
   type              ProductType @default(OTHER)
   imageUrl          String?
   price             Float
+  loyaltyPoints     Int         @default(0) // Loyalty points earned per unit (paid orders)
 
   // Box products: a "box" lets the customer pick up to `maxTastes` scoops.
   isBox             Boolean     @default(false)
@@ -518,6 +520,9 @@ model OrderItem {
   quantity   Int
   pricePerUnit Float
   total      Float
+  // Loyalty points per unit, snapshotted at order time from the menu item so
+  // later menu edits don't change what a past order earned.
+  pointsPerUnit Int   @default(0)
 
   createdAt  DateTime @default(now())
 

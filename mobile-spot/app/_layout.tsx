@@ -51,6 +51,10 @@ export default function RootLayout() {
             <Stack.Screen name="staff/index" options={{ headerShown: false }} />
             <Stack.Screen name="history/index" options={{ headerShown: false }} />
             <Stack.Screen name="notifications/index" options={{ headerShown: false }} />
+            <Stack.Screen name="notification/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="canceled/index" options={{ headerShown: false }} />
+            <Stack.Screen name="courier/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="settings/edit-profile" options={{ headerShown: false }} />
             <Stack.Screen name="order/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" options={{ headerShown: true }} />
           </Stack>

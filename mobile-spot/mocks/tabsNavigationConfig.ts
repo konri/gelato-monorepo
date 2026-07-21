@@ -40,9 +40,9 @@ export const DEFAULT_TABS_CONFIG: TabsNavigationConfig = {
     },
     {
       name: "profile",
-      labelKey: "SpotTabs.profile",
+      labelKey: "SpotTabs.more",
       icon: "profile",
-      order: 2,
+      order: 5,
       variant: "standard",
     },
   ],

@@ -33,6 +33,15 @@ class SpotCourierType {
   @Field({ nullable: true })
   phone?: string;
 
+  @Field({ nullable: true })
+  photo?: string;
+
+  @Field({ nullable: true })
+  firstName?: string;
+
+  @Field({ nullable: true })
+  surname?: string;
+
   @Field()
   isOnline!: boolean;
 
@@ -106,6 +115,31 @@ class SpotCourierEarningsSummaryType {
   couriers!: SpotCourierEarningType[];
 }
 
+/** One past delivery a courier completed for a spot (detail screen history). */
+@ObjectType()
+class SpotCourierDeliveryType {
+  @Field(() => ID)
+  id!: string;
+
+  @Field()
+  orderNumber!: string;
+
+  @Field()
+  status!: string;
+
+  @Field(() => Float)
+  total!: number;
+
+  @Field({ nullable: true })
+  deliveryAddress?: string;
+
+  @Field({ nullable: true })
+  deliveredAt?: Date;
+
+  @Field()
+  createdAt!: Date;
+}
+
 // Only staff who belong to the spot (or global admins) may view its couriers.
 async function assertSpotAccess(ctx: Context, spotId: string): Promise<void> {
   const user = ctx.req.user!;
@@ -148,6 +182,9 @@ export class SpotCourierResolver {
         name: courierDisplayName(c.user),
         email: c.user.email ?? undefined,
         phone: c.user.phone ?? undefined,
+        photo: c.user.profilePicture ?? undefined,
+        firstName: c.user.firstName ?? undefined,
+        surname: c.user.surname ?? undefined,
         isOnline: c.isOnline,
         isAvailable: c.isAvailable,
         totalDeliveries: c.totalDeliveries,
@@ -232,5 +269,35 @@ export class SpotCourierResolver {
       totalDeliveries,
       couriers: Array.from(byCourier.values()).sort((a, b) => b.amount - a.amount),
     };
+  }
+
+  /**
+   * A courier's recent deliveries for a spot (detail screen history). Includes
+   * finished + in-progress delivery orders assigned to this courier, newest
+   * first. courierId is a CourierProfile id (matches Order.courierId).
+   */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN, Role.EMPLOYEE])
+  @Query(() => [SpotCourierDeliveryType])
+  async spotCourierDeliveries(
+    @Arg('spotId', () => ID) spotId: string,
+    @Arg('courierId', () => ID) courierId: string,
+    @Arg('limit', () => Int, { nullable: true }) limit: number | undefined,
+    @Ctx() ctx: Context
+  ): Promise<SpotCourierDeliveryType[]> {
+    await assertSpotAccess(ctx, spotId);
+    const orders = await ctx.prisma.order.findMany({
+      where: { spotId, courierId },
+      orderBy: { createdAt: 'desc' },
+      take: Math.min(limit ?? 50, 100),
+    });
+    return orders.map((o) => ({
+      id: o.id,
+      orderNumber: o.orderNumber,
+      status: o.status,
+      total: o.total,
+      deliveryAddress: o.deliveryAddress ?? undefined,
+      deliveredAt: o.deliveredAt ?? undefined,
+      createdAt: o.createdAt,
+    }));
   }
 }

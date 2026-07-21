@@ -6,8 +6,10 @@ export type SpotOrderStatus =
   | 'PICKED_UP'
   | 'IN_TRANSIT'
   | 'DELIVERED'
+  | 'COLLECTED'
   | 'CANCELLED'
-  | 'FAILED';
+  | 'FAILED'
+  | 'TERMINATED';
 
 export type SpotOrderItem = {
   id: string;
@@ -32,13 +34,27 @@ export type SpotOrder = {
   noteForSpot?: string | null;
   noteForCourier?: string | null;
   customerName?: string | null;
+  customerPhone?: string | null;
   preparedById?: string | null;
   preparedByName?: string | null;
   claimedAt?: string | null;
   createdAt: string;
+  updatedAt?: string | null;
+  // Delivery incident (courier-reported) + spot termination — attention view.
+  incidentType?: string | null;
+  incidentNote?: string | null;
+  incidentPhotoUrl?: string | null;
+  incidentReportedAt?: string | null;
+  cancelReason?: string | null;
+  cancelledAt?: string | null;
+  terminatedAt?: string | null;
+  terminationReason?: string | null;
+  refundedAt?: string | null;
   items: SpotOrderItem[];
 };
 
 export type SpotOrdersResponse = { spotOrders: SpotOrder[] };
+export type SpotAttentionOrdersResponse = { spotAttentionOrders: SpotOrder[] };
 export type ClaimOrderResponse = { claimOrder: SpotOrder };
 export type UpdateOrderStatusResponse = { updateOrderStatus: boolean };
+export type RedispatchOrderResponse = { redispatchOrder: boolean };

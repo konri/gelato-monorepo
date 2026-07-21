@@ -2,6 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   claimOrder as claimOrderApi,
   getSpotOrders,
+  getSpotAttentionOrders,
+  redispatchOrder as redispatchOrderApi,
+  terminateOrder as terminateOrderApi,
   updateOrderStatus as updateOrderStatusApi,
   type SpotOrder,
 } from '@repo/api-client';
@@ -75,9 +78,53 @@ export function useSpotOrders(status: string | null, pollMs = 30000) {
   return { orders, loading, spotId, refetch: load, setOrders };
 }
 
+// Orders needing spot attention in the last 24h (terminated / cancelled /
+// incident-held) — the "Needs attention" section on the Prepared tab.
+export function useSpotAttentionOrders(pollMs = 30000) {
+  const [orders, setOrders] = useState<SpotOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    const ctx = await getStoredSpotContext();
+    if (!ctx.spotId) {
+      setOrders([]);
+      setLoading(false);
+      return;
+    }
+    const token = await AsyncStorage.getItem('access_token');
+    const res = await getSpotAttentionOrders(ctx.spotId, { token: token || undefined });
+    setOrders(res.data ?? []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const loadRef = useRef(load);
+  loadRef.current = load;
+  useEffect(() => {
+    if (!pollMs) return;
+    const id = setInterval(() => void loadRef.current(), pollMs);
+    return () => clearInterval(id);
+  }, [pollMs]);
+
+  return { orders, loading, refetch: load };
+}
+
 export async function claimOrder(orderId: string) {
   const token = await AsyncStorage.getItem('access_token');
   return claimOrderApi(orderId, { token: token || undefined });
+}
+
+export async function redispatchOrder(orderId: string) {
+  const token = await AsyncStorage.getItem('access_token');
+  return redispatchOrderApi(orderId, { token: token || undefined });
+}
+
+export async function terminateOrder(orderId: string, reason?: string) {
+  const token = await AsyncStorage.getItem('access_token');
+  return terminateOrderApi(orderId, reason, { token: token || undefined });
 }
 
 export async function advanceOrderStatus(orderId: string, status: string) {

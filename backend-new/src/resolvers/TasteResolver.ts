@@ -1,4 +1,4 @@
-import { Resolver, Query, Mutation, Arg, Ctx, Authorized, ID } from 'type-graphql';
+import { Resolver, Query, Mutation, Arg, Ctx, Authorized, ID, Int } from 'type-graphql';
 import { Role, TasteType as PrismaTasteType } from '@prisma/client';
 import { Context } from '../types/Context';
 import { TasteType } from '../types/TasteType';
@@ -93,8 +93,10 @@ export class TasteResolver {
     @Arg('kcalPerPortion', { nullable: true }) kcalPerPortion?: number,
     @Arg('kcalPer100g', { nullable: true }) kcalPer100g?: number,
     @Arg('allergens', () => [String], { defaultValue: [] }) allergens: string[] = [],
-    @Ctx() { req, prisma }: Context
+    @Arg('loyaltyPoints', () => Int, { nullable: true }) loyaltyPoints?: number,
+    @Ctx() ctx?: Context
   ): Promise<TasteType> {
+    const { req, prisma } = ctx!;
     const user = req.user!;
 
     // Check if SPOT_ADMIN has permission
@@ -118,6 +120,7 @@ export class TasteResolver {
         kcalPerPortion,
         kcalPer100g,
         allergens,
+        loyaltyPoints: loyaltyPoints ?? 0,
         isAvailable: true,
         isActive: true,
       },
@@ -148,8 +151,10 @@ export class TasteResolver {
     @Arg('kcalPerPortion', { nullable: true }) kcalPerPortion?: number,
     @Arg('kcalPer100g', { nullable: true }) kcalPer100g?: number,
     @Arg('allergens', () => [String], { nullable: true }) allergens?: string[],
-    @Ctx() { req, prisma }: Context
+    @Arg('loyaltyPoints', () => Int, { nullable: true }) loyaltyPoints?: number,
+    @Ctx() ctx?: Context
   ): Promise<TasteType> {
+    const { req, prisma } = ctx!;
     const user = req.user!;
     const existing = await prisma.taste.findUnique({ where: { id }, select: { spotId: true } });
     if (!existing) throw new Error('Taste not found');
@@ -172,6 +177,7 @@ export class TasteResolver {
     if (kcalPerPortion !== undefined) data.kcalPerPortion = kcalPerPortion;
     if (kcalPer100g !== undefined) data.kcalPer100g = kcalPer100g;
     if (allergens !== undefined) data.allergens = allergens;
+    if (loyaltyPoints !== undefined) data.loyaltyPoints = loyaltyPoints;
 
     const taste = await prisma.taste.update({ where: { id }, data });
     console.log(`✅ Taste updated: ${taste.title} (${taste.id})`);

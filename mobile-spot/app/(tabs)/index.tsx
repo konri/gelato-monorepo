@@ -100,8 +100,11 @@ export default function SpotOrdersScreen() {
   const noActive = pending.length === 0 && preparing.length === 0;
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: isWide ? 0 : insets.top }}>
-      <View className="border-b border-gray-200 bg-white px-6 py-4">
+    <View className="flex-1 bg-gray-50">
+      <View
+        className="border-b border-gray-200 bg-white px-6 pb-4"
+        style={{ paddingTop: (isWide ? 0 : insets.top) + 16 }}
+      >
         <ResponsiveContainer>
           <View className="flex-row items-center justify-between">
             {/* Logo hidden on wide layout — the sidebar already shows the brand. */}

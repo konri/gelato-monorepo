@@ -1008,14 +1008,19 @@ router.post('/admin/reset-password', async (req, res) => {
     const user = await prisma.user.findUnique({
       where: { email_accountType: { email: email.toLowerCase(), accountType: 'ADMIN' } },
     });
-    if (
-      !user ||
-      !user.emailVerificationCode ||
-      !user.emailVerificationExpires ||
-      user.emailVerificationExpires < new Date() ||
-      user.emailVerificationCode !== String(code).trim()
-    ) {
-      return res.status(400).json({ error: 'Invalid or expired reset code' });
+    // Distinguish the failure modes so a consumed/expired code doesn't read as a
+    // generic "invalid" — the ambiguity previously made a used code look expired.
+    if (!user || !user.emailVerificationCode) {
+      // No pending code: either wrong email or the code was already used.
+      return res.status(400).json({
+        error: 'This reset code was already used or no reset is pending. Request a new one.',
+      });
+    }
+    if (!user.emailVerificationExpires || user.emailVerificationExpires < new Date()) {
+      return res.status(400).json({ error: 'This reset code has expired. Request a new one.' });
+    }
+    if (user.emailVerificationCode !== String(code).trim()) {
+      return res.status(400).json({ error: 'Incorrect reset code.' });
     }
 
     let hashed: string;

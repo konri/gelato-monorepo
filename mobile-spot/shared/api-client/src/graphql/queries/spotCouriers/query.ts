@@ -8,12 +8,29 @@ export const SPOT_COURIERS_QUERY = gql`
       name
       email
       phone
+      photo
+      firstName
+      surname
       isOnline
       isAvailable
       totalDeliveries
       totalEarnings
       averageRating
       activeHere
+    }
+  }
+`;
+
+export const SPOT_COURIER_DELIVERIES_QUERY = gql`
+  query SpotCourierDeliveries($spotId: ID!, $courierId: ID!, $limit: Int) {
+    spotCourierDeliveries(spotId: $spotId, courierId: $courierId, limit: $limit) {
+      id
+      orderNumber
+      status
+      total
+      deliveryAddress
+      deliveredAt
+      createdAt
     }
   }
 `;

@@ -112,39 +112,32 @@ export default function StaffScreen() {
   };
 
   const resetPassword = (member: StaffRow) => {
-    // Prompt for a new password (web: window.prompt; native: Alert.prompt).
-    const doReset = async (newPassword: string) => {
-      if (!newPassword || newPassword.length < 8) {
-        setError(t('Staff.passwordTooShort'));
-        return;
-      }
+    // Email the staff member a set-password code so THEY choose their own
+    // password (same flow as the invite) — the admin never sets it directly.
+    const doReset = async () => {
       setBusy(true);
       setError(null);
       setNotice(null);
       try {
         const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
-        const res = await adminResetStaffPassword(member.id, newPassword, { token });
+        const res = await adminResetStaffPassword(member.id, { token });
         if (res.error) throw new Error(res.error.message);
-        setNotice(t('Staff.passwordReset', { name: member.name ?? member.email }));
+        setNotice(t('Staff.passwordResetSent', { email: member.email }));
       } catch (e) {
         setError(e instanceof Error ? e.message : t('Staff.resetError'));
       } finally {
         setBusy(false);
       }
     };
-    if (typeof (Alert as any).prompt === 'function') {
-      (Alert as any).prompt(
-        t('Staff.resetPassword'),
-        t('Staff.newPasswordPrompt'),
-        [
-          { text: t('Staff.cancel'), style: 'cancel' },
-          { text: t('Staff.save'), onPress: (v: string) => doReset(v) },
-        ],
-        'secure-text',
-      );
-    } else if (typeof window !== 'undefined' && window.prompt) {
-      const v = window.prompt(t('Staff.newPasswordPrompt')) ?? '';
-      void doReset(v);
+    const title = t('Staff.resetPassword');
+    const message = t('Staff.resetConfirm', { email: member.email });
+    if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+      if (window.confirm(`${title}\n\n${message}`)) void doReset();
+    } else {
+      Alert.alert(title, message, [
+        { text: t('Staff.cancel'), style: 'cancel' },
+        { text: t('Staff.resetSendCta'), onPress: () => void doReset() },
+      ]);
     }
   };
 

@@ -19,7 +19,7 @@ export const SPOT_NAV_ITEMS: SpotNavItem[] = [
   { name: 'scan', labelKey: 'SpotTabs.scan', icon: 'qr-code-outline' },
   { name: 'couriers', labelKey: 'SpotTabs.couriers', icon: 'bicycle-outline' },
   { name: 'menu', labelKey: 'SpotTabs.menu', icon: 'ice-cream-outline' },
-  { name: 'profile', labelKey: 'SpotTabs.profile', icon: 'person-outline' },
+  { name: 'profile', labelKey: 'SpotTabs.more', icon: 'ellipsis-horizontal' },
 ];
 
 export function visibleNavItems(isAdmin: boolean): SpotNavItem[] {

@@ -52,3 +52,38 @@ export const TERMINATE_ORDER_MUTATION = gql`
     terminateOrder(id: $id, reason: $reason)
   }
 `;
+
+// Richer fields for the "Needs attention" view (terminated / cancelled /
+// incident-held) — includes contact info + the reason it needs attention.
+const ATTENTION_FIELDS = `
+  ${ORDER_FIELDS}
+  customerPhone
+  updatedAt
+  incidentType
+  incidentNote
+  incidentPhotoUrl
+  incidentReportedAt
+  cancelReason
+  cancelledAt
+  terminatedAt
+  terminationReason
+  refundedAt
+`;
+
+// Orders needing spot attention in the last 24h (terminated / cancelled /
+// failed / incident-held) so staff can contact the client, refund, re-dispatch.
+export const SPOT_ATTENTION_ORDERS_QUERY = gql`
+  query SpotAttentionOrders($spotId: ID!) {
+    spotAttentionOrders(spotId: $spotId) {
+      ${ATTENTION_FIELDS}
+    }
+  }
+`;
+
+// Re-dispatch an incident-held delivery order back to the courier pool (after
+// the spot prepares a fresh pack). Returns it to READY.
+export const REDISPATCH_ORDER_MUTATION = gql`
+  mutation RedispatchOrder($id: ID!) {
+    redispatchOrder(id: $id)
+  }
+`;

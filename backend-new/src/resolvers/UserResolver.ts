@@ -1,9 +1,13 @@
 import { Resolver, Query, Mutation, Arg, Ctx, Authorized, ID, FieldResolver, Root } from 'type-graphql';
-import { Role } from '@prisma/client';
+import { Role, TransactionType } from '@prisma/client';
 import { Context } from '../types/Context';
 import { UserType } from '../types/UserType';
 import { CityType } from '../types/CityType';
 import { UserChangeInput } from '../types/UserChangeInput';
+import { PubSubService } from '../services/PubSubService';
+
+// Birthday quest reward — kept in sync with the client Tasks card (+700).
+const BIRTHDAY_BONUS_POINTS = 700;
 
 /**
  * User Management Resolver
@@ -122,15 +126,30 @@ export class UserResolver {
       updateData.phone = data.phone;
     }
 
+    // Set the birthday on first submit and complete the birthday quest in the
+    // same step (award the bonus + flag birthdayCompleted). A resubmit with the
+    // SAME date is a no-op (not an error) so the task screen never shows a
+    // spurious "Birthday is already set" — only a genuine CHANGE is rejected.
+    let awardBirthdayBonus = false;
     if (data.birthDate !== undefined) {
-      if (current.birthDate || current.birthdayCompleted) {
-        throw new Error('Birthday is already set and cannot be changed');
-      }
       const parsed = new Date(data.birthDate);
       if (isNaN(parsed.getTime())) {
         throw new Error('Invalid birth date');
       }
-      updateData.birthDate = parsed;
+      if (current.birthDate) {
+        // Already set — allow an identical resubmit, reject a real change.
+        const sameDay =
+          current.birthDate.toISOString().slice(0, 10) === parsed.toISOString().slice(0, 10);
+        if (!sameDay) {
+          throw new Error('Birthday is already set and cannot be changed');
+        }
+      } else {
+        updateData.birthDate = parsed;
+        if (!current.birthdayCompleted) {
+          updateData.birthdayCompleted = true;
+          awardBirthdayBonus = true;
+        }
+      }
     }
 
     const updated = await prisma.user.update({
@@ -138,9 +157,58 @@ export class UserResolver {
       data: updateData,
     });
 
+    // Award the one-time birthday bonus now that the date is saved. Guarded by
+    // birthdayCompleted above so it can never double-award.
+    if (awardBirthdayBonus) {
+      await this.awardBirthdayBonus(userId, prisma).catch((e) =>
+        console.error('Failed to award birthday bonus:', e),
+      );
+    }
+
     console.log(`✅ Profile updated: ${updated.email}`);
 
     return updated as UserType;
+  }
+
+  /**
+   * Credit the one-time birthday bonus (points + ledger transaction) and push a
+   * live balance update. Mirrors PointsResolver.claimBirthdayBonus so setting
+   * the birthday in the profile completes the quest without a second call.
+   */
+  private async awardBirthdayBonus(userId: string, prisma: Context['prisma']): Promise<void> {
+    const balance =
+      (await prisma.pointBalance.findUnique({ where: { userId } })) ??
+      (await prisma.pointBalance.create({
+        data: { userId, totalPoints: 0, availablePoints: 0, lockedPoints: 0 },
+      }));
+
+    const newBalance = await prisma.pointBalance.update({
+      where: { userId },
+      data: {
+        totalPoints: { increment: BIRTHDAY_BONUS_POINTS },
+        availablePoints: { increment: BIRTHDAY_BONUS_POINTS },
+      },
+    });
+
+    await prisma.pointTransaction.create({
+      data: {
+        userId,
+        type: TransactionType.BIRTHDAY,
+        amount: BIRTHDAY_BONUS_POINTS,
+        description: 'Birthday bonus',
+        balanceBefore: balance.availablePoints,
+        balanceAfter: newBalance.availablePoints,
+      },
+    });
+
+    await PubSubService.publishPointsUpdated(
+      userId,
+      newBalance.totalPoints,
+      newBalance.availablePoints,
+      BIRTHDAY_BONUS_POINTS,
+    );
+
+    console.log(`✅ Birthday bonus awarded to ${userId}: +${BIRTHDAY_BONUS_POINTS}`);
   }
 
   /**

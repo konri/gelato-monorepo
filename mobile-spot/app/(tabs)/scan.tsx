@@ -72,8 +72,11 @@ export default function ScanScreen() {
   );
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: isWide ? 0 : insets.top }}>
-      <View className="border-b border-gray-200 bg-white px-6 py-4">
+    <View className="flex-1 bg-gray-50">
+      <View
+        className="border-b border-gray-200 bg-white px-6 pb-4"
+        style={{ paddingTop: (isWide ? 0 : insets.top) + 16 }}
+      >
         <ResponsiveContainer>
           <Typography variant={isWide ? 'heading-32-bold' : 'body-lg-bold'} className="text-text-primary">
             {t('Scan.title')}

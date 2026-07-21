@@ -61,9 +61,10 @@ export const INVITE_SPOT_STAFF_MUTATION = gql`
   }
 `;
 
+// Emails the staff member a set-password code (they choose their own password).
 export const ADMIN_RESET_STAFF_PASSWORD_MUTATION = gql`
-  mutation AdminResetStaffPassword($userId: ID!, $newPassword: String!) {
-    adminResetStaffPassword(userId: $userId, newPassword: $newPassword)
+  mutation AdminResetStaffPassword($userId: ID!) {
+    adminResetStaffPassword(userId: $userId)
   }
 `;
 

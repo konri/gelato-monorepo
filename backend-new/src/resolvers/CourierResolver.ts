@@ -853,7 +853,11 @@ export class CourierResolver {
         incidentReportedBy: profile.id, // so this courier can't re-accept it
         ...(doCancel
           ? {
-              status: OrderStatus.READY, // hand back to the spot to reassign
+              // Hold the order OUT of the courier pool (only READY orders are
+              // offered). The spot must prepare a fresh pack and re-dispatch it
+              // (redispatchOrder) before another courier can accept.
+              status: OrderStatus.PREPARING,
+              readyAt: null,
               cancelReason: note ?? incidentType,
               // Release the courier assignment.
               courierId: null,
@@ -876,6 +880,7 @@ export class CourierResolver {
       cancelled: doCancel,
     });
     await this.notifySpotOfIncident(
+      orderId,
       order.spotId,
       order.orderNumber,
       incidentType,
@@ -893,6 +898,7 @@ export class CourierResolver {
    * persisted in-app Notification (with the incident photo, if any).
    */
   private async notifySpotOfIncident(
+    orderId: string,
     spotId: string,
     orderNumber: string,
     incidentType: string,
@@ -914,6 +920,8 @@ export class CourierResolver {
       const body = note ? `${incidentType}: ${note}` : incidentType;
 
       // Persist an in-app notification per recipient (carries the photo).
+      // data carries orderId (deep-link + re-dispatch), incidentType + note so
+      // the client can render a localized title/body.
       await prisma.notification.createMany({
         data: userIds.map((uid) => ({
           userId: uid,
@@ -921,7 +929,7 @@ export class CourierResolver {
           body,
           imageUrl: photoUrl ?? undefined,
           type: 'DELIVERY_INCIDENT',
-          data: { orderNumber, incidentType },
+          data: { orderId, orderNumber, incidentType, note: note ?? undefined },
         })),
       });
 
@@ -969,6 +977,13 @@ export class CourierResolver {
         status: OrderStatus.READY,
         courierId: null,
         spotId: { in: session.selectedSpotIds },
+        // Never offer an order this courier reported an incident on — they
+        // can't re-accept it (acceptDelivery rejects), so hide it entirely
+        // instead of erroring on tap.
+        OR: [
+          { incidentReportedBy: null },
+          { incidentReportedBy: { not: profile.id } },
+        ],
       },
       include: { spot: true, items: true },
       orderBy: { readyAt: 'asc' },

@@ -1,5 +1,6 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import {
   getMySpotNotifications,
   markSpotNotificationRead,
@@ -9,7 +10,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { goBackOr } from '@/utils/navigation';
+import { localizeNotification } from '@/utils/notificationDisplay';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -20,7 +21,6 @@ import {
   ScrollView,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Icon + tint per notification type.
 function iconFor(type: string): { name: any; color: string; bg: string } {
@@ -36,7 +36,6 @@ function iconFor(type: string): { name: any; color: string; bg: string } {
 
 export default function NotificationsScreen() {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
   const [items, setItems] = useState<SpotNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -64,11 +63,8 @@ export default function NotificationsScreen() {
       await markSpotNotificationRead(n.id, { token });
       setItems((prev) => prev.map((x) => (x.id === n.id ? { ...x, isRead: true } : x)));
     }
-    // Deep-link to the related order when the payload carries an orderId.
-    const orderId = n.data?.orderId;
-    if (orderId) {
-      router.push(`/order/${orderId}` as never);
-    }
+    // Open the detail screen (which offers a deep-link to the order).
+    router.push(`/notification/${n.id}` as never);
   };
 
   const markAll = async () => {
@@ -85,22 +81,20 @@ export default function NotificationsScreen() {
   const hasUnread = items.some((i) => !i.isRead);
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center border-b border-gray-200 bg-white px-4 py-4">
-        <Pressable onPress={() => goBackOr()} hitSlop={8} className="pr-2">
-          <Ionicons name="arrow-back" size={22} color="#212121" />
-        </Pressable>
-        <Typography variant="body-lg-bold" className="flex-1 text-text-primary">
-          {t('Notifications.title')}
-        </Typography>
-        {hasUnread && (
-          <Pressable onPress={markAll} hitSlop={8}>
-            <Typography variant="body-small-semibold" style={{ color: '#EC2828' }}>
-              {t('Notifications.markAllRead')}
-            </Typography>
-          </Pressable>
-        )}
-      </View>
+    <View className="flex-1 bg-gray-50">
+      <ScreenHeader
+        title={t('Notifications.title')}
+        backFallback="/(tabs)"
+        right={
+          hasUnread ? (
+            <Pressable onPress={markAll} hitSlop={8}>
+              <Typography variant="body-small-semibold" style={{ color: '#EC2828' }}>
+                {t('Notifications.markAllRead')}
+              </Typography>
+            </Pressable>
+          ) : undefined
+        }
+      />
 
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
@@ -119,6 +113,7 @@ export default function NotificationsScreen() {
           ) : (
             items.map((n) => {
               const ic = iconFor(n.type);
+              const { title, body } = localizeNotification(t, n);
               return (
                 <Pressable
                   key={n.id}
@@ -135,14 +130,14 @@ export default function NotificationsScreen() {
                   <View className="ml-3 flex-1">
                     <View className="flex-row items-center">
                       <Typography variant="body-base-semibold" className="flex-1 text-text-primary">
-                        {n.title}
+                        {title}
                       </Typography>
                       {!n.isRead && (
                         <View className="ml-2 h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#EC2828' }} />
                       )}
                     </View>
                     <Typography variant="body-small-regular" className="mt-0.5 text-gray-600">
-                      {n.body}
+                      {body}
                     </Typography>
                     {n.imageUrl ? (
                       <Image

@@ -14,11 +14,12 @@ import {
 } from '@repo/api-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -85,8 +86,11 @@ export default function CouriersScreen() {
   const activeCount = couriers.filter((c) => c.activeHere).length;
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: isWide ? 0 : insets.top }}>
-      <View className="border-b border-gray-200 bg-white px-6 py-4">
+    <View className="flex-1 bg-gray-50">
+      <View
+        className="border-b border-gray-200 bg-white px-6 pb-4"
+        style={{ paddingTop: (isWide ? 0 : insets.top) + 16 }}
+      >
         <ResponsiveContainer>
           <Typography variant={isWide ? 'heading-32-bold' : 'body-lg-bold'} className="text-text-primary">
             {t('Couriers.title')}
@@ -202,11 +206,22 @@ export default function CouriersScreen() {
               ) : (
                 <View className="gap-2">
                   {couriers.map((c) => (
-                    <View key={c.courierId} className="flex-row items-center rounded-2xl bg-white p-4 shadow-sm">
+                    <Pressable
+                      key={c.courierId}
+                      onPress={() => router.push(`/courier/${c.courierId}` as never)}
+                      className="flex-row items-center rounded-2xl bg-white p-4 shadow-sm"
+                    >
                       <View className="relative">
-                        <View className="h-11 w-11 items-center justify-center rounded-full bg-gray-100">
-                          <Ionicons name="person" size={20} color="#9CA3AF" />
-                        </View>
+                        {c.photo ? (
+                          <Image
+                            source={{ uri: c.photo }}
+                            style={{ width: 44, height: 44, borderRadius: 22 }}
+                          />
+                        ) : (
+                          <View className="h-11 w-11 items-center justify-center rounded-full bg-gray-100">
+                            <Ionicons name="person" size={20} color="#9CA3AF" />
+                          </View>
+                        )}
                         <View
                           className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white"
                           style={{ backgroundColor: c.isOnline ? '#16A34A' : '#9CA3AF' }}
@@ -232,7 +247,8 @@ export default function CouriersScreen() {
                           {c.isOnline ? t('Couriers.online') : t('Couriers.offline')}
                         </Typography>
                       )}
-                    </View>
+                      <Ionicons name="chevron-forward" size={16} color="#D1D5DB" style={{ marginLeft: 6 }} />
+                    </Pressable>
                   ))}
                 </View>
               )}

@@ -201,6 +201,8 @@ export default function SpotLoginScreen() {
               value={password}
               onChangeText={setPassword}
               secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
             />
             <Pressable
               onPress={doLogin}
@@ -233,6 +235,8 @@ export default function SpotLoginScreen() {
               value={newPassword}
               onChangeText={setNewPassword}
               secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
             />
             <Pressable
               onPress={doChangePassword}
@@ -302,6 +306,8 @@ export default function SpotLoginScreen() {
               value={newPassword}
               onChangeText={setNewPassword}
               secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
             />
             <Pressable
               onPress={doReset}

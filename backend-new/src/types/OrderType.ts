@@ -183,6 +183,32 @@ export class OrderType {
   @Field({ nullable: true })
   cancelledAt?: Date;
 
+  // Delivery incident (courier-reported) — shown in the spot "Needs attention" view.
+  @Field({ nullable: true })
+  incidentType?: string;
+
+  @Field({ nullable: true })
+  incidentNote?: string;
+
+  @Field({ nullable: true })
+  incidentPhotoUrl?: string;
+
+  @Field({ nullable: true })
+  incidentReportedAt?: Date;
+
+  @Field({ nullable: true })
+  cancelReason?: string;
+
+  // Spot termination (out of stock / closing).
+  @Field({ nullable: true })
+  terminatedAt?: Date;
+
+  @Field({ nullable: true })
+  terminationReason?: string;
+
+  @Field({ nullable: true })
+  refundedAt?: Date;
+
   @Field()
   createdAt!: Date;
 

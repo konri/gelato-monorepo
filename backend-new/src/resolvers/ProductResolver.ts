@@ -91,6 +91,7 @@ export class ProductResolver {
     @Arg('kcalPerPortion', () => Float, { nullable: true }) kcalPerPortion: number | undefined,
     @Arg('kcalPer100g', () => Float, { nullable: true }) kcalPer100g: number | undefined,
     @Arg('allergens', () => [String], { defaultValue: [] }) allergens: string[],
+    @Arg('loyaltyPoints', () => Int, { nullable: true }) loyaltyPoints: number | undefined,
     @Ctx() ctx: Context
   ): Promise<ProductGraphQLType> {
     await assertCanManageSpot(ctx, spotId);
@@ -110,6 +111,7 @@ export class ProductResolver {
         kcalPerPortion: kcalPerPortion ?? null,
         kcalPer100g: kcalPer100g ?? null,
         allergens,
+        loyaltyPoints: loyaltyPoints ?? 0,
         isAvailable: true,
         isActive: true,
       },
@@ -137,6 +139,7 @@ export class ProductResolver {
     @Arg('kcalPerPortion', () => Float, { nullable: true }) kcalPerPortion: number | undefined,
     @Arg('kcalPer100g', () => Float, { nullable: true }) kcalPer100g: number | undefined,
     @Arg('allergens', () => [String], { nullable: true }) allergens: string[] | undefined,
+    @Arg('loyaltyPoints', () => Int, { nullable: true }) loyaltyPoints: number | undefined,
     @Ctx() ctx: Context
   ): Promise<ProductGraphQLType> {
     const existing = await ctx.prisma.product.findUnique({ where: { id } });
@@ -156,6 +159,7 @@ export class ProductResolver {
     if (kcalPerPortion !== undefined) data.kcalPerPortion = kcalPerPortion;
     if (kcalPer100g !== undefined) data.kcalPer100g = kcalPer100g;
     if (allergens !== undefined) data.allergens = allergens;
+    if (loyaltyPoints !== undefined) data.loyaltyPoints = loyaltyPoints;
 
     const product = await ctx.prisma.product.update({ where: { id }, data });
     console.log(`✅ Product updated: ${product.name} (${product.id})`);

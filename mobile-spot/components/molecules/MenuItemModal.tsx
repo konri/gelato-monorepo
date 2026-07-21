@@ -68,6 +68,9 @@ export function MenuItemModal({
   const [ingredients, setIngredients] = useState('');
   const [allergens, setAllergens] = useState((item?.allergens ?? []).join(', '));
   const [price, setPrice] = useState(item ? String(item.price) : '');
+  const [loyaltyPoints, setLoyaltyPoints] = useState(
+    item?.loyaltyPoints != null ? String(item.loyaltyPoints) : '',
+  );
   const [kcalPortion, setKcalPortion] = useState('');
   const [kcal100g, setKcal100g] = useState('');
   // Ice cream pack (box): pick N tastes, total weight.
@@ -99,6 +102,7 @@ export function MenuItemModal({
         .map((a) => a.trim())
         .filter(Boolean);
       const priceNum = parseFloat(price) || 0;
+      const pointsNum = loyaltyPoints ? parseInt(loyaltyPoints, 10) || 0 : 0;
       const kcalP = kcalPortion ? parseFloat(kcalPortion) : undefined;
       const kcal1 = kcal100g ? parseFloat(kcal100g) : undefined;
       // Box fields apply only to products; ignored for tastes.
@@ -111,12 +115,12 @@ export function MenuItemModal({
       if (kind === 'taste') {
         if (isEdit) {
           await updateTaste(
-            { id: item!.id, title: name, titleLocal: localized, type, description, ingredients, price: priceNum, kcalPerPortion: kcalP, kcalPer100g: kcal1, allergens: allergenList },
+            { id: item!.id, title: name, titleLocal: localized, type, description, ingredients, price: priceNum, loyaltyPoints: pointsNum, kcalPerPortion: kcalP, kcalPer100g: kcal1, allergens: allergenList },
             { token },
           );
         } else {
           const res = await createTaste(
-            { spotId, title: name, titleLocal: localized, type, description, kcalPerPortion: kcalP, kcalPer100g: kcal1, allergens: allergenList },
+            { spotId, title: name, titleLocal: localized, type, description, loyaltyPoints: pointsNum, kcalPerPortion: kcalP, kcalPer100g: kcal1, allergens: allergenList },
             { token },
           );
           savedId = res.data?.createTaste?.id;
@@ -128,12 +132,12 @@ export function MenuItemModal({
       } else {
         if (isEdit) {
           await updateProduct(
-            { id: item!.id, name, nameLocal: localized, type, price: priceNum, description, maxTastes: maxTastesNum, weightGrams: weightNum, kcalPerPortion: kcalP, kcalPer100g: kcal1, allergens: allergenList },
+            { id: item!.id, name, nameLocal: localized, type, price: priceNum, loyaltyPoints: pointsNum, description, maxTastes: maxTastesNum, weightGrams: weightNum, kcalPerPortion: kcalP, kcalPer100g: kcal1, allergens: allergenList },
             { token },
           );
         } else {
           const res = await createProduct(
-            { spotId, name, nameLocal: localized, type, price: priceNum, description, isBox: box, maxTastes: maxTastesNum, weightGrams: weightNum, kcalPerPortion: kcalP, kcalPer100g: kcal1, allergens: allergenList },
+            { spotId, name, nameLocal: localized, type, price: priceNum, loyaltyPoints: pointsNum, description, isBox: box, maxTastes: maxTastesNum, weightGrams: weightNum, kcalPerPortion: kcalP, kcalPer100g: kcal1, allergens: allergenList },
             { token },
           );
           savedId = res.data?.createProduct?.id;
@@ -206,6 +210,21 @@ export function MenuItemModal({
             <View>
               <Label>{t('SpotMenu.price')}</Label>
               <TextInput className={inputCls} value={price} onChangeText={setPrice} keyboardType="decimal-pad" />
+            </View>
+
+            <View>
+              <Label>{t('SpotMenu.loyaltyPoints')}</Label>
+              <TextInput
+                className={inputCls}
+                value={loyaltyPoints}
+                onChangeText={setLoyaltyPoints}
+                keyboardType="number-pad"
+                placeholder="0"
+                placeholderTextColor="#9CA3AF"
+              />
+              <Typography variant="body-very-small-regular" className="mt-1 ml-1 text-gray-400">
+                {t('SpotMenu.loyaltyPointsHint')}
+              </Typography>
             </View>
 
             <View>

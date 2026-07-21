@@ -244,7 +244,7 @@ type LoyaltyCustomerType {
 type Mutation {
   acceptDelivery(orderId: ID!): CourierDeliveryType!
   addSpotNewsImage(imageUrl: String!, newsId: ID!): NewsType!
-  adminResetStaffPassword(newPassword: String!, userId: ID!): Boolean!
+  adminResetStaffPassword(userId: ID!): Boolean!
   applyCourierToSpot(spotId: ID!): CourierApplicationType!
   applyReferralCode(code: String!): Boolean!
   assignOrderToCourier(courierId: ID!, orderId: ID!): Boolean!
@@ -268,13 +268,13 @@ type Mutation {
   createPaymentIntent(orderId: ID!): String!
   createPointTemplate(name: String!, nameLocal: JSON, points: Int!, spotId: ID!): PointTemplate!
   createPrize(description: String, descriptionLocal: JSON, imageUrl: String, isActive: Boolean = true, pointsCost: Int!, quantity: Int, title: String!, titleLocal: JSON): PrizeType!
-  createProduct(allergens: [String!] = [], description: String, descriptionLocal: String, imageUrl: String, isBox: Boolean = false, kcalPer100g: Float, kcalPerPortion: Float, maxTastes: Int, name: String!, nameLocal: String!, price: Float!, spotId: ID!, type: ProductType!, weightGrams: Int): Product!
+  createProduct(allergens: [String!] = [], description: String, descriptionLocal: String, imageUrl: String, isBox: Boolean = false, kcalPer100g: Float, kcalPerPortion: Float, loyaltyPoints: Int, maxTastes: Int, name: String!, nameLocal: String!, price: Float!, spotId: ID!, type: ProductType!, weightGrams: Int): Product!
   createQuest(conditions: JSON, description: String, descriptionLocal: JSON, isActive: Boolean = true, isRepeatable: Boolean = false, pointsReward: Int!, targetCityIds: [String!] = [], targetSpotIds: [String!] = [], title: String!, titleLocal: JSON, type: String!): Quest!
   createReview(comment: String, courierRating: Int, orderId: ID!, overallRating: Int!, spotRating: Int!): ReviewType!
   createSpot(address: String!, cityId: String!, deliveryEnabled: Boolean = true, deliveryRadiusKm: Float = 5, description: String, freeDeliveryThreshold: Float, id: String!, latitude: Float!, longitude: Float!, name: String!, phone: String!): SpotType!
   createSpotNews(input: CreateSpotNewsInput!): NewsType!
   createSpotStaff(email: String!, name: String!, password: String!, role: String!, spotId: ID!): UserType!
-  createTaste(allergens: [String!] = [], description: String, descriptionLocal: String, imageUrl: String, kcalPer100g: Float, kcalPerPortion: Float, spotId: ID!, subtitle: String, title: String!, titleLocal: String!, type: TasteType!): Taste!
+  createTaste(allergens: [String!] = [], description: String, descriptionLocal: String, imageUrl: String, kcalPer100g: Float, kcalPerPortion: Float, loyaltyPoints: Int, spotId: ID!, subtitle: String, title: String!, titleLocal: String!, type: TasteType!): Taste!
   deleteAccount: Boolean!
   deleteNews(id: ID!): Boolean!
   deletePointTemplate(id: ID!): Boolean!
@@ -294,6 +294,7 @@ type Mutation {
   markAllNotificationsRead: Boolean!
   markNotificationRead(id: ID!): Boolean!
   redeemPrize(prizeId: ID!): UserPrizeType!
+  redispatchOrder(id: ID!): Boolean!
   refreshToken(refreshToken: String!): String!
   refundOrder(amount: Float, orderId: ID!, reason: String): Boolean!
   register(email: String!, language: Language = PL, name: String, password: String!, phone: String): AuthResponse!
@@ -321,12 +322,12 @@ type Mutation {
   updateOrderStatus(id: ID!, status: OrderStatus!): Boolean!
   updatePointTemplate(id: ID!, isActive: Boolean, name: String, nameLocal: JSON, points: Int): PointTemplate!
   updatePrize(description: String, descriptionLocal: JSON, id: ID!, imageUrl: String, isActive: Boolean, pointsCost: Int, quantity: Int, title: String, titleLocal: JSON): PrizeType!
-  updateProduct(allergens: [String!], description: String, descriptionLocal: String, id: ID!, imageUrl: String, kcalPer100g: Float, kcalPerPortion: Float, maxTastes: Int, name: String, nameLocal: String, price: Float, type: ProductType, weightGrams: Int): Product!
+  updateProduct(allergens: [String!], description: String, descriptionLocal: String, id: ID!, imageUrl: String, kcalPer100g: Float, kcalPerPortion: Float, loyaltyPoints: Int, maxTastes: Int, name: String, nameLocal: String, price: Float, type: ProductType, weightGrams: Int): Product!
   updateProductAvailability(id: ID!, isAvailable: Boolean!): Boolean!
   updateProfile(data: UserChangeInput!): UserType!
   updateQuest(conditions: JSON, description: String, descriptionLocal: JSON, id: ID!, isActive: Boolean, isRepeatable: Boolean, pointsReward: Int, targetCityIds: [String!], targetSpotIds: [String!], title: String, titleLocal: JSON): Quest!
   updateSpot(accessibilityFeatures: String, address: String, deliveryRadiusKm: Float, description: String, email: String, freeDeliveryThreshold: Float, hasSeating: Boolean, id: ID!, isActive: Boolean, latitude: Float, longitude: Float, name: String, openingHours: String, phone: String, seatingCapacity: Int): SpotType!
-  updateTaste(allergens: [String!], description: String, descriptionLocal: String, id: ID!, imageUrl: String, ingredients: String, kcalPer100g: Float, kcalPerPortion: Float, price: Float, subtitle: String, title: String, titleLocal: String, type: TasteType): Taste!
+  updateTaste(allergens: [String!], description: String, descriptionLocal: String, id: ID!, imageUrl: String, ingredients: String, kcalPer100g: Float, kcalPerPortion: Float, loyaltyPoints: Int, price: Float, subtitle: String, title: String, titleLocal: String, type: TasteType): Taste!
   updateTasteAvailability(id: ID!, isAvailable: Boolean!): Boolean!
   updateUserRoles(roles: [Role!]!, userId: ID!): UserType!
   validatePrizeQR(qrCode: String!, spotId: ID): UserPrizeType!
@@ -439,6 +440,7 @@ type OrderType {
   acceptedAt: DateTime
   apartmentNumber: String
   buildingType: String
+  cancelReason: String
   cancelledAt: DateTime
   claimedAt: DateTime
   collectedAt: DateTime
@@ -461,6 +463,10 @@ type OrderType {
   floor: String
   fulfillmentType: FulfillmentType!
   id: ID!
+  incidentNote: String
+  incidentPhotoUrl: String
+  incidentReportedAt: DateTime
+  incidentType: String
   invoiceAddress: String
   invoiceCompanyName: String
   invoiceNIP: String
@@ -477,11 +483,14 @@ type OrderType {
   preparedById: ID
   preparedByName: String
   readyAt: DateTime
+  refundedAt: DateTime
   scheduledFor: DateTime
   spot: OrderSpotSummary
   spotId: ID!
   status: OrderStatus!
   subtotal: Float!
+  terminatedAt: DateTime
+  terminationReason: String
   total: Float!
   updatedAt: DateTime!
   userId: ID!
@@ -565,6 +574,7 @@ type Product {
   isBox: Boolean!
   kcalPer100g: Float
   kcalPerPortion: Float
+  loyaltyPoints: Int!
   maxTastes: Int
   name: String!
   nameLocal: JSON!
@@ -645,8 +655,10 @@ type Query {
   searchUsers(query: String!): [UserType!]!
   spot(id: ID!): SpotType
   spotAdmins(spotId: ID!): [SpotAdminInfo!]!
+  spotAttentionOrders(spotId: ID!): [OrderType!]!
   spotComplaints(spotId: ID!, status: String): [Complaint!]!
   spotCourierApplications(spotId: ID!): [SpotCourierApplicationType!]!
+  spotCourierDeliveries(courierId: ID!, limit: Int, spotId: ID!): [SpotCourierDeliveryType!]!
   spotCourierEarnings(month: Int, spotId: ID!, year: Int): SpotCourierEarningsSummaryType!
   spotCouriers(spotId: ID!): [SpotCourierType!]!
   spotDashboard(from: String!, preparedById: ID, spotId: ID!, to: String!): SpotDashboardType!
@@ -759,6 +771,16 @@ type SpotCourierApplicationType {
   totalDeliveries: Int!
 }
 
+type SpotCourierDeliveryType {
+  createdAt: DateTime!
+  deliveredAt: DateTime
+  deliveryAddress: String
+  id: ID!
+  orderNumber: String!
+  status: String!
+  total: Float!
+}
+
 type SpotCourierEarningType {
   amount: Float!
   courierId: ID!
@@ -777,10 +799,13 @@ type SpotCourierType {
   averageRating: Float
   courierId: ID!
   email: String
+  firstName: String
   isAvailable: Boolean!
   isOnline: Boolean!
   name: String!
   phone: String
+  photo: String
+  surname: String
   totalDeliveries: Int!
   totalEarnings: Float!
   userId: ID!
@@ -872,6 +897,7 @@ type Taste {
   kcalPer100g: Float
   kcalPerPortion: Float
   likesCount: Int
+  loyaltyPoints: Int!
   portionSizeGrams: Float
   price: Float!
   spotId: ID!
