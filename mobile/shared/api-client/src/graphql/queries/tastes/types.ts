@@ -30,6 +30,8 @@ export type Spot = {
   hasSeating?: boolean;
   seatingCapacity?: number | null;
   accessibilityFeatures?: string | null;
+  averageRating?: number | null;
+  reviewCount?: number;
   isFavorite?: boolean;
 };
 

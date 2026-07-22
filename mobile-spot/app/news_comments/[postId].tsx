@@ -1,8 +1,8 @@
 import { Typography } from '@/components/atoms/Typography';
+import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import { useNewsComments } from '@/hooks/useNews';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { goBackOr } from '@/utils/navigation';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -52,20 +52,10 @@ export default function SpotNewsCommentsScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-white"
+      className="flex-1 bg-gray-50"
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View
-        className="flex-row items-center border-b border-gray-200 bg-white px-4 py-3"
-        style={{ paddingTop: insets.top + 12 }}
-      >
-        <Pressable onPress={() => goBackOr()} hitSlop={8} className="mr-3">
-          <Ionicons name="arrow-back" size={24} color="#212121" />
-        </Pressable>
-        <Typography variant="body-lg-bold" className="flex-1 text-text-primary">
-          {t('News.replies')}
-        </Typography>
-      </View>
+      <ScreenHeader title={t('News.replies')} />
 
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 20 }}>
         {loading ? (

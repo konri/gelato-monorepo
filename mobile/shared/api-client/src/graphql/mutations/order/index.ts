@@ -3,6 +3,7 @@ import { ApolloServerConfig, GraphQLResult } from '../../types';
 import {
   CREATE_ORDER_MUTATION,
   CREATE_PAYMENT_INTENT_MUTATION,
+  CONFIRM_ORDER_PAYMENT_MUTATION,
   CREATE_COMPLAINT_MUTATION,
 } from './mutation';
 
@@ -67,6 +68,17 @@ export const createPaymentIntent = async (
     { ...options, variables: { orderId } },
   );
   return { ...res, data: res.data ? res.data.createPaymentIntent : null };
+};
+
+export const confirmOrderPayment = async (
+  orderId: string,
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<boolean>> => {
+  const res = await executeGraphQLQuery<{ confirmOrderPayment: boolean }>(
+    CONFIRM_ORDER_PAYMENT_MUTATION,
+    { ...options, variables: { orderId } },
+  );
+  return { ...res, data: res.data ? res.data.confirmOrderPayment : null };
 };
 
 export const createComplaint = async (

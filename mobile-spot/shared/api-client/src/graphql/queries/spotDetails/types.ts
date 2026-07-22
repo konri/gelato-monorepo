@@ -14,6 +14,10 @@ export type SpotDetails = {
   hasSeating: boolean;
   seatingCapacity?: number | null;
   accessibilityFeatures?: string | null;
+  deliveryEnabled?: boolean;
+  deliveryFee?: number | null;
+  freeDeliveryThreshold?: number | null;
+  courierPayout?: number | null;
 };
 
 export type SpotDetailsResponse = { spot: SpotDetails | null };

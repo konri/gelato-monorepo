@@ -92,6 +92,7 @@ type CourierDeliveryType {
   itemCount: Int!
   noteForCourier: String
   orderNumber: String!
+  payout: Float!
   pickedUpAt: DateTime
   readyAt: DateTime
   reviewComment: String
@@ -141,6 +142,14 @@ type CourierProfileType {
   totalEarnings: Float!
   updatedAt: DateTime!
   userId: ID!
+}
+
+type CourierReviewType {
+  comment: String
+  createdAt: DateTime!
+  id: ID!
+  orderNumber: String!
+  rating: Int!
 }
 
 input CreateNewsInput {
@@ -259,6 +268,7 @@ type Mutation {
   claimOrder(orderId: ID!): OrderType!
   collectPickupOrder(orderId: ID!): CollectOrderResult!
   commentNews(content: String!, newsId: ID!, parentId: ID): NewsCommentType!
+  confirmOrderPayment(orderId: ID!): Boolean!
   createAdminAccount(email: String!, name: String!, role: String!): UserType!
   createCity(country: String = "Poland", latitude: Float!, longitude: Float!, name: String!, nameLocal: JSON): City!
   createComplaint(message: String!, orderId: ID!, subject: String!): Complaint!
@@ -326,7 +336,7 @@ type Mutation {
   updateProductAvailability(id: ID!, isAvailable: Boolean!): Boolean!
   updateProfile(data: UserChangeInput!): UserType!
   updateQuest(conditions: JSON, description: String, descriptionLocal: JSON, id: ID!, isActive: Boolean, isRepeatable: Boolean, pointsReward: Int, targetCityIds: [String!], targetSpotIds: [String!], title: String, titleLocal: JSON): Quest!
-  updateSpot(accessibilityFeatures: String, address: String, deliveryRadiusKm: Float, description: String, email: String, freeDeliveryThreshold: Float, hasSeating: Boolean, id: ID!, isActive: Boolean, latitude: Float, longitude: Float, name: String, openingHours: String, phone: String, seatingCapacity: Int): SpotType!
+  updateSpot(accessibilityFeatures: String, address: String, courierPayout: Float, deliveryEnabled: Boolean, deliveryFee: Float, deliveryRadiusKm: Float, description: String, email: String, freeDeliveryThreshold: Float, hasSeating: Boolean, id: ID!, isActive: Boolean, latitude: Float, longitude: Float, name: String, openingHours: String, phone: String, seatingCapacity: Int): SpotType!
   updateTaste(allergens: [String!], description: String, descriptionLocal: String, id: ID!, imageUrl: String, ingredients: String, kcalPer100g: Float, kcalPerPortion: Float, loyaltyPoints: Int, price: Float, subtitle: String, title: String, titleLocal: String, type: TasteType): Taste!
   updateTasteAvailability(id: ID!, isAvailable: Boolean!): Boolean!
   updateUserRoles(roles: [Role!]!, userId: ID!): UserType!
@@ -607,6 +617,14 @@ type PromoValidation {
   value: Float
 }
 
+type PublicReviewType {
+  authorName: String!
+  comment: String
+  createdAt: DateTime!
+  id: ID!
+  rating: Int!
+}
+
 type Query {
   adminAccounts: [UserType!]!
   allNews(includeUnpublished: Boolean = true): [NewsType!]!
@@ -628,6 +646,7 @@ type Query {
   myAdminSpots: [SpotType!]!
   myApprovedSpots: [CourierApprovedSpotType!]!
   myCourierApplications: [CourierApplicationType!]!
+  myCourierReviews(limit: Int = 50): [CourierReviewType!]!
   myDeliveryHistory(limit: Int = 50): [CourierDeliveryType!]!
   myEarnings(days: Int = 30): CourierEarningsSummaryType!
   myFCMTokens: [String!]!
@@ -667,6 +686,8 @@ type Query {
   spotOrders(spotId: ID!, status: OrderStatus): [OrderType!]!
   spotPointTemplates(includeInactive: Boolean = false, spotId: ID!): [PointTemplate!]!
   spotProducts(includeUnavailable: Boolean = false, spotId: ID!): [Product!]!
+  spotRatingSummary(spotId: ID!): SpotRatingSummaryType!
+  spotReviews(limit: Int = 20, spotId: ID!): [PublicReviewType!]!
   spotStaffAdmins(spotId: ID!): [StaffMember!]!
   spotStaffSessions(limit: Int = 100, spotId: ID!): [StaffLoginSessionType!]!
   spotTastes(includeUnavailable: Boolean = false, spotId: ID!): [Taste!]!
@@ -819,11 +840,18 @@ type SpotDashboardType {
   revenue: Float!
 }
 
+type SpotRatingSummaryType {
+  averageRating: Float
+  reviewCount: Int!
+}
+
 type SpotType {
   accessibilityFeatures: String
   address: String!
+  averageRating: Float
   city: City
   cityId: String!
+  courierPayout: Float!
   coverUrl: String
   createdAt: DateTime!
   deliveryEnabled: Boolean!
@@ -843,6 +871,7 @@ type SpotType {
   openingHours: JSON
   phone: String
   photos: [String!]!
+  reviewCount: Int!
   seatingCapacity: Int
   tastes(includeUnavailable: Boolean = false): [Taste!]!
   updatedAt: DateTime!

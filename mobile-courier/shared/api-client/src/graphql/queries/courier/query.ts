@@ -83,6 +83,7 @@ const DELIVERY_FIELDS = `
   orderNumber
   status
   total
+  payout
   itemCount
   spotId
   spotName

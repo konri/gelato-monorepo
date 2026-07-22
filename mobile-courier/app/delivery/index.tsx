@@ -1,5 +1,6 @@
 import { Typography } from '@/components/atoms/Typography';
 import { DeliveryMap } from '@/components/molecules/DeliveryMap';
+import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import { useMyActiveDelivery } from '@/hooks/useCourierApplications';
 import { useCourierLocationPing } from '@/hooks/useCourierLocationPing';
 import { useCurrentLocation } from '@/hooks/useCurrentLocation';
@@ -119,21 +120,12 @@ export default function ActiveDeliveryScreen() {
   };
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-4 border-b border-gray-200 bg-white">
-        <Pressable onPress={() => router.replace('/(tabs)')} className="p-1 mr-2">
-          <Ionicons name="chevron-back" size={26} color="#212121" />
-        </Pressable>
-        <View>
-          <Typography variant="body-lg-bold" className="text-text-primary">
-            {t('Courier.activeDelivery')}
-          </Typography>
-          <Typography variant="body-small-regular" className="text-gray-500">
-            {t('Courier.orderNumber', { number: delivery.orderNumber })}
-          </Typography>
-        </View>
-      </View>
+    <View className="flex-1 bg-gray-50">
+      <ScreenHeader
+        title={t('Courier.activeDelivery')}
+        subtitle={t('Courier.orderNumber', { number: delivery.orderNumber })}
+        onBack={() => router.replace('/(tabs)')}
+      />
 
       <ScrollView
         className="flex-1"

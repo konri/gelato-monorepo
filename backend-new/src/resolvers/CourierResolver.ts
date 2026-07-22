@@ -738,6 +738,7 @@ export class CourierResolver {
         courierId: true,
         status: true,
         deliveryFee: true,
+        courierPayout: true,
         orderNumber: true,
         spotId: true,
         pickupCode: true,
@@ -777,8 +778,9 @@ export class CourierResolver {
         updateData.deliveredAt = new Date();
         // Only pay + count once (guard against a repeated DELIVERED call).
         if (order.status !== OrderStatus.DELIVERED) {
-          // The courier earns the order's delivery fee.
-          const earning = order.deliveryFee ?? 0;
+          // The courier earns the order's snapshotted payout (falls back to the
+          // customer delivery fee for legacy orders created before payouts).
+          const earning = order.courierPayout || order.deliveryFee || 0;
           await prisma.courierProfile.update({
             where: { id: profile.id },
             data: {
@@ -1116,6 +1118,9 @@ export class CourierResolver {
       orderNumber: order.orderNumber,
       status: order.status,
       total: order.total,
+      // What the courier earns — snapshot on the order, else the spot's live
+      // config, else the customer fee (legacy).
+      payout: order.courierPayout || order.spot?.courierPayout || order.deliveryFee || 0,
       itemCount,
       spotId: order.spotId,
       spotName: order.spot?.name ?? '',

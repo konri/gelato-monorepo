@@ -643,6 +643,7 @@ export default {
     notRatedYet: 'Not rated yet',
     totalDeliveries: 'Total deliveries',
     yourRating: 'Your rating',
+    yourPayout: 'Your payout',
     // Earnings dashboard (Phase 5)
     today: 'Today',
     thisMonth: 'This month',

@@ -643,6 +643,7 @@ export default {
     notRatedYet: 'Brak oceny',
     totalDeliveries: 'Wszystkie dostawy',
     yourRating: 'Twoja ocena',
+    yourPayout: 'Twoje wynagrodzenie',
     today: 'Dziś',
     thisMonth: 'Ten miesiąc',
     allTime: 'Łącznie',

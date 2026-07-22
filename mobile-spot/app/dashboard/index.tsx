@@ -1,5 +1,6 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { getStoredSpotContext } from '@/hooks/useSpotOrders';
 import {
@@ -11,12 +12,9 @@ import {
 import { downloadReport } from '@/services/downloadReport';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { goBackOr } from '@/utils/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Preset = 'today' | 'week' | 'month';
 
@@ -43,7 +41,6 @@ const empName = (e: SpotEmployee) =>
 
 export default function DashboardScreen() {
   const { t, i18n } = useTranslation();
-  const insets = useSafeAreaInsets();
   const { isWide } = useBreakpoint();
 
   const [spotId, setSpotId] = useState<string | null>(null);
@@ -111,15 +108,8 @@ export default function DashboardScreen() {
   }, [load]);
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center border-b border-gray-200 bg-white px-4 py-4">
-        <Pressable onPress={() => goBackOr()} hitSlop={8} className="pr-2">
-          <Ionicons name="arrow-back" size={22} color="#212121" />
-        </Pressable>
-        <Typography variant="body-lg-bold" className="text-text-primary">
-          {t('Dashboard.title')}
-        </Typography>
-      </View>
+    <View className="flex-1 bg-gray-50">
+      <ScreenHeader title={t('Dashboard.title')} />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         <ResponsiveContainer maxWidth={720}>

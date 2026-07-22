@@ -642,6 +642,7 @@ const ua = {
     notRatedYet: 'Ще не оцінено',
     totalDeliveries: 'Усього доставок',
     yourRating: 'Ваша оцінка',
+    yourPayout: 'Ваша виплата',
     today: 'Сьогодні',
     thisMonth: 'Цей місяць',
     allTime: 'За весь час',

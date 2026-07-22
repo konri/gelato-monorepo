@@ -1,5 +1,5 @@
 import { Typography } from '@/components/atoms/Typography';
-import { HeaderWithBackButton } from '@/components/HeaderWithBackButton';
+import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import {
   applyToSpot,
   useCities,
@@ -18,11 +18,9 @@ import {
   ScrollView,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ApplySpotScreen() {
   const { t, i18n } = useTranslation();
-  const insets = useSafeAreaInsets();
 
   const { data: cities, loading: citiesLoading } = useCities();
   const [cityId, setCityId] = useState<string | null>(null);
@@ -67,9 +65,8 @@ export default function ApplySpotScreen() {
   const selectedCity = cities?.find((c) => c.id === cityId) ?? null;
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top + 8 }}>
-      {/* Floating card header (matches the client app's look). */}
-      <HeaderWithBackButton title={t('Courier.applyTitle')} variant="card" />
+    <View className="flex-1 bg-gray-50">
+      <ScreenHeader title={t('Courier.applyTitle')} />
 
       <ScrollView
         className="flex-1"

@@ -4,8 +4,7 @@ import Stripe from 'stripe';
 import { StripeService } from '../services/StripeService';
 import { PubSubService } from '../services/PubSubService';
 import { EmailService } from '../services/EmailService';
-import { OrderPointsService } from '../services/OrderPointsService';
-import { persistNewOrderNotification } from '../resolvers/OrderResolver';
+import { OrderPaymentService } from '../services/OrderPaymentService';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -87,66 +86,9 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     return;
   }
 
-  // Update order status
-  const order = await prisma.order.update({
-    where: { id: orderId },
-    data: {
-      paymentStatus: 'paid',
-      paymentIntentId: paymentIntent.id,
-    },
-    include: {
-      user: true,
-      spot: true,
-      items: {
-        include: {
-          taste: true,
-          product: true,
-        },
-      },
-    },
-  });
-
-  console.log(`✅ Payment succeeded for order ${order.orderNumber}`);
-
-  // Pickup orders paid online (pay-now) earn their loyalty points immediately.
-  // Delivery orders still earn on DELIVERED; cash pickups earn on collection.
-  // The award is idempotent (pointsAwarded guard), so collection won't re-award.
-  if (order.fulfillmentType === 'PICKUP') {
-    await OrderPointsService.awardOrderPointsIfNeeded(order.id, prisma);
-  }
-
-  // Notify the user and the spot (client subscribes to order status; spot to new orders).
-  await PubSubService.publishOrderStatusChanged(order);
-  await PubSubService.publishNewOrderNotification(order.spotId, order);
-  await persistNewOrderNotification(order.spotId, order, prisma).catch((e) =>
-    console.error('Failed to persist new-order notification:', e),
-  );
-
-  // Send order confirmation email. An item is either a taste or a product.
-  await EmailService.sendOrderConfirmation({
-    email: order.user.email,
-    name: order.user.firstName || order.user.name || 'Customer',
-    orderNumber: order.orderNumber,
-    orderId: order.id,
-    items: order.items.map((item) => ({
-      name: item.taste?.title || item.product?.name || 'Item',
-      quantity: item.quantity,
-      price: item.pricePerUnit,
-    })),
-    subtotal: order.subtotal,
-    deliveryFee: order.deliveryFee,
-    total: order.total,
-    deliveryAddress:
-      order.fulfillmentType === 'PICKUP'
-        ? `Pickup at ${order.spot.name}`
-        : order.deliveryAddress ?? '',
-    estimatedDelivery: order.fulfillmentType === 'PICKUP' ? 'Ready soon' : '30-45 minutes',
-    spotName: order.spot.name,
-    language: order.user.language,
-  });
-
-  // TODO: Send FCM push notification to user
-  // TODO: Send FCM push notification to spot admins
+  // Shared commit path (idempotent) — also used by the confirmOrderPayment
+  // mutation, so the order still reaches the spot without the webhook.
+  await OrderPaymentService.markOrderPaid(orderId, paymentIntent.id, prisma);
 }
 
 /**

@@ -1,5 +1,6 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import { staticMapUrl } from '@/services/googlePlaces';
 import { getOrderById, terminateOrder, type OrderDetail } from '@repo/api-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -107,15 +108,10 @@ export default function OrderTrackScreen() {
       : null;
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center border-b border-gray-200 bg-white px-4 py-4">
-        <Pressable onPress={() => goBackOr()} hitSlop={8} className="pr-2">
-          <Ionicons name="arrow-back" size={22} color="#212121" />
-        </Pressable>
-        <Typography variant="body-lg-bold" className="text-text-primary">
-          {order ? t('Spot.orderNumber', { number: order.orderNumber }) : t('OrderTrack.title')}
-        </Typography>
-      </View>
+    <View className="flex-1 bg-gray-50">
+      <ScreenHeader
+        title={order ? t('Spot.orderNumber', { number: order.orderNumber }) : t('OrderTrack.title')}
+      />
 
       {loading ? (
         <View className="flex-1 items-center justify-center">

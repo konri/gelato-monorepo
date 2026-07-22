@@ -26,13 +26,19 @@ export function DeliveryPoolCard({ delivery, onAccept }: Props) {
 
   return (
     <View className="bg-white rounded-2xl p-4 shadow-sm">
-      <View className="flex-row items-center justify-between">
+      <View className="flex-row items-start justify-between">
         <Typography variant="body-base-bold" className="text-text-primary">
           {t('Courier.orderNumber', { number: delivery.orderNumber })}
         </Typography>
-        <Typography variant="body-base-bold" className="text-primary">
-          {delivery.total.toFixed(2)} zł
-        </Typography>
+        {/* The courier's earning is the headline number, not the order total. */}
+        <View className="items-end">
+          <Typography variant="body-lg-bold" style={{ color: '#16A34A' }}>
+            +{delivery.payout.toFixed(2)} zł
+          </Typography>
+          <Typography variant="body-very-small-medium" className="text-gray-400">
+            {t('Courier.yourPayout')}
+          </Typography>
+        </View>
       </View>
 
       <View className="flex-row items-center mt-2">
@@ -45,7 +51,7 @@ export function DeliveryPoolCard({ delivery, onAccept }: Props) {
       <View className="flex-row items-center mt-1">
         <Ionicons name="cube-outline" size={16} color="#6B7280" />
         <Typography variant="body-small-regular" className="text-gray-600 ml-2">
-          {t('Courier.itemsCount', { count: delivery.itemCount })}
+          {t('Courier.itemsCount', { count: delivery.itemCount })} · {delivery.total.toFixed(2)} zł
         </Typography>
       </View>
 

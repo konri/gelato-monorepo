@@ -410,6 +410,9 @@ export class OrderResolver {
     if (!isPickup && spot.freeDeliveryThreshold && subtotal >= spot.freeDeliveryThreshold) {
       deliveryFee = 0;
     }
+    // Snapshot what the courier will be paid for this delivery. Independent of
+    // the customer fee, so free-to-customer delivery orders still pay couriers.
+    const courierPayout = isPickup ? 0 : spot.courierPayout ?? 0;
 
     // 5. Apply promo / influencer code discount (server-side validated).
     let discount = 0;
@@ -466,6 +469,7 @@ export class OrderResolver {
           fulfillmentType,
           subtotal,
           deliveryFee,
+          courierPayout,
           discount,
           total,
           paymentMethod: input.paymentMethod,

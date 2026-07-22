@@ -22,6 +22,14 @@ export const CREATE_PAYMENT_INTENT_MUTATION = gql`
   }
 `;
 
+// Called after the Stripe PaymentSheet reports success — commits the order
+// (marks paid + sends it to the spot) without waiting on the webhook.
+export const CONFIRM_ORDER_PAYMENT_MUTATION = gql`
+  mutation ConfirmOrderPayment($orderId: ID!) {
+    confirmOrderPayment(orderId: $orderId)
+  }
+`;
+
 export const CREATE_COMPLAINT_MUTATION = gql`
   mutation CreateComplaint($orderId: ID!, $subject: String!, $message: String!) {
     createComplaint(orderId: $orderId, subject: $subject, message: $message) {

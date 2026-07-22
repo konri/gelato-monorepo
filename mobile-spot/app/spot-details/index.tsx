@@ -1,5 +1,6 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import { config } from '@/config';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { useToast } from '@/components/organisms/ToastProvider';
@@ -14,7 +15,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import { goBackOr } from '@/utils/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -26,7 +26,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const inputCls = 'rounded-xl border border-gray-300 px-4 py-3 text-base';
@@ -56,7 +55,6 @@ async function uploadSpotImage(spotId: string, uri: string, type: 'logo' | 'cove
 
 export default function SpotDetailsScreen() {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
   const { isWide } = useBreakpoint();
   const toast = useToast();
 
@@ -75,6 +73,10 @@ export default function SpotDetailsScreen() {
     hasSeating: false,
     seatingCapacity: '',
     accessibilityFeatures: '',
+    deliveryEnabled: true,
+    deliveryFee: '',
+    freeDeliveryThreshold: '',
+    courierPayout: '',
   });
   const [hours, setHours] = useState<Record<string, string>>({});
 
@@ -100,6 +102,10 @@ export default function SpotDetailsScreen() {
         hasSeating: s.hasSeating ?? false,
         seatingCapacity: s.seatingCapacity != null ? String(s.seatingCapacity) : '',
         accessibilityFeatures: s.accessibilityFeatures ?? '',
+        deliveryEnabled: s.deliveryEnabled ?? true,
+        deliveryFee: s.deliveryFee != null ? String(s.deliveryFee) : '',
+        freeDeliveryThreshold: s.freeDeliveryThreshold != null ? String(s.freeDeliveryThreshold) : '',
+        courierPayout: s.courierPayout != null ? String(s.courierPayout) : '',
       });
       setHours(
         s.openingHours && typeof s.openingHours === 'object' ? { ...s.openingHours } : {},
@@ -139,6 +145,12 @@ export default function SpotDetailsScreen() {
           hasSeating: form.hasSeating,
           seatingCapacity: form.seatingCapacity ? parseInt(form.seatingCapacity, 10) : undefined,
           accessibilityFeatures: form.accessibilityFeatures,
+          deliveryEnabled: form.deliveryEnabled,
+          deliveryFee: form.deliveryFee ? parseFloat(form.deliveryFee) : 0,
+          freeDeliveryThreshold: form.freeDeliveryThreshold
+            ? parseFloat(form.freeDeliveryThreshold)
+            : undefined,
+          courierPayout: form.courierPayout ? parseFloat(form.courierPayout) : 0,
         },
         { token },
       );
@@ -203,15 +215,8 @@ export default function SpotDetailsScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center border-b border-gray-200 bg-white px-4 py-4">
-        <Pressable onPress={() => goBackOr()} hitSlop={8} className="pr-2">
-          <Ionicons name="arrow-back" size={22} color="#212121" />
-        </Pressable>
-        <Typography variant="body-lg-bold" className="text-text-primary">
-          {t('SpotDetails.title')}
-        </Typography>
-      </View>
+    <View className="flex-1 bg-gray-50">
+      <ScreenHeader title={t('SpotDetails.title')} />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         <ResponsiveContainer maxWidth={640}>
@@ -334,6 +339,50 @@ export default function SpotDetailsScreen() {
             onChangeText={set('accessibilityFeatures')}
             multiline
           />
+
+          {/* Delivery pricing */}
+          <Typography variant="body-base-bold" className="mb-2 mt-4 text-text-primary">
+            {t('SpotDetails.deliverySection')}
+          </Typography>
+          <View className="mb-2 flex-row items-center justify-between rounded-xl bg-white px-4 py-3">
+            <Typography variant="body-base-regular" className="text-text-primary">
+              {t('SpotDetails.deliveryEnabled')}
+            </Typography>
+            <Switch
+              value={form.deliveryEnabled}
+              onValueChange={(v) => setForm((f) => ({ ...f, deliveryEnabled: v }))}
+              trackColor={{ true: '#EC2828', false: '#D1D5DB' }}
+              thumbColor="#fff"
+            />
+          </View>
+          {form.deliveryEnabled && (
+            <>
+              <Field
+                label={t('SpotDetails.deliveryFee')}
+                value={form.deliveryFee}
+                onChangeText={set('deliveryFee')}
+                keyboardType="decimal-pad"
+                placeholder="0"
+              />
+              <Field
+                label={t('SpotDetails.freeDeliveryThreshold')}
+                value={form.freeDeliveryThreshold}
+                onChangeText={set('freeDeliveryThreshold')}
+                keyboardType="decimal-pad"
+                placeholder="—"
+              />
+              <Field
+                label={t('SpotDetails.courierPayout')}
+                value={form.courierPayout}
+                onChangeText={set('courierPayout')}
+                keyboardType="decimal-pad"
+                placeholder="0"
+              />
+              <Typography variant="body-very-small-regular" className="-mt-1 mb-1 ml-1 text-gray-400">
+                {t('SpotDetails.courierPayoutHint')}
+              </Typography>
+            </>
+          )}
 
           <Pressable
             onPress={save}

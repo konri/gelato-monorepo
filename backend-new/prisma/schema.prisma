@@ -257,6 +257,13 @@ model Spot {
   deliveryRadiusKm    Float    @default(5.0)
   freeDeliveryThreshold Float? // Minimum order value for free delivery
   deliveryFee         Float    @default(0)
+  // What the spot pays the courier per delivery. Independent of the customer
+  // fee: a spot can offer free delivery to customers but still pay couriers.
+  courierPayout       Float    @default(0)
+
+  // Cached review aggregates (recomputed on each new review).
+  averageRating       Float?
+  reviewCount         Int      @default(0)
 
   // Spot features
   hasSeating          Boolean  @default(false)
@@ -425,6 +432,10 @@ model Order {
   // Pricing
   subtotal          Float
   deliveryFee       Float
+  // What the courier is paid for delivering this order — snapshotted from the
+  // spot's courierPayout at order time so it's paid even when the customer got
+  // free delivery, and unaffected by later config changes.
+  courierPayout     Float       @default(0)
   discount          Float       @default(0)
   total             Float
 

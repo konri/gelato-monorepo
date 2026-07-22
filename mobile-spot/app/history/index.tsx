@@ -1,5 +1,6 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import { useRole } from '@/hooks/useRole';
 import { goBackOr } from '@/utils/navigation';
 import { getSpotOrders, type SpotOrder } from '@repo/api-client';
@@ -95,13 +96,8 @@ export default function OrderHistoryScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center border-b border-gray-200 bg-white px-4 py-4">
-        <Pressable onPress={() => goBackOr()} hitSlop={8} className="pr-2">
-          <Ionicons name="arrow-back" size={22} color="#212121" />
-        </Pressable>
-        <Typography variant="body-lg-bold" className="text-text-primary">{t('History.title')}</Typography>
-      </View>
+    <View className="flex-1 bg-gray-50">
+      <ScreenHeader title={t('History.title')} />
 
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 48 }}

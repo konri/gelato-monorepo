@@ -181,6 +181,10 @@ export class CourierDeliveryType {
   @Field(() => Float)
   total!: number;
 
+  // What the courier earns for delivering this order (spot's courier payout).
+  @Field(() => Float)
+  payout!: number;
+
   @Field(() => Int)
   itemCount!: number;
 

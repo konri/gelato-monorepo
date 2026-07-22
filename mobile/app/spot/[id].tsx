@@ -1,4 +1,6 @@
 import { Image } from '@/components/atoms/Image';
+import { StarRating } from '@/components/atoms/StarRating';
+import { SpotReviews } from '@/components/spots/SpotReviews';
 import { isSpotOpenNow, useFavoriteToggle } from '@/hooks/useSpots';
 import { useSpotDetail, useSpotTastes } from '@/hooks/useTastes';
 import type { Taste } from '@repo/api-client';
@@ -126,6 +128,17 @@ export default function SpotDetailScreen() {
             ) : null}
             <View className="flex-1">
               <Text className="text-2xl font-urbanist-bold text-text-primary">{spot.name}</Text>
+              {spot.averageRating != null && (spot.reviewCount ?? 0) > 0 ? (
+                <View className="mt-1 flex-row items-center">
+                  <StarRating rating={spot.averageRating} size={16} />
+                  <Text className="ml-2 font-urbanist-semibold text-text-primary">
+                    {spot.averageRating.toFixed(1)}
+                  </Text>
+                  <Text className="ml-1 font-urbanist text-text-secondary">
+                    ({spot.reviewCount})
+                  </Text>
+                </View>
+              ) : null}
               {spot.description ? (
                 <Text className="text-sm font-urbanist text-text-secondary mt-1">
                   {spot.description}
@@ -284,6 +297,9 @@ export default function SpotDetailScreen() {
               ))}
             </View>
           ) : null}
+
+          {/* Reviews */}
+          <SpotReviews spotId={spot.id} />
         </View>
       </ScrollView>
     </View>

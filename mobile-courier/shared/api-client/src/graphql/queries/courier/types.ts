@@ -63,6 +63,7 @@ export type CourierDelivery = {
   orderNumber: string;
   status: CourierDeliveryStatus | string;
   total: number;
+  payout: number;
   itemCount: number;
   spotId: string;
   spotName: string;

@@ -133,6 +133,17 @@ export class SpotType {
   @Field({ nullable: true })
   freeDeliveryThreshold?: number;
 
+  // What the spot pays the courier per delivery.
+  @Field()
+  courierPayout!: number;
+
+  // Review aggregates.
+  @Field(() => Float, { nullable: true })
+  averageRating?: number;
+
+  @Field(() => Int)
+  reviewCount!: number;
+
   // Features
   @Field()
   hasSeating!: boolean;
@@ -425,6 +436,9 @@ export class SpotResolver {
     @Arg('longitude', { nullable: true }) longitude?: number,
     @Arg('deliveryRadiusKm', { nullable: true }) deliveryRadiusKm?: number,
     @Arg('freeDeliveryThreshold', { nullable: true }) freeDeliveryThreshold?: number,
+    @Arg('deliveryFee', { nullable: true }) deliveryFee?: number,
+    @Arg('deliveryEnabled', () => Boolean, { nullable: true }) deliveryEnabled?: boolean,
+    @Arg('courierPayout', { nullable: true }) courierPayout?: number,
     @Arg('isActive', { nullable: true }) isActive?: boolean,
     @Arg('email', () => String, { nullable: true }) email?: string,
     @Arg('openingHours', () => String, { nullable: true }) openingHours?: string,
@@ -453,6 +467,9 @@ export class SpotResolver {
     if (longitude !== undefined) updateData.longitude = longitude;
     if (deliveryRadiusKm !== undefined) updateData.deliveryRadiusKm = deliveryRadiusKm;
     if (freeDeliveryThreshold !== undefined) updateData.freeDeliveryThreshold = freeDeliveryThreshold;
+    if (deliveryFee !== undefined) updateData.deliveryFee = deliveryFee;
+    if (deliveryEnabled !== undefined) updateData.deliveryEnabled = deliveryEnabled;
+    if (courierPayout !== undefined) updateData.courierPayout = courierPayout;
     if (isActive !== undefined) updateData.isActive = isActive;
     if (email !== undefined) updateData.email = email;
     // openingHours arrives as a JSON string ({ monday: "10:00-22:00", ... }).

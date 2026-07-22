@@ -1,5 +1,6 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import { config } from '@/config';
 import { useRole } from '@/hooks/useRole';
 import {
@@ -137,15 +138,8 @@ export default function NewsComposerScreen() {
   const canPublish = !!title.trim() && !!description.trim() && !posting;
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center border-b border-gray-200 bg-white px-4 py-4">
-        <Pressable onPress={() => goBackOr()} hitSlop={8} className="pr-2">
-          <Ionicons name="arrow-back" size={22} color="#212121" />
-        </Pressable>
-        <Typography variant="body-lg-bold" className="text-text-primary">
-          {t('News.title')}
-        </Typography>
-      </View>
+    <View className="flex-1 bg-gray-50">
+      <ScreenHeader title={t('News.title')} />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         <ResponsiveContainer maxWidth={640}>

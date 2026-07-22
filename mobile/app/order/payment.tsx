@@ -1,6 +1,6 @@
 import { useCart } from '@/hooks/useCart';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
-import { createOrder, createPaymentIntent, CreateOrderInput } from '@repo/api-client';
+import { createOrder, createPaymentIntent, confirmOrderPayment, CreateOrderInput } from '@repo/api-client';
 import { useStripe } from '@stripe/stripe-react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -134,7 +134,12 @@ export default function PaymentScreen() {
         return;
       }
 
-      // 4. Success — clear cart, go to confetti screen.
+      // 4. Confirm server-side so the order is committed + sent to the spot
+      // immediately (don't wait on the Stripe webhook, which may not reach us
+      // in dev). Best-effort: if this fails the webhook is still the backstop.
+      await confirmOrderPayment(order.id, auth).catch(() => {});
+
+      // 5. Success — clear cart, go to confetti screen.
       goToSuccess(order);
     } catch (e) {
       Alert.alert(t('Payment.paymentFailed'), (e as Error).message);

@@ -2,6 +2,7 @@ import { Resolver, Mutation, Query, Arg, Ctx, Authorized, ID } from 'type-graphq
 import { PrismaClient } from '@prisma/client';
 import { Context } from '../types/Context';
 import { StripeService } from '../services/StripeService';
+import { OrderPaymentService } from '../services/OrderPaymentService';
 
 const prisma = new PrismaClient();
 
@@ -74,6 +75,38 @@ export class PaymentResolver {
 
     // Return client secret for mobile app to complete payment
     return paymentIntent.client_secret!;
+  }
+
+  /**
+   * Confirm an order's payment straight after the Stripe PaymentSheet reports
+   * success on the client. We re-verify the PaymentIntent with Stripe (never
+   * trust the client's word) and then commit the order via the SAME path as the
+   * webhook. This makes the order reach the spot immediately even when the
+   * webhook can't reach us (local dev, missing forwarding, delayed delivery).
+   * Idempotent — safe if the webhook also fires.
+   */
+  @Authorized(['CLIENT'])
+  @Mutation(() => Boolean)
+  async confirmOrderPayment(
+    @Arg('orderId', () => ID) orderId: string,
+    @Ctx() context: Context
+  ): Promise<boolean> {
+    const userId = context.req.user!.id;
+
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new Error('Order not found');
+    if (order.userId !== userId) throw new Error('Unauthorized');
+    if (order.paymentStatus === 'paid') return true; // already committed
+    if (!order.paymentIntentId) throw new Error('No payment intent for this order');
+
+    // Verify with Stripe that the money actually moved.
+    const intent = await StripeService.getPaymentIntent(order.paymentIntentId);
+    if (intent.status !== 'succeeded') {
+      throw new Error(`Payment not completed (status: ${intent.status})`);
+    }
+
+    await OrderPaymentService.markOrderPaid(orderId, order.paymentIntentId, prisma);
+    return true;
   }
 
   /**

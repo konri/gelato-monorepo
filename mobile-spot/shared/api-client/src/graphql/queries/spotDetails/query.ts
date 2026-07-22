@@ -18,6 +18,10 @@ export const SPOT_DETAILS_QUERY = gql`
       hasSeating
       seatingCapacity
       accessibilityFeatures
+      deliveryEnabled
+      deliveryFee
+      freeDeliveryThreshold
+      courierPayout
     }
   }
 `;
@@ -45,6 +49,10 @@ export const UPDATE_SPOT_DETAILS_MUTATION = gql`
     $hasSeating: Boolean
     $seatingCapacity: Int
     $accessibilityFeatures: String
+    $deliveryEnabled: Boolean
+    $deliveryFee: Float
+    $freeDeliveryThreshold: Float
+    $courierPayout: Float
   ) {
     updateSpot(
       id: $id
@@ -59,6 +67,10 @@ export const UPDATE_SPOT_DETAILS_MUTATION = gql`
       hasSeating: $hasSeating
       seatingCapacity: $seatingCapacity
       accessibilityFeatures: $accessibilityFeatures
+      deliveryEnabled: $deliveryEnabled
+      deliveryFee: $deliveryFee
+      freeDeliveryThreshold: $freeDeliveryThreshold
+      courierPayout: $courierPayout
     ) {
       id
     }

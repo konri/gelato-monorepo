@@ -13,7 +13,7 @@ type Props = {
   backFallback?: string;
   /** Override the back action entirely (e.g. router.replace). */
   onBack?: () => void;
-  /** Right-aligned action(s) (e.g. "Mark all read"). */
+  /** Right-aligned action(s). */
   right?: ReactNode;
   /** Hide the back button (top-level screens). */
   showBack?: boolean;

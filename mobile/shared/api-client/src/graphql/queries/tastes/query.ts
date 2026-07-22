@@ -126,6 +126,8 @@ export const SPOT_DETAIL_QUERY = gql`
       hasSeating
       seatingCapacity
       accessibilityFeatures
+      averageRating
+      reviewCount
       isFavorite
     }
   }

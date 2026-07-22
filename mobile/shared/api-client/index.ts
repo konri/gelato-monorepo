@@ -27,6 +27,7 @@ export * from './src/graphql/queries/products';
 export * from './src/graphql/queries/orders';
 export * from './src/graphql/queries/prizes';
 export * from './src/graphql/queries/news';
+export * from './src/graphql/queries/reviews';
 export * from './src/graphql/mutations/order';
 export * from './src/graphql/mutations/prize';
 export * from './src/graphql/mutations/profile';

@@ -1,4 +1,5 @@
 import { STATUS_STYLE, trackingSteps, trackingStepIndex, isTerminal } from '@/components/ordering/orderStatus';
+import { OrderReviewSection } from '@/components/ordering/OrderReviewSection';
 import { useOrderTracking } from '@/hooks/useOrders';
 import { staticMapUrl } from '@/services/googlePlaces';
 import { createComplaint } from '@repo/api-client';
@@ -230,6 +231,13 @@ export default function OrderTrackingScreen() {
             <Text className="font-urbanist-bold text-text-primary">{zl(order.total)}</Text>
           </View>
         </View>
+
+        {/* Rate the order (shown once delivered, hidden after reviewing). */}
+        <OrderReviewSection
+          orderId={order.id}
+          delivered={order.status === 'DELIVERED'}
+          hasCourier={!!order.courierName || !!order.courierLocation}
+        />
 
         {/* Report a problem */}
         <Pressable
