@@ -5,9 +5,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "../i18n/I18nProvider";
 import type { Locale } from "../i18n/translations";
 import { fetchSpotTastes, fetchSpotProducts } from "../lib/api";
-import { useCart } from "../lib/cart";
+import { useCart, type BoxSelection } from "../lib/cart";
 import { buildMenuSections } from "../lib/spot-utils";
 import type { LocalizedName, MenuItem } from "../lib/types";
+import { MenuItemDetailModal } from "./MenuItemDetailModal";
+import { BoxPickerModal } from "./BoxPickerModal";
 
 function localized(value: LocalizedName | null | undefined, fallback: string, locale: Locale) {
   return (value && value[locale]) || fallback;
@@ -30,9 +32,57 @@ export function SpotMenu({ spotId, spotName }: { spotId: string; spotName: strin
   const cart = useCart();
   const [sections, setSections] = useState<{ type: string; items: MenuItem[] }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detailItem, setDetailItem] = useState<MenuItem | null>(null);
+  const [boxItem, setBoxItem] = useState<MenuItem | null>(null);
 
+  // Boxes live on their own cart lines, so their menu-row quantity is the sum
+  // across every configured box of that product; non-box items have one line.
   const qtyOf = (item: MenuItem) =>
-    cart.items.find((c) => c.kind === item.kind && c.refId === item.id)?.quantity ?? 0;
+    cart.items
+      .filter((c) => c.kind === item.kind && c.refId === item.id)
+      .reduce((s, c) => s + c.quantity, 0);
+
+  const addToCart = (item: MenuItem) =>
+    cart.add(
+      {
+        kind: item.kind,
+        refId: item.id,
+        spotId,
+        title: localized(item.titleLocal, item.title, locale),
+        imageUrl: item.imageUrl,
+        price: item.price,
+      },
+      spotName,
+    );
+
+  // Adding a box opens the taste picker; everything else adds straight to cart.
+  const handleAdd = (item: MenuItem) => {
+    if (item.isBox) {
+      setDetailItem(null);
+      setBoxItem(item);
+    } else {
+      addToCart(item);
+    }
+  };
+
+  const confirmBox = (selections: BoxSelection[]) => {
+    if (!boxItem) return;
+    cart.addBox(
+      {
+        kind: boxItem.kind,
+        refId: boxItem.id,
+        spotId,
+        title: localized(boxItem.titleLocal, boxItem.title, locale),
+        imageUrl: boxItem.imageUrl,
+        price: boxItem.price,
+        boxSelections: selections,
+      },
+      spotName,
+    );
+    setBoxItem(null);
+  };
+
+  const decrement = (item: MenuItem) => cart.setQuantity(item.kind, item.id, qtyOf(item) - 1);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,7 +134,12 @@ export function SpotMenu({ spotId, spotName }: { spotId: string; spotName: strin
                 key={`${item.kind}-${item.id}`}
                 className="flex gap-3 rounded-2xl border border-berry/10 bg-white p-3 shadow-sm"
               >
-                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-cream-soft">
+                <button
+                  type="button"
+                  onClick={() => setDetailItem(item)}
+                  aria-label={t("spot.details")}
+                  className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-cream-soft transition-transform hover:scale-105"
+                >
                   {item.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
@@ -93,11 +148,15 @@ export function SpotMenu({ spotId, spotName }: { spotId: string; spotName: strin
                       {item.kind === "taste" ? "🍦" : "🥤"}
                     </div>
                   )}
-                </div>
+                </button>
                 <div className="flex min-w-0 flex-1 flex-col">
-                  <p className="font-semibold text-espresso">
+                  <button
+                    type="button"
+                    onClick={() => setDetailItem(item)}
+                    className="text-left font-semibold text-espresso hover:text-berry"
+                  >
                     {localized(item.titleLocal, item.title, locale)}
-                  </p>
+                  </button>
                   {item.subtitle && (
                     <p className="truncate text-xs text-espresso/55">{item.subtitle}</p>
                   )}
@@ -111,12 +170,14 @@ export function SpotMenu({ spotId, spotName }: { spotId: string; spotName: strin
                       {item.isBox ? `${t("spot.from")} ` : ""}
                       {priceFmt(item.price, locale)}
                     </span>
-                    {qtyOf(item) > 0 ? (
+                    {/* Boxes always route through the picker; non-box items get
+                        an inline quantity stepper once in the cart. */}
+                    {!item.isBox && qtyOf(item) > 0 ? (
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           aria-label="−"
-                          onClick={() => cart.setQuantity(item.kind, item.id, qtyOf(item) - 1)}
+                          onClick={() => decrement(item)}
                           className="flex h-7 w-7 items-center justify-center rounded-full bg-berry/10 font-bold text-berry hover:bg-berry/20"
                         >
                           −
@@ -125,19 +186,7 @@ export function SpotMenu({ spotId, spotName }: { spotId: string; spotName: strin
                         <button
                           type="button"
                           aria-label="+"
-                          onClick={() =>
-                            cart.add(
-                              {
-                                kind: item.kind,
-                                refId: item.id,
-                                spotId,
-                                title: localized(item.titleLocal, item.title, locale),
-                                imageUrl: item.imageUrl,
-                                price: item.price,
-                              },
-                              spotName,
-                            )
-                          }
+                          onClick={() => handleAdd(item)}
                           className="flex h-7 w-7 items-center justify-center rounded-full bg-berry font-bold text-white hover:bg-berry-dark"
                         >
                           +
@@ -146,22 +195,10 @@ export function SpotMenu({ spotId, spotName }: { spotId: string; spotName: strin
                     ) : (
                       <button
                         type="button"
-                        onClick={() =>
-                          cart.add(
-                            {
-                              kind: item.kind,
-                              refId: item.id,
-                              spotId,
-                              title: localized(item.titleLocal, item.title, locale),
-                              imageUrl: item.imageUrl,
-                              price: item.price,
-                            },
-                            spotName,
-                          )
-                        }
+                        onClick={() => handleAdd(item)}
                         className="rounded-full bg-berry/10 px-3.5 py-1.5 text-xs font-semibold text-berry transition-colors hover:bg-berry hover:text-white"
                       >
-                        + {t("spot.add")}
+                        {item.isBox ? t("spot.box_configure") : `+ ${t("spot.add")}`}
                       </button>
                     )}
                   </div>
@@ -189,6 +226,21 @@ export function SpotMenu({ spotId, spotName }: { spotId: string; spotName: strin
           </Link>
         </div>
       )}
+
+      {/* Item details — opened by tapping an image or title. */}
+      <MenuItemDetailModal
+        item={detailItem}
+        quantity={detailItem ? qtyOf(detailItem) : 0}
+        onClose={() => setDetailItem(null)}
+        onAdd={(item) => {
+          handleAdd(item);
+          if (!item.isBox) setDetailItem(null);
+        }}
+        onDecrement={decrement}
+      />
+
+      {/* Box taste picker. */}
+      <BoxPickerModal box={boxItem} onClose={() => setBoxItem(null)} onConfirm={confirmBox} />
     </div>
   );
 }

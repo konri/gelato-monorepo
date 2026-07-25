@@ -13,6 +13,7 @@ import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Image, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LanguageSelectorModal } from '@/components/molecules/Settings/LanguageSelectorModal';
 
 // One tappable row in the More menu (matches the client settings look).
 function MenuRow({
@@ -61,6 +62,7 @@ export default function MoreScreen() {
   const { data: me } = useWhoAmI();
   const { logout } = useAuth();
   const [unread, setUnread] = useState(0);
+  const [languageOpen, setLanguageOpen] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -131,6 +133,11 @@ export default function MoreScreen() {
           {/* Operations group */}
           <View className="mt-4 gap-3">
             <MenuRow
+              icon="ice-cream-outline"
+              label={t('SpotTabs.menu')}
+              onPress={() => router.push('/menu')}
+            />
+            <MenuRow
               icon="notifications-outline"
               label={t('Notifications.title')}
               badge={unread}
@@ -140,6 +147,11 @@ export default function MoreScreen() {
               icon="close-circle-outline"
               label={t('SpotCanceled.title')}
               onPress={() => router.push('/canceled')}
+            />
+            <MenuRow
+              icon="language-outline"
+              label={t('Settings.language')}
+              onPress={() => setLanguageOpen(true)}
             />
           </View>
 
@@ -165,6 +177,8 @@ export default function MoreScreen() {
           </Pressable>
         </ResponsiveContainer>
       </ScrollView>
+
+      <LanguageSelectorModal visible={languageOpen} onClose={() => setLanguageOpen(false)} />
     </View>
   );
 }

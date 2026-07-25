@@ -1,7 +1,7 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import { MenuItemModal } from '@/components/molecules/MenuItemModal';
-import { TAB_BAR_TOTAL_HEIGHT } from '@/constants/tabBarStyles';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { useRole } from '@/hooks/useRole';
 import { useSpotMenu } from '@/hooks/useSpotMenu';
@@ -57,43 +57,27 @@ export default function MenuScreen() {
 
   return (
     <View className="flex-1 bg-gray-50">
-      {/* Header carries the safe-area top padding so the status-bar strip is
-          white, not the gray page background (avoids a two-toned top). */}
-      <View
-        className="border-b border-gray-200 bg-white px-6 py-4"
-        style={{ paddingTop: isWide ? 16 : insets.top + 12 }}
-      >
-        <ResponsiveContainer>
-          <View className="flex-row items-center justify-between">
-            <View>
-              <Typography variant={isWide ? 'heading-32-bold' : 'body-lg-bold'} className="text-text-primary">
-                {t('SpotMenu.title')}
-              </Typography>
-              {isWide && (
-                <Typography variant="body-small-regular" className="text-gray-500">
-                  {t('SpotMenu.subtitle')}
-                </Typography>
-              )}
-            </View>
-            {isAdmin && (
-              <Pressable
-                onPress={() => setCreating(true)}
-                className="flex-row items-center rounded-xl px-4 py-2.5"
-                style={{ backgroundColor: '#EC2828' }}
-              >
-                <Ionicons name="add" size={18} color="#fff" />
-                <Typography variant="body-small-bold" className="ml-1 text-white">
-                  {t('SpotMenu.addItem')}
-                </Typography>
-              </Pressable>
-            )}
-          </View>
-        </ResponsiveContainer>
-      </View>
+      <ScreenHeader
+        title={t('SpotMenu.title')}
+        subtitle={isWide ? t('SpotMenu.subtitle') : undefined}
+        right={
+          isAdmin ? (
+            <Pressable
+              onPress={() => setCreating(true)}
+              hitSlop={8}
+              className="h-10 w-10 items-center justify-center rounded-full"
+              style={{ backgroundColor: '#EC2828' }}
+              accessibilityLabel={t('SpotMenu.addItem')}
+            >
+              <Ionicons name="add" size={22} color="#fff" />
+            </Pressable>
+          ) : undefined
+        }
+      />
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: (isWide ? 24 : TAB_BAR_TOTAL_HEIGHT) + 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: (isWide ? 24 : insets.bottom) + 24 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#EC2828" colors={['#EC2828']} />
         }

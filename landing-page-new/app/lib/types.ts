@@ -181,11 +181,14 @@ export type MenuItem = {
   title: string;
   titleLocal: LocalizedName;
   subtitle?: string | null;
+  description?: string | null;
   type: string;
   imageUrl?: string | null;
   price: number;
   allergens: string[];
+  kcalPerPortion?: number | null;
   isBox?: boolean;
+  maxTastes?: number | null;
 };
 
 export type OrderItemInput = {

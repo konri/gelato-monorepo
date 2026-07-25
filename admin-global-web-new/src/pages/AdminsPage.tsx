@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
+import { useTranslation } from 'react-i18next';
 import {
   ADMIN_ACCOUNTS,
   CREATE_ADMIN_ACCOUNT,
@@ -14,6 +15,7 @@ const label = 'block text-sm font-medium text-gray-700 mb-1';
 const ROLES = ['SUPER_ADMIN', 'SPOTS_ADMIN'];
 
 export function AdminsPage() {
+  const { t } = useTranslation();
   const { data, loading } = useQuery<{ adminAccounts: AdminAccount[] }>(ADMIN_ACCOUNTS);
   const [createAdmin, { loading: creating }] = useMutation(CREATE_ADMIN_ACCOUNT, {
     refetchQueries: [{ query: ADMIN_ACCOUNTS }],
@@ -41,10 +43,10 @@ export function AdminsPage() {
     setNotice(null);
     try {
       await createAdmin({ variables: form });
-      setNotice(`Admin account created for ${form.email}. An invite email was sent.`);
+      setNotice(t('Admins.created', { email: form.email }));
       setForm({ email: '', name: '', role: 'SUPER_ADMIN' });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create admin');
+      setError(err instanceof Error ? err.message : t('Admins.failedCreate'));
     }
   };
 
@@ -52,12 +54,12 @@ export function AdminsPage() {
 
   return (
     <div className="mx-auto w-full max-w-4xl p-6 sm:p-8">
-      <h1 className="mb-1 text-2xl font-bold text-gray-900">Admins</h1>
-      <p className="mb-6 text-sm text-gray-500">Manage admin accounts.</p>
+      <h1 className="mb-1 text-2xl font-bold text-gray-900">{t('Admins.title')}</h1>
+      <p className="mb-6 text-sm text-gray-500">{t('Admins.subtitle')}</p>
 
       {/* Create form */}
       <form onSubmit={submit} className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">Create admin account</h2>
+        <h2 className="mb-4 text-lg font-semibold text-gray-900">{t('Admins.createAdminAccount')}</h2>
         {error && (
           <div className="mb-3 rounded-lg bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>
         )}
@@ -66,7 +68,7 @@ export function AdminsPage() {
         )}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label className={label}>Name</label>
+            <label className={label}>{t('Common.name')}</label>
             <input
               className={input}
               value={form.name}
@@ -75,7 +77,7 @@ export function AdminsPage() {
             />
           </div>
           <div>
-            <label className={label}>Email</label>
+            <label className={label}>{t('Common.email')}</label>
             <input
               className={input}
               type="email"
@@ -85,7 +87,7 @@ export function AdminsPage() {
             />
           </div>
           <div>
-            <label className={label}>Role</label>
+            <label className={label}>{t('Admins.role')}</label>
             <select
               className={input}
               value={form.role}
@@ -103,7 +105,7 @@ export function AdminsPage() {
           disabled={creating}
           className="mt-4 rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
         >
-          {creating ? 'Creating…' : 'Create admin'}
+          {creating ? t('Common.creating') : t('Admins.createAdmin')}
         </button>
       </form>
 
@@ -112,24 +114,24 @@ export function AdminsPage() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
             <tr>
-              <th className="px-5 py-3">Name</th>
-              <th className="px-5 py-3">Email</th>
-              <th className="px-5 py-3">Roles</th>
-              <th className="px-5 py-3 text-right">Actions</th>
+              <th className="px-5 py-3">{t('Common.name')}</th>
+              <th className="px-5 py-3">{t('Common.email')}</th>
+              <th className="px-5 py-3">{t('Admins.roles')}</th>
+              <th className="px-5 py-3 text-right">{t('Admins.actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {loading && (
               <tr>
                 <td colSpan={4} className="px-5 py-6 text-center text-gray-500">
-                  Loading…
+                  {t('Common.loading')}
                 </td>
               </tr>
             )}
             {!loading && admins.length === 0 && (
               <tr>
                 <td colSpan={4} className="px-5 py-6 text-center text-gray-500">
-                  No admins yet.
+                  {t('Admins.noAdminsYet')}
                 </td>
               </tr>
             )}
@@ -151,12 +153,12 @@ export function AdminsPage() {
                       className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
                     >
                       {state === 'sending'
-                        ? 'Sending…'
+                        ? t('Common.sending')
                         : state === 'sent'
-                          ? 'Code sent ✓'
+                          ? t('Common.codeSent')
                           : state === 'error'
-                            ? 'Failed — retry'
-                            : 'Resend code'}
+                            ? t('Common.failedRetry')
+                            : t('Common.resendCode')}
                     </button>
                   </td>
                 </tr>

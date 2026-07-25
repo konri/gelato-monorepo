@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- PLACEHOLDER — replace with the real GoogleService-Info.plist downloaded from the Firebase console after adding an iOS app (bundle com.konradhopek.gelato.courier) to the existing 'gelato-d6d03' project. -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>PLACEHOLDER_IOS_API_KEY</string>
+	<string>AIzaSyDPBjpa9DL-uTSzm3zjk-9GS7Bkm1mmEhI</string>
 	<key>GCM_SENDER_ID</key>
-	<string>225210197516</string>
+	<string>486625705694</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.konradhopek.gelato.courier</string>
 	<key>PROJECT_ID</key>
-	<string>gelato-d6d03</string>
+	<string>gelato-2a42f</string>
 	<key>STORAGE_BUCKET</key>
-	<string>gelato-d6d03.firebasestorage.app</string>
+	<string>gelato-2a42f.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -26,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:225210197516:ios:PLACEHOLDER_COURIER_IOS_APP_ID</string>
+	<string>1:486625705694:ios:0ff8a9e5371c92c4cb0c4f</string>
 </dict>
 </plist>

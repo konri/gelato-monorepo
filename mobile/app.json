@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Gelato",
-    "slug": "gelato",
+    "slug": "gelato-client",
     "version": "1.0.0",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",

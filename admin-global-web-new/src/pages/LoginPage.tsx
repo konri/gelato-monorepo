@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContext';
 import { adminForgotPassword, adminResetPassword } from '../lib/authApi';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 
 type Mode = 'login' | 'forgot' | 'reset';
 
 export function LoginPage() {
+  const { t } = useTranslation();
   const { login } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -30,7 +33,7 @@ export function LoginPage() {
     setLoading(true);
     const res = await login(email, password);
     setLoading(false);
-    if (!res.ok) return setError(res.error || 'Login failed');
+    if (!res.ok) return setError(res.error || t('Login.loginFailed'));
     navigate('/spots', { replace: true });
   };
 
@@ -40,7 +43,7 @@ export function LoginPage() {
     setLoading(true);
     await adminForgotPassword(email);
     setLoading(false);
-    setNotice('If the account exists, a reset code was emailed.');
+    setNotice(t('Login.resetCodeEmailed'));
     setMode('reset');
   };
 
@@ -50,8 +53,8 @@ export function LoginPage() {
     setLoading(true);
     const res = await adminResetPassword(email, code, newPassword);
     setLoading(false);
-    if (!res.ok) return setError(res.error || 'Reset failed');
-    setNotice('Password updated. You can sign in now.');
+    if (!res.ok) return setError(res.error || t('Login.resetFailed'));
+    setNotice(t('Login.passwordUpdated'));
     setMode('login');
     setPassword('');
   };
@@ -63,18 +66,21 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+      <div className="absolute right-4 top-4">
+        <LanguageSwitcher />
+      </div>
       <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-sm">
         <div className="mb-6 text-center">
           <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-brand text-lg font-bold text-white">
             G
           </div>
-          <h1 className="text-xl font-bold text-gray-900">Gelato Admin</h1>
+          <h1 className="text-xl font-bold text-gray-900">{t('Login.title')}</h1>
           <p className="text-sm text-gray-500">
             {mode === 'login'
-              ? 'Sign in to manage spots'
+              ? t('Login.signInToManage')
               : mode === 'forgot'
-              ? 'Reset your password'
-              : 'Enter your code and set a password'}
+              ? t('Login.resetYourPassword')
+              : t('Login.enterCodeSetPassword')}
           </p>
         </div>
 
@@ -94,7 +100,7 @@ export function LoginPage() {
             <input
               className={input}
               type="email"
-              placeholder="Email"
+              placeholder={t('Login.emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -102,13 +108,13 @@ export function LoginPage() {
             <input
               className={input}
               type="password"
-              placeholder="Password"
+              placeholder={t('Login.passwordPlaceholder')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
             <button className={btn} disabled={loading}>
-              {loading ? 'Signing in…' : 'Sign in'}
+              {loading ? t('Login.signingIn') : t('Login.signIn')}
             </button>
             <button
               type="button"
@@ -119,7 +125,7 @@ export function LoginPage() {
                 setNotice(null);
               }}
             >
-              Forgot password?
+              {t('Login.forgotPassword')}
             </button>
           </form>
         )}
@@ -129,20 +135,20 @@ export function LoginPage() {
             <input
               className={input}
               type="email"
-              placeholder="Email"
+              placeholder={t('Login.emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
             <button className={btn} disabled={loading}>
-              {loading ? 'Sending…' : 'Send reset code'}
+              {loading ? t('Common.sending') : t('Login.sendResetCode')}
             </button>
             <button
               type="button"
               className="w-full text-center text-sm text-gray-500 hover:text-brand"
               onClick={() => setMode('login')}
             >
-              Back to sign in
+              {t('Login.backToSignIn')}
             </button>
           </form>
         )}
@@ -152,7 +158,7 @@ export function LoginPage() {
             <input
               className={input}
               type="email"
-              placeholder="Email"
+              placeholder={t('Login.emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -160,7 +166,7 @@ export function LoginPage() {
             <input
               className={input}
               type="text"
-              placeholder="Code from your email"
+              placeholder={t('Login.codeFromEmail')}
               value={code}
               onChange={(e) => setCode(e.target.value)}
               required
@@ -168,20 +174,20 @@ export function LoginPage() {
             <input
               className={input}
               type="password"
-              placeholder="New password"
+              placeholder={t('Login.newPassword')}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
             />
             <button className={btn} disabled={loading}>
-              {loading ? 'Updating…' : 'Set new password'}
+              {loading ? t('Login.updating') : t('Login.setNewPassword')}
             </button>
             <button
               type="button"
               className="w-full text-center text-sm text-gray-500 hover:text-brand"
               onClick={() => setMode('login')}
             >
-              Back to sign in
+              {t('Login.backToSignIn')}
             </button>
           </form>
         )}

@@ -10,7 +10,7 @@ import {
   ObjectType,
   Field,
 } from 'type-graphql';
-import { Role } from '@prisma/client';
+import { Role, Language } from '@prisma/client';
 import { Context } from '../types/Context';
 import { UserType } from '../types/UserType';
 import { SpotType } from './SpotResolver';
@@ -70,6 +70,88 @@ class StaffLoginSessionType {
 // staff who may not act immediately).
 const RESET_CODE_TTL_MS = 24 * 60 * 60 * 1000;
 
+// Footer tagline for the berry-branded admin/spot invite emails.
+const INVITE_FOOTER: Record<Language, string> = {
+  PL: 'Zrobione z ❤️ dla miłośników lodów · Gelato',
+  EN: 'Made with ❤️ for ice cream lovers · Gelato',
+  UA: 'Зроблено з ❤️ для любителів морозива · Gelato',
+};
+
+// Localized copy for the admin-account invite email.
+const ADMIN_INVITE_COPY: Record<
+  Language,
+  {
+    subject: string;
+    heading: string;
+    createdAs: (role: string) => string;
+    codeIntro: string;
+    cta: string;
+    orCopyLink: string;
+    expiry: string;
+    text: (role: string, code: string, url: string) => string;
+  }
+> = {
+  PL: {
+    subject: 'Twoje konto administratora Gelato',
+    heading: 'Witamy w Gelato Admin',
+    createdAs: (role) => `Utworzono dla Ciebie konto jako <b style="color:#c026a3;">${role}</b>.`,
+    codeIntro: 'Użyj tego kodu na stronie administratora, aby ustawić hasło:',
+    cta: 'Ustaw hasło',
+    orCopyLink: 'Lub skopiuj ten link do przeglądarki:',
+    expiry: 'Ten kod wygasa za 24 godziny.',
+    text: (role, code, url) =>
+      `Utworzono dla Ciebie konto administratora Gelato (${role}). Twój kod ustawienia hasła to ${code} (wygasa za 24 godziny). Ustaw hasło na ${url}`,
+  },
+  EN: {
+    subject: 'Your Gelato admin account',
+    heading: 'Welcome to Gelato Admin',
+    createdAs: (role) => `An account was created for you as <b style="color:#c026a3;">${role}</b>.`,
+    codeIntro: 'Use this code on the admin site to set your password:',
+    cta: 'Set your password',
+    orCopyLink: 'Or copy this link into your browser:',
+    expiry: 'This code expires in 24 hours.',
+    text: (role, code, url) =>
+      `A Gelato admin account was created for you (${role}). Your set-password code is ${code} (expires in 24 hours). Set your password at ${url}`,
+  },
+  UA: {
+    subject: 'Ваш обліковий запис адміністратора Gelato',
+    heading: 'Ласкаво просимо до Gelato Admin',
+    createdAs: (role) => `Для вас створено обліковий запис як <b style="color:#c026a3;">${role}</b>.`,
+    codeIntro: 'Використайте цей код на сайті адміністратора, щоб встановити пароль:',
+    cta: 'Встановити пароль',
+    orCopyLink: 'Або скопіюйте це посилання у браузер:',
+    expiry: 'Цей код дійсний 24 години.',
+    text: (role, code, url) =>
+      `Для вас створено обліковий запис адміністратора Gelato (${role}). Ваш код встановлення пароля — ${code} (дійсний 24 години). Встановіть пароль на ${url}`,
+  },
+};
+
+// Role labels shown in invite emails, localized. Callers pass a canonical
+// English label; unknown values fall through unchanged.
+const ROLE_LABELS: Record<Language, Record<string, string>> = {
+  PL: {
+    'Super Admin': 'Super Administrator',
+    'Spots Admin': 'Administrator lokali',
+    'Spot Admin': 'Administrator lokalu',
+    Employee: 'Pracownik',
+  },
+  EN: {
+    'Super Admin': 'Super Admin',
+    'Spots Admin': 'Spots Admin',
+    'Spot Admin': 'Spot Admin',
+    Employee: 'Employee',
+  },
+  UA: {
+    'Super Admin': 'Супер-адміністратор',
+    'Spots Admin': 'Адміністратор закладів',
+    'Spot Admin': 'Адміністратор закладу',
+    Employee: 'Працівник',
+  },
+};
+
+const localizeRole = (label: string, language: Language) =>
+  ROLE_LABELS[language]?.[label] ?? label;
+
 // Email a newly-created admin their initial set-password code.
 // Styled to match the Gelato landing page (berry gradient, cream background).
 // `target` picks which app the set-password link points at:
@@ -80,6 +162,7 @@ async function sendInviteCode(
   code: string,
   roleLabel: string,
   target: 'admin' | 'spot' = 'admin',
+  language: Language = Language.PL,
 ) {
   const baseUrl =
     target === 'spot'
@@ -87,10 +170,12 @@ async function sendInviteCode(
       : process.env.GELATO_ADMIN_URL || 'http://localhost:5173';
   // Deep-link straight to the set-password form with the email pre-filled.
   const setPasswordUrl = `${baseUrl}/login?mode=reset&email=${encodeURIComponent(email)}`;
+  const copy = ADMIN_INVITE_COPY[language] ?? ADMIN_INVITE_COPY.EN;
+  const role = localizeRole(roleLabel, language);
 
   await EmailService.sendEmail({
     to: email,
-    subject: 'Your Gelato admin account',
+    subject: copy.subject,
     html: `<!DOCTYPE html>
 <html>
   <body style="margin:0;padding:0;background:#fff8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
@@ -102,17 +187,17 @@ async function sendInviteCode(
             <tr>
               <td style="background:linear-gradient(135deg,#c026a3 0%,#8a1673 100%);padding:36px 32px;text-align:center;">
                 <div style="font-size:40px;line-height:1;">🍦</div>
-                <h1 style="margin:12px 0 0;color:#ffffff;font-size:24px;font-weight:800;">Welcome to Gelato Admin</h1>
+                <h1 style="margin:12px 0 0;color:#ffffff;font-size:24px;font-weight:800;">${copy.heading}</h1>
               </td>
             </tr>
             <!-- Body -->
             <tr>
               <td style="padding:32px;text-align:center;color:#3a1526;">
                 <p style="margin:0 0 8px;font-size:16px;line-height:1.5;">
-                  An account was created for you as <b style="color:#c026a3;">${roleLabel}</b>.
+                  ${copy.createdAs(role)}
                 </p>
                 <p style="margin:0 0 24px;font-size:15px;color:#5c2a3d;line-height:1.5;">
-                  Use this code on the admin site to set your password:
+                  ${copy.codeIntro}
                 </p>
                 <!-- Code -->
                 <div style="display:inline-block;background:#fff1e6;border:2px dashed rgba(192,38,163,0.3);border-radius:16px;padding:18px 28px;margin-bottom:24px;">
@@ -121,20 +206,20 @@ async function sendInviteCode(
                 <!-- CTA -->
                 <div style="margin:8px 0 20px;">
                   <a href="${setPasswordUrl}" style="display:inline-block;background:#c026a3;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:14px 32px;border-radius:999px;">
-                    Set your password
+                    ${copy.cta}
                   </a>
                 </div>
-                <p style="margin:0 0 4px;font-size:13px;color:#5c2a3d;">Or copy this link into your browser:</p>
+                <p style="margin:0 0 4px;font-size:13px;color:#5c2a3d;">${copy.orCopyLink}</p>
                 <p style="margin:0 0 20px;font-size:13px;">
                   <a href="${setPasswordUrl}" style="color:#c026a3;word-break:break-all;">${setPasswordUrl}</a>
                 </p>
-                <p style="margin:0;font-size:13px;color:#9a8a90;">This code expires in 24 hours.</p>
+                <p style="margin:0;font-size:13px;color:#9a8a90;">${copy.expiry}</p>
               </td>
             </tr>
             <!-- Footer -->
             <tr>
               <td style="background:#fff1e6;padding:20px 32px;text-align:center;">
-                <p style="margin:0;font-size:12px;color:#9a8a90;">Made with ❤️ for ice cream lovers · Gelato</p>
+                <p style="margin:0;font-size:12px;color:#9a8a90;">${INVITE_FOOTER[language] ?? INVITE_FOOTER.EN}</p>
               </td>
             </tr>
           </table>
@@ -143,7 +228,7 @@ async function sendInviteCode(
     </table>
   </body>
 </html>`,
-    text: `A Gelato admin account was created for you (${roleLabel}). Your set-password code is ${code} (expires in 24 hours). Set your password at ${setPasswordUrl}`,
+    text: copy.text(role, code, setPasswordUrl),
   });
 }
 
@@ -153,6 +238,90 @@ async function sendInviteCode(
  * one) and its name/address/phone, so the invitee recognizes who invited them.
  * The set-password link points at the spot app.
  */
+// Localized copy for the spot-staff invite / reset email.
+const SPOT_STAFF_COPY: Record<
+  Language,
+  {
+    subjectInvite: (spot: string) => string;
+    subjectReset: (spot: string) => string;
+    introInvite: (spot: string, role: string) => string;
+    introReset: (spot: string, role: string) => string;
+    codeIntroInvite: string;
+    codeIntroReset: string;
+    introTextInvite: (spot: string, role: string) => string;
+    introTextReset: (spot: string, role: string) => string;
+    labelSpot: string;
+    labelAddress: string;
+    labelPhone: string;
+    cta: string;
+    orCopyLink: string;
+    expiry: string;
+    text: (intro: string, code: string, isReset: boolean, url: string) => string;
+  }
+> = {
+  PL: {
+    subjectInvite: (spot) => `Zaproszenie do ${spot} w Gelato`,
+    subjectReset: (spot) => `Zresetuj hasło do ${spot} w Gelato`,
+    introInvite: (spot, role) =>
+      `Zaproszono Cię do <b style="color:#c026a3;">${spot}</b> jako <b style="color:#c026a3;">${role}</b>.`,
+    introReset: (spot, role) =>
+      `Poproszono o reset hasła dla Twojego konta w <b style="color:#c026a3;">${spot}</b> (<b style="color:#c026a3;">${role}</b>).`,
+    codeIntroInvite: 'Użyj tego kodu w aplikacji Gelato Spot, aby ustawić hasło:',
+    codeIntroReset: 'Użyj tego kodu w aplikacji Gelato Spot, aby ustawić nowe hasło:',
+    introTextInvite: (spot, role) => `Zaproszono Cię do ${spot} jako ${role}.`,
+    introTextReset: (spot, role) => `Poproszono o reset hasła dla Twojego konta w ${spot} (${role}).`,
+    labelSpot: 'Lokal',
+    labelAddress: 'Adres',
+    labelPhone: 'Telefon',
+    cta: 'Ustaw hasło',
+    orCopyLink: 'Lub skopiuj ten link do przeglądarki:',
+    expiry: 'Ten kod wygasa za 24 godziny.',
+    text: (intro, code, isReset, url) =>
+      `${intro} Użyj kodu ${code} w aplikacji Gelato Spot, aby ustawić ${isReset ? 'nowe' : 'swoje'} hasło (wygasa za 24 godziny). Ustaw je na ${url}`,
+  },
+  EN: {
+    subjectInvite: (spot) => `You've been invited to ${spot} on Gelato`,
+    subjectReset: (spot) => `Reset your password for ${spot} on Gelato`,
+    introInvite: (spot, role) =>
+      `You've been invited to join <b style="color:#c026a3;">${spot}</b> as <b style="color:#c026a3;">${role}</b>.`,
+    introReset: (spot, role) =>
+      `A password reset was requested for your <b style="color:#c026a3;">${spot}</b> account (<b style="color:#c026a3;">${role}</b>).`,
+    codeIntroInvite: 'Use this code in the Gelato Spot app to set your password:',
+    codeIntroReset: 'Use this code in the Gelato Spot app to set a new password:',
+    introTextInvite: (spot, role) => `You've been invited to ${spot} as ${role}.`,
+    introTextReset: (spot, role) => `A password reset was requested for your ${spot} account (${role}).`,
+    labelSpot: 'Spot',
+    labelAddress: 'Address',
+    labelPhone: 'Phone',
+    cta: 'Set your password',
+    orCopyLink: 'Or copy this link into your browser:',
+    expiry: 'This code expires in 24 hours.',
+    text: (intro, code, isReset, url) =>
+      `${intro} Use code ${code} in the Gelato Spot app to set ${isReset ? 'a new' : 'your'} password (expires in 24 hours). Set it at ${url}`,
+  },
+  UA: {
+    subjectInvite: (spot) => `Вас запросили до ${spot} у Gelato`,
+    subjectReset: (spot) => `Скиньте пароль для ${spot} у Gelato`,
+    introInvite: (spot, role) =>
+      `Вас запросили приєднатися до <b style="color:#c026a3;">${spot}</b> як <b style="color:#c026a3;">${role}</b>.`,
+    introReset: (spot, role) =>
+      `Запитано скидання пароля для вашого облікового запису <b style="color:#c026a3;">${spot}</b> (<b style="color:#c026a3;">${role}</b>).`,
+    codeIntroInvite: 'Використайте цей код у застосунку Gelato Spot, щоб встановити пароль:',
+    codeIntroReset: 'Використайте цей код у застосунку Gelato Spot, щоб встановити новий пароль:',
+    introTextInvite: (spot, role) => `Вас запросили до ${spot} як ${role}.`,
+    introTextReset: (spot, role) =>
+      `Запитано скидання пароля для вашого облікового запису ${spot} (${role}).`,
+    labelSpot: 'Заклад',
+    labelAddress: 'Адреса',
+    labelPhone: 'Телефон',
+    cta: 'Встановити пароль',
+    orCopyLink: 'Або скопіюйте це посилання у браузер:',
+    expiry: 'Цей код дійсний 24 години.',
+    text: (intro, code, isReset, url) =>
+      `${intro} Використайте код ${code} у застосунку Gelato Spot, щоб встановити ${isReset ? 'новий' : 'свій'} пароль (дійсний 24 години). Встановіть його на ${url}`,
+  },
+};
+
 async function sendSpotStaffInvite(opts: {
   email: string;
   code: string;
@@ -160,23 +329,20 @@ async function sendSpotStaffInvite(opts: {
   spot: { name: string; address?: string | null; phone?: string | null; logoUrl?: string | null };
   // 'invite' = brand-new member; 'reset' = existing member resetting password.
   variant?: 'invite' | 'reset';
+  language?: Language;
 }) {
-  const { email, code, roleLabel, spot, variant = 'invite' } = opts;
+  const { email, code, roleLabel, spot, variant = 'invite', language = Language.PL } = opts;
   const isReset = variant === 'reset';
+  const copy = SPOT_STAFF_COPY[language] ?? SPOT_STAFF_COPY.EN;
+  const role = localizeRole(roleLabel, language);
   const baseUrl = process.env.GELATO_SPOT_URL || 'http://localhost:8083';
   const setPasswordUrl = `${baseUrl}/login?mode=reset&email=${encodeURIComponent(email)}`;
-  const subject = isReset
-    ? `Reset your password for ${spot.name} on Gelato`
-    : `You've been invited to ${spot.name} on Gelato`;
-  const introHtml = isReset
-    ? `A password reset was requested for your <b style="color:#c026a3;">${spot.name}</b> account (<b style="color:#c026a3;">${roleLabel}</b>).`
-    : `You've been invited to join <b style="color:#c026a3;">${spot.name}</b> as <b style="color:#c026a3;">${roleLabel}</b>.`;
-  const codeIntro = isReset
-    ? 'Use this code in the Gelato Spot app to set a new password:'
-    : 'Use this code in the Gelato Spot app to set your password:';
+  const subject = isReset ? copy.subjectReset(spot.name) : copy.subjectInvite(spot.name);
+  const introHtml = isReset ? copy.introReset(spot.name, role) : copy.introInvite(spot.name, role);
+  const codeIntro = isReset ? copy.codeIntroReset : copy.codeIntroInvite;
   const introText = isReset
-    ? `A password reset was requested for your ${spot.name} account (${roleLabel}).`
-    : `You've been invited to ${spot.name} as ${roleLabel}.`;
+    ? copy.introTextReset(spot.name, role)
+    : copy.introTextInvite(spot.name, role);
 
   // Logo if the spot has one, else the ice-cream glyph (matches admin invite).
   const brandMark = spot.logoUrl
@@ -187,9 +353,9 @@ async function sendSpotStaffInvite(opts: {
     `<tr><td style="padding:2px 0;font-size:13px;color:#9a8a90;">${label}</td>` +
     `<td style="padding:2px 0 2px 12px;font-size:13px;color:#3a1526;text-align:right;">${value}</td></tr>`;
   const detailRows = [
-    detailRow('Spot', spot.name),
-    spot.address ? detailRow('Address', spot.address) : '',
-    spot.phone ? detailRow('Phone', spot.phone) : '',
+    detailRow(copy.labelSpot, spot.name),
+    spot.address ? detailRow(copy.labelAddress, spot.address) : '',
+    spot.phone ? detailRow(copy.labelPhone, spot.phone) : '',
   ].join('');
 
   await EmailService.sendEmail({
@@ -229,20 +395,20 @@ async function sendSpotStaffInvite(opts: {
                 <!-- CTA -->
                 <div style="margin:8px 0 20px;">
                   <a href="${setPasswordUrl}" style="display:inline-block;background:#c026a3;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:14px 32px;border-radius:999px;">
-                    Set your password
+                    ${copy.cta}
                   </a>
                 </div>
-                <p style="margin:0 0 4px;font-size:13px;color:#5c2a3d;">Or copy this link into your browser:</p>
+                <p style="margin:0 0 4px;font-size:13px;color:#5c2a3d;">${copy.orCopyLink}</p>
                 <p style="margin:0 0 20px;font-size:13px;">
                   <a href="${setPasswordUrl}" style="color:#c026a3;word-break:break-all;">${setPasswordUrl}</a>
                 </p>
-                <p style="margin:0;font-size:13px;color:#9a8a90;">This code expires in 24 hours.</p>
+                <p style="margin:0;font-size:13px;color:#9a8a90;">${copy.expiry}</p>
               </td>
             </tr>
             <!-- Footer -->
             <tr>
               <td style="background:#fff1e6;padding:20px 32px;text-align:center;">
-                <p style="margin:0;font-size:12px;color:#9a8a90;">Made with ❤️ for ice cream lovers · Gelato</p>
+                <p style="margin:0;font-size:12px;color:#9a8a90;">${INVITE_FOOTER[language] ?? INVITE_FOOTER.EN}</p>
               </td>
             </tr>
           </table>
@@ -251,7 +417,7 @@ async function sendSpotStaffInvite(opts: {
     </table>
   </body>
 </html>`,
-    text: `${introText} Use code ${code} in the Gelato Spot app to set ${isReset ? 'a new' : 'your'} password (expires in 24 hours). Set it at ${setPasswordUrl}`,
+    text: copy.text(introText, code, isReset, setPasswordUrl),
   });
 }
 
@@ -436,7 +602,7 @@ export class AdminResolver {
       : user.roles.includes(Role.SPOTS_ADMIN)
         ? 'Spots Admin'
         : 'Spot Admin';
-    await sendInviteCode(user.email, code, roleLabel, isGlobalAdmin ? 'admin' : 'spot');
+    await sendInviteCode(user.email, code, roleLabel, isGlobalAdmin ? 'admin' : 'spot', user.language);
 
     console.log(`✅ Resent invite code to ${user.email}`);
     return true;
@@ -748,6 +914,7 @@ export class AdminResolver {
         ? { name: spot.name, address: spot.address, phone: spot.phone, logoUrl: spot.logoUrl }
         : { name: 'Gelato' },
       variant: 'reset',
+      language: target.language,
     });
 
     console.log(`✅ Admin ${caller.id} emailed password-reset code to staff ${targetUserId}`);

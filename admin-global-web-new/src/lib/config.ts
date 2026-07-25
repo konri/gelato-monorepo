@@ -7,3 +7,4 @@ export const API_ORIGIN = GRAPHQL_URL.replace(/\/graphql$/, '');
 
 export const ACCESS_TOKEN_KEY = 'admin_access_token';
 export const ADMIN_USER_KEY = 'admin_user';
+export const LANGUAGE_KEY = 'admin_language';

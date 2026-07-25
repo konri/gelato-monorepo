@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   SPOT_DETAIL,
   UPDATE_SPOT,
@@ -17,6 +18,7 @@ const input =
 const label = 'block text-sm font-medium text-gray-700 mb-1';
 
 export function EditSpotPage() {
+  const { t } = useTranslation();
   const { spotId } = useParams<{ spotId: string }>();
   const navigate = useNavigate();
   const { data, loading } = useQuery<{ spot: AdminSpot | null }>(SPOT_DETAIL, {
@@ -79,14 +81,14 @@ export function EditSpotPage() {
           isActive,
         },
       });
-      setNotice('Spot updated.');
+      setNotice(t('EditSpot.spotUpdated'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update spot');
+      setError(err instanceof Error ? err.message : t('EditSpot.failedUpdate'));
     }
   };
 
-  if (loading && !data) return <div className="p-8 text-sm text-gray-500">Loading…</div>;
-  if (!data?.spot) return <div className="p-8 text-sm text-gray-500">Spot not found.</div>;
+  if (loading && !data) return <div className="p-8 text-sm text-gray-500">{t('Common.loading')}</div>;
+  if (!data?.spot) return <div className="p-8 text-sm text-gray-500">{t('EditSpot.spotNotFound')}</div>;
 
   return (
     <div className="mx-auto w-full max-w-2xl p-6 sm:p-8 lg:max-w-4xl">
@@ -94,50 +96,50 @@ export function EditSpotPage() {
           (wider on lg) container so it isn't clipped. */}
       <div className="lg:max-w-2xl">
       <button onClick={() => navigate('/spots')} className="mb-4 text-sm text-gray-500 hover:text-brand">
-        ← Back to spots
+        {t('Common.backToSpots')}
       </button>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Edit spot</h1>
+      <h1 className="mb-6 text-2xl font-bold text-gray-900">{t('EditSpot.title')}</h1>
 
       {error && <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
       {notice && <div className="mb-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">{notice}</div>}
 
       <form onSubmit={save} className="space-y-4 rounded-xl border border-gray-200 bg-white p-6">
         <div>
-          <label className={label}>Name</label>
+          <label className={label}>{t('Common.name')}</label>
           <input className={input} value={form.name} onChange={set('name')} required />
         </div>
         <div>
-          <label className={label}>Address</label>
+          <label className={label}>{t('Common.address')}</label>
           <input className={input} value={form.address} onChange={set('address')} required />
         </div>
         <div>
-          <label className={label}>Phone</label>
+          <label className={label}>{t('Common.phone')}</label>
           <input className={input} value={form.phone} onChange={set('phone')} />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label className={label}>Latitude</label>
+            <label className={label}>{t('Common.latitude')}</label>
             <input className={input} type="number" step="any" value={form.latitude} onChange={set('latitude')} />
           </div>
           <div>
-            <label className={label}>Longitude</label>
+            <label className={label}>{t('Common.longitude')}</label>
             <input className={input} type="number" step="any" value={form.longitude} onChange={set('longitude')} />
           </div>
           <div>
-            <label className={label}>Radius (km)</label>
+            <label className={label}>{t('EditSpot.radius')}</label>
             <input className={input} type="number" step="any" value={form.deliveryRadiusKm} onChange={set('deliveryRadiusKm')} />
           </div>
         </div>
         <div>
-          <label className={label}>Description</label>
+          <label className={label}>{t('Common.description')}</label>
           <textarea className={input} rows={3} value={form.description} onChange={set('description')} />
         </div>
 
         <label className="flex cursor-pointer items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4">
           <span>
-            <span className="block text-sm font-medium text-gray-800">Spot is active</span>
+            <span className="block text-sm font-medium text-gray-800">{t('EditSpot.spotIsActive')}</span>
             <span className="block text-xs text-gray-500">
-              Disable to hide this spot from clients and stop new orders.
+              {t('EditSpot.disableToHide')}
             </span>
           </span>
           <input
@@ -152,7 +154,7 @@ export function EditSpotPage() {
           disabled={saving}
           className="w-full rounded-lg bg-brand py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
         >
-          {saving ? 'Saving…' : 'Save changes'}
+          {saving ? t('Common.saving') : t('EditSpot.saveChanges')}
         </button>
       </form>
       </div>
@@ -164,6 +166,7 @@ export function EditSpotPage() {
 }
 
 function SpotAdminsSection({ spotId }: { spotId: string }) {
+  const { t } = useTranslation();
   const { data, loading } = useQuery<{ spotAdmins: SpotAdmin[] }>(SPOT_ADMINS, {
     variables: { spotId },
     fetchPolicy: 'cache-and-network',
@@ -188,9 +191,9 @@ function SpotAdminsSection({ spotId }: { spotId: string }) {
 
   return (
     <div className="mt-8">
-      <h2 className="mb-3 text-lg font-semibold text-gray-900">Spot admins</h2>
+      <h2 className="mb-3 text-lg font-semibold text-gray-900">{t('EditSpot.spotAdmins')}</h2>
       <p className="mb-4 text-sm text-gray-500">
-        Resend a set-password code, or disable an admin's login if they no longer manage this spot.
+        {t('EditSpot.spotAdminsHint')}
       </p>
       {/* overflow-x-auto lets the table scroll horizontally on narrow viewports
           instead of clipping the Actions column; min-w keeps columns legible. */}
@@ -198,22 +201,22 @@ function SpotAdminsSection({ spotId }: { spotId: string }) {
         <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
             <tr>
-              <th className="px-5 py-3">Name</th>
-              <th className="px-5 py-3">Email</th>
-              <th className="px-5 py-3">Status</th>
-              <th className="px-5 py-3 text-right">Actions</th>
+              <th className="px-5 py-3">{t('Common.name')}</th>
+              <th className="px-5 py-3">{t('Common.email')}</th>
+              <th className="px-5 py-3">{t('Orders.status')}</th>
+              <th className="px-5 py-3 text-right">{t('EditSpot.actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {loading && (
               <tr>
-                <td colSpan={4} className="px-5 py-6 text-center text-gray-500">Loading…</td>
+                <td colSpan={4} className="px-5 py-6 text-center text-gray-500">{t('Common.loading')}</td>
               </tr>
             )}
             {!loading && admins.length === 0 && (
               <tr>
                 <td colSpan={4} className="px-5 py-6 text-center text-gray-500">
-                  No admins assigned to this spot.
+                  {t('EditSpot.noAdminsAssigned')}
                 </td>
               </tr>
             )}
@@ -229,7 +232,7 @@ function SpotAdminsSection({ spotId }: { spotId: string }) {
                         a.loginDisabled ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
                       }`}
                     >
-                      {a.loginDisabled ? 'Disabled' : 'Active'}
+                      {a.loginDisabled ? t('Common.disabled') : t('Common.active')}
                     </span>
                   </td>
                   <td className="px-5 py-3">
@@ -240,12 +243,12 @@ function SpotAdminsSection({ spotId }: { spotId: string }) {
                         className="whitespace-nowrap rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
                       >
                         {state === 'sending'
-                          ? 'Sending…'
+                          ? t('Common.sending')
                           : state === 'sent'
-                            ? 'Code sent ✓'
+                            ? t('Common.codeSent')
                             : state === 'error'
-                              ? 'Failed — retry'
-                              : 'Resend code'}
+                              ? t('Common.failedRetry')
+                              : t('Common.resendCode')}
                       </button>
                       <button
                         onClick={() => setDisabled({ variables: { userId: a.id, disabled: !a.loginDisabled } })}
@@ -255,7 +258,7 @@ function SpotAdminsSection({ spotId }: { spotId: string }) {
                             : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
                         }`}
                       >
-                        {a.loginDisabled ? 'Enable login' : 'Disable login'}
+                        {a.loginDisabled ? t('EditSpot.enableLogin') : t('EditSpot.disableLogin')}
                       </button>
                     </div>
                   </td>

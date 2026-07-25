@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
+import { useTranslation } from 'react-i18next';
 import {
   PRIZES,
   CREATE_PRIZE,
@@ -8,6 +9,7 @@ import {
   type Prize,
 } from '../graphql/prizes';
 import { API_ORIGIN, ACCESS_TOKEN_KEY } from '../lib/config';
+import i18n from '../translations';
 
 const input =
   'w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-1 focus:ring-brand';
@@ -24,13 +26,14 @@ async function uploadPrizeImage(prizeId: string, file: File): Promise<string> {
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || 'Image upload failed');
+    throw new Error(data.error || i18n.t('Prizes.imageUploadFailed'));
   }
   const data = await res.json();
   return data.imageUrl;
 }
 
 export function PrizesPage() {
+  const { t } = useTranslation();
   const { data, loading } = useQuery<{ prizes: Prize[] }>(PRIZES, {
     fetchPolicy: 'cache-and-network',
   });
@@ -43,18 +46,18 @@ export function PrizesPage() {
     <div className="mx-auto w-full max-w-4xl p-6 sm:p-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Rewards</h1>
-          <p className="text-sm text-gray-500">Create and manage prizes clients redeem with points.</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('Prizes.title')}</h1>
+          <p className="text-sm text-gray-500">{t('Prizes.subtitle')}</p>
         </div>
         <button
           onClick={() => setCreating(true)}
           className="rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark"
         >
-          + Create prize
+          {t('Prizes.createPrize')}
         </button>
       </div>
 
-      {loading && !data && <p className="text-sm text-gray-500">Loading…</p>}
+      {loading && !data && <p className="text-sm text-gray-500">{t('Common.loading')}</p>}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {prizes.map((p) => (
@@ -62,7 +65,7 @@ export function PrizesPage() {
         ))}
         {!loading && prizes.length === 0 && (
           <div className="col-span-full rounded-xl border border-dashed border-gray-300 p-10 text-center text-gray-500">
-            No prizes yet.
+            {t('Prizes.noPrizesYet')}
           </div>
         )}
       </div>
@@ -81,6 +84,7 @@ export function PrizesPage() {
 }
 
 function PrizeCard({ prize, onEdit }: { prize: Prize; onEdit: () => void }) {
+  const { t } = useTranslation();
   const [updatePrize] = useMutation(UPDATE_PRIZE, { refetchQueries: [{ query: PRIZES }] });
 
   const toggle = () =>
@@ -99,21 +103,23 @@ function PrizeCard({ prize, onEdit }: { prize: Prize; onEdit: () => void }) {
             prize.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'
           }`}
         >
-          {prize.isActive ? 'Active' : 'Disabled'}
+          {prize.isActive ? t('Common.active') : t('Common.disabled')}
         </span>
       </div>
       <div className="p-4">
         <p className="font-semibold text-gray-900">{prize.title}</p>
-        <p className="mt-0.5 text-sm text-brand">{prize.pointsCost} pts</p>
+        <p className="mt-0.5 text-sm text-brand">{t('Prizes.points', { count: prize.pointsCost })}</p>
         <p className="mt-1 text-xs text-gray-500">
-          {prize.quantity != null ? `${prize.claimed}/${prize.quantity} claimed` : `${prize.claimed} claimed`}
+          {prize.quantity != null
+            ? t('Prizes.claimedOf', { claimed: prize.claimed, quantity: prize.quantity })
+            : t('Prizes.claimed', { claimed: prize.claimed })}
         </p>
         <div className="mt-3 flex gap-2">
           <button
             onClick={onEdit}
             className="flex-1 rounded-lg border border-gray-300 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
           >
-            Edit
+            {t('Common.edit')}
           </button>
           <button
             onClick={toggle}
@@ -123,7 +129,7 @@ function PrizeCard({ prize, onEdit }: { prize: Prize; onEdit: () => void }) {
                 : 'bg-brand text-white hover:bg-brand-dark'
             }`}
           >
-            {prize.isActive ? 'Disable' : 'Enable'}
+            {prize.isActive ? t('Common.disable') : t('Common.enable')}
           </button>
         </div>
       </div>
@@ -132,6 +138,7 @@ function PrizeCard({ prize, onEdit }: { prize: Prize; onEdit: () => void }) {
 }
 
 function PrizeModal({ prize, onClose }: { prize: Prize | null; onClose: () => void }) {
+  const { t } = useTranslation();
   const isEdit = !!prize;
   const [createPrize] = useMutation<{ createPrize: { id: string } }>(CREATE_PRIZE);
   const [updatePrize] = useMutation(UPDATE_PRIZE);
@@ -172,20 +179,20 @@ function PrizeModal({ prize, onClose }: { prize: Prize | null; onClose: () => vo
       }
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save prize');
+      setError(err instanceof Error ? err.message : t('Prizes.failedSave'));
       setBusy(false);
     }
   };
 
   const remove = async () => {
     if (!prize) return;
-    if (!confirm(`Delete "${prize.title}"?`)) return;
+    if (!confirm(t('Prizes.confirmDelete', { title: prize.title }))) return;
     setBusy(true);
     try {
       await deletePrize({ variables: { id: prize.id } });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete');
+      setError(err instanceof Error ? err.message : t('Prizes.failedDelete'));
       setBusy(false);
     }
   };
@@ -195,14 +202,14 @@ function PrizeModal({ prize, onClose }: { prize: Prize | null; onClose: () => vo
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
         <h2 className="mb-4 text-lg font-bold text-gray-900">
-          {isEdit ? 'Edit prize' : 'Create prize'}
+          {isEdit ? t('Prizes.editPrize') : t('Prizes.createPrizeTitle')}
         </h2>
         {error && (
           <div className="mb-3 rounded-lg bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>
         )}
         <form onSubmit={submit} className="space-y-3">
           <div>
-            <label className={label}>Title</label>
+            <label className={label}>{t('Prizes.prizeTitle')}</label>
             <input
               className={input}
               value={form.title}
@@ -211,7 +218,7 @@ function PrizeModal({ prize, onClose }: { prize: Prize | null; onClose: () => vo
             />
           </div>
           <div>
-            <label className={label}>Description</label>
+            <label className={label}>{t('Common.description')}</label>
             <textarea
               className={input}
               rows={3}
@@ -221,7 +228,7 @@ function PrizeModal({ prize, onClose }: { prize: Prize | null; onClose: () => vo
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={label}>Points cost</label>
+              <label className={label}>{t('Prizes.pointsCost')}</label>
               <input
                 className={input}
                 type="number"
@@ -231,7 +238,7 @@ function PrizeModal({ prize, onClose }: { prize: Prize | null; onClose: () => vo
               />
             </div>
             <div>
-              <label className={label}>Quantity (blank = ∞)</label>
+              <label className={label}>{t('Prizes.quantityInfinity')}</label>
               <input
                 className={input}
                 type="number"
@@ -241,7 +248,7 @@ function PrizeModal({ prize, onClose }: { prize: Prize | null; onClose: () => vo
             </div>
           </div>
           <div>
-            <label className={label}>Photo</label>
+            <label className={label}>{t('Prizes.photo')}</label>
             {prize?.imageUrl && !file && (
               <img src={prize.imageUrl} alt="" className="mb-2 h-24 w-full rounded-lg object-cover" />
             )}
@@ -261,7 +268,7 @@ function PrizeModal({ prize, onClose }: { prize: Prize | null; onClose: () => vo
                 disabled={busy}
                 className="rounded-lg border border-red-300 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
               >
-                Delete
+                {t('Common.delete')}
               </button>
             )}
             <button
@@ -269,13 +276,13 @@ function PrizeModal({ prize, onClose }: { prize: Prize | null; onClose: () => vo
               onClick={onClose}
               className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
             >
-              Cancel
+              {t('Common.cancel')}
             </button>
             <button
               disabled={busy}
               className="flex-1 rounded-lg bg-brand py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
             >
-              {busy ? 'Saving…' : isEdit ? 'Save' : 'Create'}
+              {busy ? t('Common.saving') : isEdit ? t('Common.save') : t('Common.create')}
             </button>
           </div>
         </form>

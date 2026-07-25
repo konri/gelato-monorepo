@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
+import { useTranslation } from 'react-i18next';
 import {
   QUESTS,
   CREATE_QUEST,
@@ -23,6 +24,7 @@ const TYPE_ICON: Record<string, string> = {
 };
 
 export function QuestsPage() {
+  const { t } = useTranslation();
   const { data, loading } = useQuery<{ quests: Quest[] }>(QUESTS, {
     fetchPolicy: 'cache-and-network',
   });
@@ -35,18 +37,18 @@ export function QuestsPage() {
     <div className="mx-auto w-full max-w-4xl p-6 sm:p-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quests</h1>
-          <p className="text-sm text-gray-500">Create tasks that reward clients with points.</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('Quests.title')}</h1>
+          <p className="text-sm text-gray-500">{t('Quests.subtitle')}</p>
         </div>
         <button
           onClick={() => setCreating(true)}
           className="rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark"
         >
-          + Create quest
+          {t('Quests.createQuest')}
         </button>
       </div>
 
-      {loading && !data && <p className="text-sm text-gray-500">Loading…</p>}
+      {loading && !data && <p className="text-sm text-gray-500">{t('Common.loading')}</p>}
 
       <div className="space-y-3">
         {quests.map((q) => (
@@ -54,7 +56,7 @@ export function QuestsPage() {
         ))}
         {!loading && quests.length === 0 && (
           <div className="rounded-xl border border-dashed border-gray-300 p-10 text-center text-gray-500">
-            No quests yet.
+            {t('Quests.noQuestsYet')}
           </div>
         )}
       </div>
@@ -73,6 +75,7 @@ export function QuestsPage() {
 }
 
 function QuestRow({ quest, onEdit }: { quest: Quest; onEdit: () => void }) {
+  const { t } = useTranslation();
   const [updateQuest] = useMutation(UPDATE_QUEST, { refetchQueries: [{ query: QUESTS }] });
   const toggle = () => updateQuest({ variables: { id: quest.id, isActive: !quest.isActive } });
 
@@ -85,32 +88,32 @@ function QuestRow({ quest, onEdit }: { quest: Quest; onEdit: () => void }) {
         <div className="flex items-center gap-2">
           <p className="font-semibold text-gray-900">{quest.title}</p>
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
-            {quest.type}
+            {t(`Quests.types.${quest.type}`, { defaultValue: quest.type })}
           </span>
           {quest.isRepeatable && (
             <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600">
-              repeatable
+              {t('Quests.repeatable')}
             </span>
           )}
         </div>
         {quest.description && (
           <p className="mt-0.5 truncate text-sm text-gray-500">{quest.description}</p>
         )}
-        <p className="mt-0.5 text-sm font-semibold text-brand">+{quest.pointsReward} pts</p>
+        <p className="mt-0.5 text-sm font-semibold text-brand">{t('Quests.pointsReward', { count: quest.pointsReward })}</p>
       </div>
       <span
         className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
           quest.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'
         }`}
       >
-        {quest.isActive ? 'Active' : 'Disabled'}
+        {quest.isActive ? t('Common.active') : t('Common.disabled')}
       </span>
       <div className="flex shrink-0 gap-2">
         <button
           onClick={onEdit}
           className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
         >
-          Edit
+          {t('Common.edit')}
         </button>
         <button
           onClick={toggle}
@@ -120,7 +123,7 @@ function QuestRow({ quest, onEdit }: { quest: Quest; onEdit: () => void }) {
               : 'bg-brand text-white hover:bg-brand-dark'
           }`}
         >
-          {quest.isActive ? 'Disable' : 'Enable'}
+          {quest.isActive ? t('Common.disable') : t('Common.enable')}
         </button>
       </div>
     </div>
@@ -128,6 +131,7 @@ function QuestRow({ quest, onEdit }: { quest: Quest; onEdit: () => void }) {
 }
 
 function QuestModal({ quest, onClose }: { quest: Quest | null; onClose: () => void }) {
+  const { t } = useTranslation();
   const isEdit = !!quest;
   const [createQuest] = useMutation(CREATE_QUEST, { refetchQueries: [{ query: QUESTS }] });
   const [updateQuest] = useMutation(UPDATE_QUEST, { refetchQueries: [{ query: QUESTS }] });
@@ -163,19 +167,19 @@ function QuestModal({ quest, onClose }: { quest: Quest | null; onClose: () => vo
       }
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save quest');
+      setError(err instanceof Error ? err.message : t('Quests.failedSave'));
       setBusy(false);
     }
   };
 
   const remove = async () => {
-    if (!quest || !confirm(`Delete "${quest.title}"?`)) return;
+    if (!quest || !confirm(t('Prizes.confirmDelete', { title: quest.title }))) return;
     setBusy(true);
     try {
       await deleteQuest({ variables: { id: quest.id } });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete');
+      setError(err instanceof Error ? err.message : t('Prizes.failedDelete'));
       setBusy(false);
     }
   };
@@ -185,7 +189,7 @@ function QuestModal({ quest, onClose }: { quest: Quest | null; onClose: () => vo
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
         <h2 className="mb-4 text-lg font-bold text-gray-900">
-          {isEdit ? 'Edit quest' : 'Create quest'}
+          {isEdit ? t('Quests.editQuest') : t('Quests.createQuestTitle')}
         </h2>
         {error && (
           <div className="mb-3 rounded-lg bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>
@@ -193,22 +197,22 @@ function QuestModal({ quest, onClose }: { quest: Quest | null; onClose: () => vo
         <form onSubmit={submit} className="space-y-3">
           {!isEdit && (
             <div>
-              <label className={label}>Type</label>
+              <label className={label}>{t('Quests.type')}</label>
               <select
                 className={input}
                 value={form.type}
                 onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
               >
-                {QUEST_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
+                {QUEST_TYPES.map((qt) => (
+                  <option key={qt} value={qt}>
+                    {t(`Quests.types.${qt}`, { defaultValue: qt })}
                   </option>
                 ))}
               </select>
             </div>
           )}
           <div>
-            <label className={label}>Title</label>
+            <label className={label}>{t('Quests.questTitle')}</label>
             <input
               className={input}
               value={form.title}
@@ -217,7 +221,7 @@ function QuestModal({ quest, onClose }: { quest: Quest | null; onClose: () => vo
             />
           </div>
           <div>
-            <label className={label}>Description</label>
+            <label className={label}>{t('Common.description')}</label>
             <textarea
               className={input}
               rows={3}
@@ -226,7 +230,7 @@ function QuestModal({ quest, onClose }: { quest: Quest | null; onClose: () => vo
             />
           </div>
           <div>
-            <label className={label}>Points reward</label>
+            <label className={label}>{t('Quests.pointsRewardLabel')}</label>
             <input
               className={input}
               type="number"
@@ -241,7 +245,7 @@ function QuestModal({ quest, onClose }: { quest: Quest | null; onClose: () => vo
               checked={form.isRepeatable}
               onChange={(e) => setForm((f) => ({ ...f, isRepeatable: e.target.checked }))}
             />
-            Repeatable (can be completed more than once)
+            {t('Quests.repeatableCheckbox')}
           </label>
 
           <div className="flex gap-3 pt-2">
@@ -252,7 +256,7 @@ function QuestModal({ quest, onClose }: { quest: Quest | null; onClose: () => vo
                 disabled={busy}
                 className="rounded-lg border border-red-300 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
               >
-                Delete
+                {t('Common.delete')}
               </button>
             )}
             <button
@@ -260,13 +264,13 @@ function QuestModal({ quest, onClose }: { quest: Quest | null; onClose: () => vo
               onClick={onClose}
               className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
             >
-              Cancel
+              {t('Common.cancel')}
             </button>
             <button
               disabled={busy}
               className="flex-1 rounded-lg bg-brand py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
             >
-              {busy ? 'Saving…' : isEdit ? 'Save' : 'Create'}
+              {busy ? t('Common.saving') : isEdit ? t('Common.save') : t('Common.create')}
             </button>
           </div>
         </form>

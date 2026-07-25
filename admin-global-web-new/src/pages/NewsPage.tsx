@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
+import { useTranslation } from 'react-i18next';
 import { CITIES, type City } from '../graphql/spots';
 import { CREATE_NEWS, BROADCAST_TO_CLIENTS, BROADCAST_TO_CITY } from '../graphql/admin';
 
@@ -10,26 +11,27 @@ const label = 'block text-sm font-medium text-gray-700 mb-1';
 type Tab = 'news' | 'notification';
 
 export function NewsPage() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>('news');
 
   return (
     <div className="mx-auto w-full max-w-2xl p-6 sm:p-8">
-      <h1 className="mb-1 text-2xl font-bold text-gray-900">News & Notifications</h1>
+      <h1 className="mb-1 text-2xl font-bold text-gray-900">{t('News.title')}</h1>
       <p className="mb-6 text-sm text-gray-500">
-        Publish news to specific cities, or send a push notification to all clients.
+        {t('News.subtitle')}
       </p>
 
       <div className="mb-6 flex gap-2 border-b border-gray-200">
-        {(['news', 'notification'] as Tab[]).map((t) => (
+        {(['news', 'notification'] as Tab[]).map((tabKey) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
             className={`relative px-4 py-2.5 text-sm font-semibold ${
-              tab === t ? 'text-brand' : 'text-gray-500 hover:text-gray-800'
+              tab === tabKey ? 'text-brand' : 'text-gray-500 hover:text-gray-800'
             }`}
           >
-            {t === 'news' ? 'News' : 'Notification'}
-            {tab === t && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-brand" />}
+            {tabKey === 'news' ? t('News.tabNews') : t('News.tabNotification')}
+            {tab === tabKey && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-brand" />}
           </button>
         ))}
       </div>
@@ -40,6 +42,7 @@ export function NewsPage() {
 }
 
 function NewsForm() {
+  const { t } = useTranslation();
   const { data: citiesData } = useQuery<{ cities: City[] }>(CITIES);
   const [createNews, { loading }] = useMutation(CREATE_NEWS);
 
@@ -71,13 +74,13 @@ function NewsForm() {
           },
         },
       });
-      setNotice('News published.');
+      setNotice(t('News.newsPublished'));
       setTitle('');
       setDescription('');
       setCityIds([]);
       setAllCities(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to publish news');
+      setError(err instanceof Error ? err.message : t('News.failedPublish'));
     }
   };
 
@@ -89,11 +92,11 @@ function NewsForm() {
       {notice && <div className="rounded-lg bg-green-50 px-4 py-2.5 text-sm text-green-700">{notice}</div>}
 
       <div>
-        <label className={label}>Title</label>
+        <label className={label}>{t('News.titleLabel')}</label>
         <input className={input} value={title} onChange={(e) => setTitle(e.target.value)} required />
       </div>
       <div>
-        <label className={label}>Description</label>
+        <label className={label}>{t('Common.description')}</label>
         <textarea
           className={input}
           rows={4}
@@ -104,15 +107,15 @@ function NewsForm() {
       </div>
 
       <div>
-        <label className={label}>Audience</label>
+        <label className={label}>{t('News.audience')}</label>
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-sm">
             <input type="radio" checked={allCities} onChange={() => setAllCities(true)} />
-            All cities
+            {t('News.allCities')}
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input type="radio" checked={!allCities} onChange={() => setAllCities(false)} />
-            Specific cities
+            {t('News.specificCities')}
           </label>
         </div>
         {!allCities && (
@@ -131,7 +134,7 @@ function NewsForm() {
                 {c.name}
               </button>
             ))}
-            {cities.length === 0 && <p className="text-sm text-gray-400">No cities yet.</p>}
+            {cities.length === 0 && <p className="text-sm text-gray-400">{t('News.noCitiesYet')}</p>}
           </div>
         )}
       </div>
@@ -140,13 +143,14 @@ function NewsForm() {
         disabled={loading || (!allCities && cityIds.length === 0)}
         className="w-full rounded-lg bg-brand py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
       >
-        {loading ? 'Publishing…' : 'Publish news'}
+        {loading ? t('News.publishing') : t('News.publishNews')}
       </button>
     </form>
   );
 }
 
 function NotificationForm() {
+  const { t } = useTranslation();
   const { data: citiesData } = useQuery<{ cities: City[] }>(CITIES);
   const [broadcastAll, { loading: loadingAll }] = useMutation(BROADCAST_TO_CLIENTS);
   const [broadcastCity, { loading: loadingCity }] = useMutation(BROADCAST_TO_CITY);
@@ -168,20 +172,16 @@ function NotificationForm() {
     try {
       if (allCities) {
         await broadcastAll({ variables: { title, body, language: 'pl' } });
-        setNotice('Notification sent to all clients.');
+        setNotice(t('News.notifSentAll'));
       } else {
         const res = await broadcastCity({ variables: { cityId, title, body, language: 'pl' } });
         const delivered = (res.data as { broadcastToCity?: boolean } | null)?.broadcastToCity;
-        setNotice(
-          delivered
-            ? 'Notification sent to clients in the selected city.'
-            : 'No clients with devices found for that city.',
-        );
+        setNotice(delivered ? t('News.notifSentCity') : t('News.noClientsCity'));
       }
       setTitle('');
       setBody('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send notification');
+      setError(err instanceof Error ? err.message : t('News.failedSendNotif'));
     }
   };
 
@@ -191,24 +191,24 @@ function NotificationForm() {
       {notice && <div className="rounded-lg bg-green-50 px-4 py-2.5 text-sm text-green-700">{notice}</div>}
 
       <div>
-        <label className={label}>Title</label>
+        <label className={label}>{t('News.titleLabel')}</label>
         <input className={input} value={title} onChange={(e) => setTitle(e.target.value)} required />
       </div>
       <div>
-        <label className={label}>Message</label>
+        <label className={label}>{t('News.message')}</label>
         <textarea className={input} rows={4} value={body} onChange={(e) => setBody(e.target.value)} required />
       </div>
 
       <div>
-        <label className={label}>Audience</label>
+        <label className={label}>{t('News.audience')}</label>
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-sm">
             <input type="radio" checked={allCities} onChange={() => setAllCities(true)} />
-            All clients
+            {t('News.allClients')}
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input type="radio" checked={!allCities} onChange={() => setAllCities(false)} />
-            Clients in a specific city
+            {t('News.clientsSpecificCity')}
           </label>
         </div>
         {!allCities && (
@@ -218,7 +218,7 @@ function NotificationForm() {
             onChange={(e) => setCityId(e.target.value)}
             required
           >
-            <option value="">Select a city…</option>
+            <option value="">{t('News.selectCity')}</option>
             {cities.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -228,7 +228,7 @@ function NotificationForm() {
         )}
         {!allCities && (
           <p className="mt-2 text-xs text-gray-500">
-            Only clients who selected this city as their preferred city (and have a device) receive it.
+            {t('News.notifCityHint')}
           </p>
         )}
       </div>
@@ -237,7 +237,7 @@ function NotificationForm() {
         disabled={loading || (!allCities && !cityId)}
         className="w-full rounded-lg bg-brand py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
       >
-        {loading ? 'Sending…' : 'Send notification'}
+        {loading ? t('Common.sending') : t('News.sendNotification')}
       </button>
     </form>
   );

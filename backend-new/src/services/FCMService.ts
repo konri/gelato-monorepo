@@ -1,4 +1,6 @@
 import * as admin from 'firebase-admin';
+import * as fs from 'fs';
+import * as path from 'path';
 import { PrismaClient } from '@prisma/client';
 
 /**
@@ -331,26 +333,49 @@ export class FCMService {
       return;
     }
 
+    // A single Firebase project holds all three apps (client/courier/spot); one
+    // service account here can message every one of them, because each device
+    // token already encodes which app/project it belongs to. Credentials can be
+    // supplied three ways — pick whichever suits the environment:
     const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
     const projectId = process.env.FIREBASE_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    // Env-provided keys usually contain literal "\n"; restore real newlines.
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
-    if (!serviceAccountPath && !projectId) {
-      console.warn('⚠️  Firebase credentials not configured. Push notifications disabled.');
-      return;
-    }
+    // Only use the file option if it actually exists — otherwise fall through to
+    // the env-var / ADC options (so a stale path in .env doesn't crash init
+    // before you've downloaded the key).
+    const resolvedPath = serviceAccountPath
+      ? path.resolve(process.cwd(), serviceAccountPath)
+      : null;
+    const hasServiceAccountFile = resolvedPath ? fs.existsSync(resolvedPath) : false;
 
     try {
-      if (serviceAccountPath) {
-        // Initialize with service account file
-        const serviceAccount = require(serviceAccountPath);
+      if (hasServiceAccountFile && resolvedPath) {
+        // (A) Full service-account JSON file (path in FIREBASE_SERVICE_ACCOUNT_PATH).
+        const serviceAccount = require(resolvedPath);
         admin.initializeApp({
           credential: admin.credential.cert(serviceAccount),
         });
-      } else if (projectId) {
-        // Initialize with project ID (uses Application Default Credentials)
+      } else if (projectId && clientEmail && privateKey) {
+        // (B) The three service-account fields as separate env vars — no file to
+        // mount, which is nicer for hosted deploys.
         admin.initializeApp({
-          projectId,
+          credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
         });
+      } else if (projectId && process.env.FIREBASE_USE_ADC === 'true') {
+        // (C) Application Default Credentials (e.g. on GCP) with just a project
+        // id — opt-in, since it only works where ADC is actually available.
+        admin.initializeApp({ projectId });
+      } else {
+        // Nothing usable configured (e.g. the service-account file hasn't been
+        // downloaded yet). Degrade gracefully — the app runs, push is a no-op.
+        console.warn(
+          '⚠️  Firebase credentials not configured (no service-account file or env keys). ' +
+            'Push notifications disabled.',
+        );
+        return;
       }
 
       this.initialized = true;

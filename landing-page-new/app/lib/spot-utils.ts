@@ -33,10 +33,12 @@ export function buildMenuSections(
         title: t.title,
         titleLocal: t.titleLocal,
         subtitle: t.subtitle,
+        description: t.description,
         type: t.type,
         imageUrl: t.imageUrl,
         price: t.price,
         allergens: t.allergens,
+        kcalPerPortion: t.kcalPerPortion,
       })),
     ...products
       .filter((p) => p.isAvailable)
@@ -46,11 +48,13 @@ export function buildMenuSections(
         spotId: p.spotId,
         title: p.name,
         titleLocal: p.nameLocal,
+        description: p.description,
         type: p.type,
         imageUrl: p.imageUrl,
         price: p.price,
         allergens: p.allergens,
         isBox: p.isBox,
+        maxTastes: p.maxTastes,
       })),
   ];
 

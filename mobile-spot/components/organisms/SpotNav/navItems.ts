@@ -18,7 +18,6 @@ export const SPOT_NAV_ITEMS: SpotNavItem[] = [
   { name: 'prepared', labelKey: 'SpotTabs.prepared', icon: 'checkmark-done-outline' },
   { name: 'scan', labelKey: 'SpotTabs.scan', icon: 'qr-code-outline' },
   { name: 'couriers', labelKey: 'SpotTabs.couriers', icon: 'bicycle-outline' },
-  { name: 'menu', labelKey: 'SpotTabs.menu', icon: 'ice-cream-outline' },
   { name: 'profile', labelKey: 'SpotTabs.more', icon: 'ellipsis-horizontal' },
 ];
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { AdminSpot } from '../graphql/spots';
 
 /**
@@ -9,13 +10,14 @@ export function SpotPicker({
   spots,
   value,
   onChange,
-  placeholder = 'Select a spot…',
+  placeholder,
 }: {
   spots: AdminSpot[];
   value: string;
   onChange: (spotId: string) => void;
   placeholder?: string;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const ref = useRef<HTMLDivElement>(null);
@@ -45,7 +47,7 @@ export function SpotPicker({
     // Group by city name; spots without a city go under "Other".
     const byCity: Record<string, AdminSpot[]> = {};
     for (const s of filtered) {
-      const city = s.city?.name ?? 'Other';
+      const city = s.city?.name ?? t('SpotPicker.other');
       (byCity[city] ??= []).push(s);
     }
     return Object.keys(byCity)
@@ -70,7 +72,7 @@ export function SpotPicker({
               {selected.city && <span className="text-gray-400"> · {selected.city.name}</span>}
             </>
           ) : (
-            placeholder
+            placeholder ?? t('SpotPicker.selectSpot')
           )}
         </span>
         <svg width="14" height="14" viewBox="0 0 12 12" className={open ? 'rotate-180' : ''}>
@@ -85,13 +87,13 @@ export function SpotPicker({
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search name, address, phone…"
+              placeholder={t('SpotPicker.searchPlaceholder')}
               className="w-full rounded-lg bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-1 focus:ring-brand"
             />
           </div>
           <div className="max-h-72 overflow-y-auto py-1">
             {groups.length === 0 && (
-              <p className="px-4 py-6 text-center text-sm text-gray-400">No spots found.</p>
+              <p className="px-4 py-6 text-center text-sm text-gray-400">{t('SpotPicker.noSpotsFound')}</p>
             )}
             {groups.map((group) => (
               <div key={group.city}>

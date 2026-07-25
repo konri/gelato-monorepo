@@ -32,17 +32,10 @@ export const DEFAULT_TABS_CONFIG: TabsNavigationConfig = {
       variant: "standard",
     },
     {
-      name: "menu",
-      labelKey: "SpotTabs.menu",
-      icon: "icecream",
-      order: 4,
-      variant: "standard",
-    },
-    {
       name: "profile",
       labelKey: "SpotTabs.more",
       icon: "profile",
-      order: 5,
+      order: 4,
       variant: "standard",
     },
   ],

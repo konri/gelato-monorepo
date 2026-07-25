@@ -65,8 +65,14 @@ async function startServer() {
   const allowedOrigins = [
     'http://localhost:3000', // landing page
     'http://localhost:5173', // admin web
-    'http://localhost:8081', // expo web default
-    'http://localhost:8083', // spot app (web/tablet)
+    // Expo web picks the first free port (8081+), so allow the common range the
+    // spot/courier/client apps land on during dev.
+    'http://localhost:8081',
+    'http://localhost:8082',
+    'http://localhost:8083',
+    'http://localhost:8084',
+    'http://localhost:8085',
+    'http://localhost:8086',
     ...(process.env.CORS_ORIGINS?.split(',').map((o) => o.trim()).filter(Boolean) ?? []),
   ];
   app.use(

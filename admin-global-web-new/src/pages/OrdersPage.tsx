@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { MY_ADMIN_SPOTS, type AdminSpot } from '../graphql/spots';
 import { SPOT_ORDERS, type SpotOrder } from '../graphql/orders';
 import { SpotPicker } from '../components/SpotPicker';
@@ -30,6 +31,7 @@ const fmtMoney = (v: number) =>
   new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(v);
 
 export function OrdersPage() {
+  const { t } = useTranslation();
   const { data: spotsData } = useQuery<{ myAdminSpots: AdminSpot[] }>(MY_ADMIN_SPOTS);
   const spots = spotsData?.myAdminSpots ?? [];
   const [searchParams, setSearchParams] = useSearchParams();
@@ -49,19 +51,17 @@ export function OrdersPage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl p-6 sm:p-8">
-      <h1 className="mb-1 text-2xl font-bold text-gray-900">Order history</h1>
-      <p className="mb-6 text-sm text-gray-500">
-        View orders per spot — what was ordered, for whom, and delivery status.
-      </p>
+      <h1 className="mb-1 text-2xl font-bold text-gray-900">{t('Orders.title')}</h1>
+      <p className="mb-6 text-sm text-gray-500">{t('Orders.subtitle')}</p>
 
       <div className="mb-6 max-w-sm">
-        <label className="mb-1 block text-sm font-medium text-gray-700">Spot</label>
+        <label className="mb-1 block text-sm font-medium text-gray-700">{t('Orders.spot')}</label>
         <SpotPicker spots={spots} value={spotId} onChange={selectSpot} />
       </div>
 
       {spotId ? <OrderList spotId={spotId} /> : (
         <div className="rounded-xl border border-dashed border-gray-300 p-10 text-center text-gray-500">
-          Select a spot to view its orders.
+          {t('Orders.selectSpotToView')}
         </div>
       )}
     </div>
@@ -69,13 +69,18 @@ export function OrdersPage() {
 }
 
 function OrderList({ spotId }: { spotId: string }) {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery<{ spotOrders: SpotOrder[] }>(SPOT_ORDERS, {
     variables: { spotId },
     fetchPolicy: 'cache-and-network',
   });
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  if (loading && !data) return <p className="text-sm text-gray-500">Loading…</p>;
+  // Fall back to the raw status if the backend ever sends one we don't map.
+  const statusLabel = (status: string) =>
+    t(`Orders.statuses.${status}`, { defaultValue: status });
+
+  if (loading && !data) return <p className="text-sm text-gray-500">{t('Common.loading')}</p>;
   if (error)
     return <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error.message}</div>;
 
@@ -86,7 +91,7 @@ function OrderList({ spotId }: { spotId: string }) {
   if (orders.length === 0)
     return (
       <div className="rounded-xl border border-dashed border-gray-300 p-10 text-center text-gray-500">
-        No orders for this spot yet.
+        {t('Orders.noOrdersYet')}
       </div>
     );
 
@@ -95,12 +100,12 @@ function OrderList({ spotId }: { spotId: string }) {
       <table className="w-full text-sm">
         <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
           <tr>
-            <th className="px-5 py-3">Order</th>
-            <th className="px-5 py-3">Customer</th>
-            <th className="px-5 py-3">Status</th>
-            <th className="px-5 py-3">Courier</th>
-            <th className="px-5 py-3">Total</th>
-            <th className="px-5 py-3">Placed</th>
+            <th className="px-5 py-3">{t('Orders.order')}</th>
+            <th className="px-5 py-3">{t('Orders.customer')}</th>
+            <th className="px-5 py-3">{t('Orders.status')}</th>
+            <th className="px-5 py-3">{t('Orders.courier')}</th>
+            <th className="px-5 py-3">{t('Orders.total')}</th>
+            <th className="px-5 py-3">{t('Orders.placed')}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
@@ -123,7 +128,7 @@ function OrderList({ spotId }: { spotId: string }) {
                       STATUS_STYLE[o.status] ?? 'bg-gray-100 text-gray-700'
                     }`}
                   >
-                    {o.status}
+                    {statusLabel(o.status)}
                   </span>
                 </td>
                 <td className="px-5 py-3 text-gray-600">{o.courierName || '—'}</td>
@@ -135,20 +140,20 @@ function OrderList({ spotId }: { spotId: string }) {
                   <td colSpan={6} className="px-5 py-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
-                        <p className="mb-1 text-xs font-semibold uppercase text-gray-400">Delivery</p>
+                        <p className="mb-1 text-xs font-semibold uppercase text-gray-400">{t('Orders.delivery')}</p>
                         <p className="text-sm text-gray-700">{o.deliveryAddress}</p>
                         <p className="mt-1 text-xs text-gray-500">
-                          Payment: {o.paymentStatus}
-                          {o.deliveredAt && ` · Delivered ${fmtDate(o.deliveredAt)}`}
+                          {t('Orders.payment', { status: o.paymentStatus })}
+                          {o.deliveredAt && ` · ${t('Orders.deliveredAt', { date: fmtDate(o.deliveredAt) })}`}
                         </p>
                       </div>
                       <div>
-                        <p className="mb-1 text-xs font-semibold uppercase text-gray-400">Items</p>
+                        <p className="mb-1 text-xs font-semibold uppercase text-gray-400">{t('Orders.items')}</p>
                         <ul className="space-y-1 text-sm text-gray-700">
                           {o.items.map((it) => (
                             <li key={it.id} className="flex justify-between">
                               <span>
-                                {it.quantity}× {it.tasteId ? 'Ice cream' : it.productId ? 'Product' : 'Item'}
+                                {it.quantity}× {it.tasteId ? t('Orders.iceCream') : it.productId ? t('Orders.product') : t('Orders.item')}
                               </span>
                               <span className="text-gray-500">{fmtMoney(it.total)}</span>
                             </li>
@@ -156,7 +161,10 @@ function OrderList({ spotId }: { spotId: string }) {
                         </ul>
                         <div className="mt-2 flex justify-between border-t border-gray-200 pt-2 text-sm">
                           <span className="text-gray-500">
-                            Subtotal {fmtMoney(o.subtotal)} + delivery {fmtMoney(o.deliveryFee)}
+                            {t('Orders.breakdown', {
+                              subtotal: fmtMoney(o.subtotal),
+                              delivery: fmtMoney(o.deliveryFee),
+                            })}
                           </span>
                           <span className="font-semibold text-gray-900">{fmtMoney(o.total)}</span>
                         </div>

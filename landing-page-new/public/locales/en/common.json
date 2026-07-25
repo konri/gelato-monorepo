@@ -283,7 +283,18 @@
       "friday": "Friday",
       "saturday": "Saturday",
       "sunday": "Sunday"
-    }
+    },
+    "details": "Details",
+    "close": "Close",
+    "ingredients": "Allergens",
+    "calories": "{{count}} kcal / portion",
+    "no_description": "No description available.",
+    "box_pick_up_to": "Pick up to {{max}} scoops",
+    "box_remaining": "{{count}} scoop(s) left",
+    "box_full": "Box is full",
+    "box_add": "Add box ({{count}})",
+    "box_choose": "Choose your scoops",
+    "box_configure": "Choose scoops"
   },
   "footer": {
     "tagline": "Artisan ice cream and coffee delivery — straight from local spots.",

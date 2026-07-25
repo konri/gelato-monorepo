@@ -16,10 +16,10 @@
       "bundleIdentifier": "com.konradhopek.gelato.courier",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Ta aplikacja potrzebuje dost\u0119pu do lokalizacji, aby pokazywa\u0107 odpowiednie oferty w Twojej okolicy.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Ta aplikacja potrzebuje dost\u0119pu do lokalizacji, aby pokazywa\u0107 odpowiednie oferty w Twojej okolicy.",
-        "NSCameraUsageDescription": "Aplikacja potrzebuje dost\u0119pu do aparatu, aby zrobi\u0107 zdj\u0119cie profilowe kuriera.",
-        "NSPhotoLibraryUsageDescription": "Aplikacja potrzebuje dost\u0119pu do galerii, aby wybra\u0107 zdj\u0119cie profilowe kuriera.",
+        "NSLocationWhenInUseUsageDescription": "Ta aplikacja potrzebuje dostępu do lokalizacji, aby pokazywać odpowiednie oferty w Twojej okolicy.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Ta aplikacja potrzebuje dostępu do lokalizacji, aby pokazywać odpowiednie oferty w Twojej okolicy.",
+        "NSCameraUsageDescription": "Aplikacja potrzebuje dostępu do aparatu, aby zrobić zdjęcie profilowe kuriera.",
+        "NSPhotoLibraryUsageDescription": "Aplikacja potrzebuje dostępu do galerii, aby wybrać zdjęcie profilowe kuriera.",
         "NSAppTransportSecurity": {
           "NSAllowsLocalNetworking": true,
           "NSExceptionDomains": {
@@ -46,7 +46,11 @@
       },
       "package": "com.konradhopek.gelato.courier",
       "googleServicesFile": "./google-services.json",
-      "useNextNotificationsApi": true
+      "useNextNotificationsApi": true,
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -90,7 +94,9 @@
     },
     "extra": {
       "router": {},
-      "eas": {}
+      "eas": {
+        "projectId": "7d54a5a6-da12-44df-9cd4-c29314eab878"
+      }
     },
     "owner": "konradns"
   }

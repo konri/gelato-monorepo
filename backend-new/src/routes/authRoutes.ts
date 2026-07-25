@@ -12,6 +12,13 @@ const prisma = new PrismaClient();
 // 15-minute email verification window.
 const EMAIL_CODE_TTL_MS = 15 * 60 * 1000;
 
+// The footer tagline is localized alongside the body copy below.
+const CODE_EMAIL_FOOTER: Record<Language, string> = {
+  PL: 'Zrobione z ❤️ dla miłośników lodów · Gelato',
+  EN: 'Made with ❤️ for ice cream lovers · Gelato',
+  UA: 'Зроблено з ❤️ для любителів морозива · Gelato',
+};
+
 /**
  * Branded one-time-code email (Gelato red), shared by the verification and
  * password-reset flows for both the client and courier apps.
@@ -21,6 +28,7 @@ const codeEmailHtml = (opts: {
   intro: string;
   code: string;
   expiry: string;
+  footer: string;
 }) => `<!DOCTYPE html>
 <html>
   <body style="margin:0;padding:0;background:#fef2f2;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
@@ -49,7 +57,7 @@ const codeEmailHtml = (opts: {
             <!-- Footer -->
             <tr>
               <td style="background:#fef2f2;padding:20px 32px;text-align:center;">
-                <p style="margin:0;font-size:12px;color:#9ca3af;">Made with ❤️ for ice cream lovers · Gelato</p>
+                <p style="margin:0;font-size:12px;color:#9ca3af;">${opts.footer}</p>
               </td>
             </tr>
           </table>
@@ -59,17 +67,79 @@ const codeEmailHtml = (opts: {
   </body>
 </html>`;
 
-const sendEmailVerificationCode = async (email: string, code: string) => {
+// Localized copy for the account verification email (the signup / resend flow).
+const VERIFICATION_EMAIL: Record<
+  Language,
+  { subject: string; heading: string; intro: string; expiry: string; text: (code: string) => string }
+> = {
+  PL: {
+    subject: 'Twój kod weryfikacyjny Gelato',
+    heading: 'Witamy w Gelato! 🍦',
+    intro: 'Twój kod weryfikacyjny to:',
+    expiry: 'Ten kod wygasa za 15 minut.',
+    text: (code) => `Twój kod weryfikacyjny Gelato to ${code}. Wygasa za 15 minut.`,
+  },
+  EN: {
+    subject: 'Your Gelato verification code',
+    heading: 'Welcome to Gelato! 🍦',
+    intro: 'Your verification code is:',
+    expiry: 'This code expires in 15 minutes.',
+    text: (code) => `Your Gelato verification code is ${code}. It expires in 15 minutes.`,
+  },
+  UA: {
+    subject: 'Ваш код підтвердження Gelato',
+    heading: 'Ласкаво просимо до Gelato! 🍦',
+    intro: 'Ваш код підтвердження:',
+    expiry: 'Цей код дійсний 15 хвилин.',
+    text: (code) => `Ваш код підтвердження Gelato — ${code}. Він дійсний 15 хвилин.`,
+  },
+};
+
+// Localized copy for the admin password-reset email.
+const ADMIN_RESET_EMAIL: Record<
+  Language,
+  { subject: string; heading: string; intro: string; expiry: string; text: (code: string) => string }
+> = {
+  PL: {
+    subject: 'Kod resetowania hasła administratora Gelato',
+    heading: 'Reset hasła 🔒',
+    intro: 'Twój kod resetowania hasła to:',
+    expiry: 'Ten kod wygasa za 15 minut.',
+    text: (code) => `Twój kod resetowania hasła administratora Gelato to ${code}. Wygasa za 15 minut.`,
+  },
+  EN: {
+    subject: 'Your Gelato admin password reset code',
+    heading: 'Password reset 🔒',
+    intro: 'Your password reset code is:',
+    expiry: 'This code expires in 15 minutes.',
+    text: (code) => `Your Gelato admin password reset code is ${code}. It expires in 15 minutes.`,
+  },
+  UA: {
+    subject: 'Код скидання пароля адміністратора Gelato',
+    heading: 'Скидання пароля 🔒',
+    intro: 'Ваш код скидання пароля:',
+    expiry: 'Цей код дійсний 15 хвилин.',
+    text: (code) => `Ваш код скидання пароля адміністратора Gelato — ${code}. Він дійсний 15 хвилин.`,
+  },
+};
+
+const sendEmailVerificationCode = async (
+  email: string,
+  code: string,
+  language: Language = Language.PL,
+) => {
+  const copy = VERIFICATION_EMAIL[language] ?? VERIFICATION_EMAIL.EN;
   await EmailService.sendEmail({
     to: email,
-    subject: 'Your Gelato verification code',
+    subject: copy.subject,
     html: codeEmailHtml({
-      heading: 'Welcome to Gelato! 🍦',
-      intro: 'Your verification code is:',
+      heading: copy.heading,
+      intro: copy.intro,
       code,
-      expiry: 'This code expires in 15 minutes.',
+      expiry: copy.expiry,
+      footer: CODE_EMAIL_FOOTER[language] ?? CODE_EMAIL_FOOTER.EN,
     }),
-    text: `Your Gelato verification code is ${code}. It expires in 15 minutes.`,
+    text: copy.text(code),
   });
 };
 
@@ -290,7 +360,7 @@ router.post('/signup', async (req, res) => {
       },
     });
 
-    await sendEmailVerificationCode(user.email, verificationCode);
+    await sendEmailVerificationCode(user.email, verificationCode, user.language);
     console.log(`✅ New user registered (pending verification): ${user.email}`);
 
     // No tokens yet — client must call /verify-code with the emailed OTP.
@@ -399,7 +469,7 @@ router.post('/resend-verification', async (req, res) => {
         emailVerificationExpires: new Date(Date.now() + EMAIL_CODE_TTL_MS),
       },
     });
-    await sendEmailVerificationCode(user.email, code);
+    await sendEmailVerificationCode(user.email, code, user.language);
     return res.json({ message: 'Verification code sent' });
   } catch (error) {
     console.error('Resend verification error:', error);
@@ -412,7 +482,7 @@ router.post('/resend-verification', async (req, res) => {
  */
 router.post('/phone/send-code', async (req, res) => {
   try {
-    const { phoneNumber } = req.body;
+    const { phoneNumber, language } = req.body;
 
     if (!phoneNumber) {
       return res.status(400).json({
@@ -421,7 +491,9 @@ router.post('/phone/send-code', async (req, res) => {
       });
     }
 
-    const result = await TwilioService.sendOTP(phoneNumber, 'en');
+    // TwilioService expects a lowercase locale ('pl' | 'en' | 'ua').
+    const smsLang = (['pl', 'en', 'ua'].includes(language) ? language : 'pl') as 'pl' | 'en' | 'ua';
+    const result = await TwilioService.sendOTP(phoneNumber, smsLang);
 
     if (!result.success) {
       return res.status(400).json({
@@ -975,16 +1047,18 @@ router.post('/admin/forgot-password', async (req, res) => {
           emailVerificationExpires: new Date(Date.now() + EMAIL_CODE_TTL_MS),
         },
       });
+      const resetCopy = ADMIN_RESET_EMAIL[user.language] ?? ADMIN_RESET_EMAIL.EN;
       await EmailService.sendEmail({
         to: user.email,
-        subject: 'Your Gelato admin password reset code',
+        subject: resetCopy.subject,
         html: codeEmailHtml({
-          heading: 'Password reset 🔒',
-          intro: 'Your password reset code is:',
+          heading: resetCopy.heading,
+          intro: resetCopy.intro,
           code,
-          expiry: 'This code expires in 15 minutes.',
+          expiry: resetCopy.expiry,
+          footer: CODE_EMAIL_FOOTER[user.language] ?? CODE_EMAIL_FOOTER.EN,
         }),
-        text: `Your Gelato admin password reset code is ${code}. It expires in 15 minutes.`,
+        text: resetCopy.text(code),
       });
     }
 

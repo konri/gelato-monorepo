@@ -1,16 +1,19 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContext';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 const navItems = [
-  { to: '/spots', label: 'Spots', icon: '🍦' },
-  { to: '/orders', label: 'Order history', icon: '📦' },
-  { to: '/prizes', label: 'Rewards', icon: '🎁' },
-  { to: '/quests', label: 'Quests', icon: '🎯', superAdminOnly: true },
-  { to: '/admins', label: 'Admins', icon: '👤', superAdminOnly: true },
-  { to: '/news', label: 'News & Notifications', icon: '📣' },
+  { to: '/spots', labelKey: 'Nav.spots', icon: '🍦' },
+  { to: '/orders', labelKey: 'Nav.orderHistory', icon: '📦' },
+  { to: '/prizes', labelKey: 'Nav.rewards', icon: '🎁' },
+  { to: '/quests', labelKey: 'Nav.quests', icon: '🎯', superAdminOnly: true },
+  { to: '/admins', labelKey: 'Nav.admins', icon: '👤', superAdminOnly: true },
+  { to: '/news', labelKey: 'Nav.newsNotifications', icon: '📣' },
 ];
 
 export function AppLayout() {
+  const { t } = useTranslation();
   const { user, isSuperAdmin, logout } = useAuth();
 
   return (
@@ -23,7 +26,7 @@ export function AppLayout() {
           </div>
           <div>
             <div className="text-sm font-bold leading-4 text-gray-900">Gelato</div>
-            <div className="text-xs font-semibold tracking-wide text-brand">ADMIN</div>
+            <div className="text-xs font-semibold tracking-wide text-brand">{t('Nav.adminBadge')}</div>
           </div>
         </div>
 
@@ -43,7 +46,7 @@ export function AppLayout() {
                 }
               >
                 <span>{item.icon}</span>
-                {item.label}
+                {t(item.labelKey)}
               </NavLink>
             ))}
         </nav>
@@ -55,11 +58,12 @@ export function AppLayout() {
             </div>
             <div className="text-xs text-gray-500">{user?.roles?.join(', ')}</div>
           </div>
+          <LanguageSwitcher className="mb-1 px-1" />
           <button
             onClick={logout}
             className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-600 hover:bg-gray-50"
           >
-            Sign out
+            {t('Nav.signOut')}
           </button>
         </div>
       </aside>

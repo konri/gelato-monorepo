@@ -16,8 +16,8 @@
       "bundleIdentifier": "com.konradhopek.gelato.spot",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Ta aplikacja potrzebuje dost\u0119pu do lokalizacji, aby pokazywa\u0107 odpowiednie oferty w Twojej okolicy.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Ta aplikacja potrzebuje dost\u0119pu do lokalizacji, aby pokazywa\u0107 odpowiednie oferty w Twojej okolicy.",
+        "NSLocationWhenInUseUsageDescription": "Ta aplikacja potrzebuje dostępu do lokalizacji, aby pokazywać odpowiednie oferty w Twojej okolicy.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Ta aplikacja potrzebuje dostępu do lokalizacji, aby pokazywać odpowiednie oferty w Twojej okolicy.",
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [
@@ -35,7 +35,11 @@
       },
       "package": "com.konradhopek.gelato.spot",
       "googleServicesFile": "./google-services.json",
-      "useNextNotificationsApi": true
+      "useNextNotificationsApi": true,
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -72,7 +76,9 @@
     },
     "extra": {
       "router": {},
-      "eas": {}
+      "eas": {
+        "projectId": "c99f5ebc-4881-42da-85a6-e9f27fa87980"
+      }
     },
     "owner": "konradns"
   }

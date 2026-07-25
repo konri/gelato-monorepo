@@ -107,11 +107,18 @@ export function CheckoutClient() {
     try {
       const created = await createOrder({
         spotId: cart.spotId,
-        items: cart.items.map((i) =>
-          i.kind === "taste"
-            ? { tasteId: i.refId, quantity: i.quantity }
-            : { productId: i.refId, quantity: i.quantity },
-        ),
+        items: cart.items.map((i) => {
+          if (i.kind === "taste") return { tasteId: i.refId, quantity: i.quantity };
+          // Expand box selections (title + qty) into a flat list of taste ids.
+          const boxTasteIds = i.boxSelections?.flatMap((s) =>
+            Array.from({ length: s.quantity }, () => s.tasteId),
+          );
+          return {
+            productId: i.refId,
+            quantity: i.quantity,
+            ...(boxTasteIds && boxTasteIds.length ? { boxTasteIds } : {}),
+          };
+        }),
         fulfillmentType: cart.fulfillmentType,
         paymentMethod: cash ? "cash" : "card",
         spotNotes: note || undefined,
@@ -298,31 +305,41 @@ export function CheckoutClient() {
           <div className="rounded-3xl border border-berry/10 bg-white p-5 shadow-sm">
             <h3 className="mb-3 font-bold text-espresso">{t("checkout.summary")}</h3>
             <ul className="space-y-2">
-              {cart.items.map((i) => (
-                <li key={`${i.kind}-${i.refId}`} className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2 text-espresso/80">
-                    <button
-                      type="button"
-                      onClick={() => cart.setQuantity(i.kind, i.refId, i.quantity - 1)}
-                      className="flex h-5 w-5 items-center justify-center rounded-full bg-berry/10 text-berry"
-                      aria-label="−"
-                    >
-                      −
-                    </button>
-                    <span className="w-5 text-center font-semibold">{i.quantity}</span>
-                    <button
-                      type="button"
-                      onClick={() => cart.setQuantity(i.kind, i.refId, i.quantity + 1)}
-                      className="flex h-5 w-5 items-center justify-center rounded-full bg-berry/10 text-berry"
-                      aria-label="+"
-                    >
-                      +
-                    </button>
-                    <span className="ml-1 truncate">{i.title}</span>
-                  </span>
-                  <span className="font-semibold text-espresso">{zl(i.price * i.quantity)}</span>
-                </li>
-              ))}
+              {cart.items.map((i) => {
+                const key = cart.lineKey(i);
+                return (
+                  <li key={key} className="flex items-start justify-between text-sm">
+                    <span className="flex items-start gap-2 text-espresso/80">
+                      <button
+                        type="button"
+                        onClick={() => cart.setLineQuantity(key, i.quantity - 1)}
+                        className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-berry/10 text-berry"
+                        aria-label="−"
+                      >
+                        −
+                      </button>
+                      <span className="mt-0.5 w-5 text-center font-semibold">{i.quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => cart.setLineQuantity(key, i.quantity + 1)}
+                        className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-berry/10 text-berry"
+                        aria-label="+"
+                      >
+                        +
+                      </button>
+                      <span className="ml-1 min-w-0">
+                        <span className="block truncate">{i.title}</span>
+                        {i.boxSelections && i.boxSelections.length > 0 && (
+                          <span className="block truncate text-xs text-espresso/50">
+                            {i.boxSelections.map((s) => `${s.quantity}× ${s.title}`).join(", ")}
+                          </span>
+                        )}
+                      </span>
+                    </span>
+                    <span className="font-semibold text-espresso">{zl(i.price * i.quantity)}</span>
+                  </li>
+                );
+              })}
             </ul>
 
             <div className="my-3 h-px bg-berry/10" />

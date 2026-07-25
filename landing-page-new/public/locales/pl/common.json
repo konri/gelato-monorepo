@@ -283,7 +283,18 @@
       "friday": "Piątek",
       "saturday": "Sobota",
       "sunday": "Niedziela"
-    }
+    },
+    "details": "Szczegóły",
+    "close": "Zamknij",
+    "ingredients": "Alergeny",
+    "calories": "{{count}} kcal / porcja",
+    "no_description": "Brak opisu.",
+    "box_pick_up_to": "Wybierz do {{max}} gałek",
+    "box_remaining": "Pozostało gałek: {{count}}",
+    "box_full": "Paczka jest pełna",
+    "box_add": "Dodaj paczkę ({{count}})",
+    "box_choose": "Wybierz gałki",
+    "box_configure": "Wybierz gałki"
   },
   "footer": {
     "tagline": "Rzemieślnicze lody i kawa z dostawą — prosto z lokalnych punktów.",
