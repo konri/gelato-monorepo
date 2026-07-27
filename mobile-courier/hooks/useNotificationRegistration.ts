@@ -9,17 +9,38 @@ export const useNotificationRegistration = () => {
   const [isRegistered, setIsRegistered] = useState(false);
 
   useEffect(() => {
+    // Send an FCM token to the backend (skips silently if not logged in).
+    const registerToken = async (fcmToken: string) => {
+      const token = await AsyncStorage.getItem('access_token');
+      if (!token) {
+        logger.warn('⚠️ No auth token found, skipping notification registration');
+        return;
+      }
+      const deviceInfo = await NotificationService.getDeviceInfo();
+      const result = await executeGraphQLQuery(REGISTER_DEVICE, {
+        variables: {
+          token: fcmToken,
+          platform: deviceInfo.platform,
+          deviceId: deviceInfo.deviceId,
+        },
+        token,
+      });
+      if (result.success) {
+        logger.log('✅ Push notifications registered successfully');
+        setIsRegistered(true);
+      } else {
+        logger.error('❌ Failed to register device:', result.error);
+      }
+    };
+
     const registerDevice = async () => {
       try {
         logger.log('🔔 Starting notification registration...');
         const token = await AsyncStorage.getItem('access_token');
-        
         if (!token) {
           logger.warn('⚠️ No auth token found, skipping notification registration');
           return;
         }
-        
-        logger.log('✅ Auth token found, proceeding with registration');
 
         const fcmToken = await NotificationService.getFCMToken();
         if (!fcmToken) {
@@ -27,38 +48,26 @@ export const useNotificationRegistration = () => {
           return;
         }
 
-        const deviceInfo = await NotificationService.getDeviceInfo();
-        logger.log('📱 Device info:', deviceInfo);
-
         logger.log('🚀 Sending registration to backend...');
-        const result = await executeGraphQLQuery(REGISTER_DEVICE, {
-          variables: {
-            token: fcmToken,
-            platform: deviceInfo.platform,
-            deviceId: deviceInfo.deviceId,
-          },
-          token,
-        });
-
-        if (result.success) {
-          logger.log('✅ Push notifications registered successfully');
-          setIsRegistered(true);
-        } else {
-          logger.error('❌ Failed to register device:', result.error);
-        }
+        await registerToken(fcmToken);
       } catch (error) {
         logger.error('❌ Error registering device:', error);
       }
     };
 
     registerDevice();
+
+    // Re-register whenever Firebase rotates the token.
+    const unsubscribe = NotificationService.onTokenRefresh((newToken) => {
+      logger.log('🔄 FCM token refreshed, re-registering');
+      void registerToken(newToken).catch((e) => logger.error('Token refresh register failed:', e));
+    });
+    return unsubscribe;
   }, []);
 
-  // Setup notification listeners
-  useEffect(() => {
-    const cleanup = NotificationService.setupNotificationListeners();
-    return cleanup;
-  }, []);
+  // NOTE: notification receive/tap listeners are registered by
+  // <NotificationBridge> (mounted under ToastProvider) so they can show a toast
+  // and navigate. Don't register them here too, or handlers fire twice.
 
   return { isRegistered };
 };

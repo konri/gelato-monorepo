@@ -186,7 +186,28 @@ const ua = {
     today: 'Сьогодні',
     yesterday: 'Вчора',
     noNotifications: 'Поки що немає сповіщень',
-    unreadCount: '{{count}} непрочитаних сповіщень'
+    unreadCount: '{{count}} непрочитаних сповіщень',
+    detailTitle: 'Сповіщення',
+    empty: 'Це сповіщення більше недоступне',
+    viewOrder: 'Переглянути замовлення',
+    viewNews: 'Читати новину',
+    order: {
+      preparing: { title: 'Замовлення прийнято', body: 'Замовлення #{{number}} готується.' },
+      ready: { title: 'Замовлення готове', body: 'Замовлення #{{number}} готове.' },
+      delivered: { title: 'Замовлення доставлено', body: 'Замовлення #{{number}} доставлено. Смачного!' },
+      collected: { title: 'Замовлення отримано', body: 'Замовлення #{{number}} отримано. Смачного!' },
+      cancelled: { title: 'Замовлення скасовано', body: 'Замовлення #{{number}} скасовано.' },
+      generic: { title: 'Оновлення замовлення', body: 'Замовлення #{{number}} оновлено.' }
+    },
+    news: { title: 'Новини', body: '{{title}}' }
+  },
+  OrderChat: {
+    title: 'Повідомлення',
+    empty: 'Повідомлень ще немає. Поставте запитання точці або курʼєру тут.',
+    placeholder: 'Напишіть повідомлення…',
+    roleSpot: 'Точка',
+    roleCourier: 'Курʼєр',
+    roleYou: 'Ви'
   },
   Complaint: {
     report: 'Повідомити про проблему',

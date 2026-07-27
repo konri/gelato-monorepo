@@ -14,10 +14,12 @@ import {
 } from 'type-graphql';
 import { Role, OrderStatus, FulfillmentType } from '@prisma/client';
 import { Context } from '../types/Context';
-import { OrderType, OrderItemType, CreateOrderInput, CollectOrderResult } from '../types/OrderType';
+import { OrderType, OrderItemType, CreateOrderInput, CollectOrderResult, OrderMessageType } from '../types/OrderType';
 import { PubSubService } from '../services/PubSubService';
 import { computeDiscount } from './PromoCodeResolver';
 import { OrderPointsService } from '../services/OrderPointsService';
+import { NotifyService } from '../services/NotifyService';
+import { NotificationType } from '../services/FCMService';
 import { CodeGenerator } from '../shared/utils/CodeGenerator';
 
 /**
@@ -48,6 +50,66 @@ export async function persistNewOrderNotification(
       data: { orderId: order.id, orderNumber: order.orderNumber },
     })),
   });
+}
+
+/**
+ * Notify the CLIENT (order owner) that their order advanced to a new status —
+ * both an in-app bell row and an FCM push, via the centralized NotifyService.
+ * Best-effort. Titles/bodies are English; the apps re-localize from type+data.
+ */
+export async function notifyClientOrderStatus(
+  order: { id: string; orderNumber: string; userId: string },
+  status: OrderStatus,
+  prisma: Context['prisma'],
+): Promise<void> {
+  // Only statuses the customer cares about. There is no COLLECTED FCM template,
+  // so pickup collection reuses the ORDER_DELIVERED template for the push.
+  const map: Partial<
+    Record<OrderStatus, { fcmType: NotificationType; title: string; body: string }>
+  > = {
+    [OrderStatus.PREPARING]: {
+      fcmType: NotificationType.ORDER_PREPARING,
+      title: 'Order accepted',
+      body: `Order #${order.orderNumber} is being prepared.`,
+    },
+    [OrderStatus.READY]: {
+      fcmType: NotificationType.ORDER_READY,
+      title: 'Order ready',
+      body: `Order #${order.orderNumber} is ready.`,
+    },
+    [OrderStatus.DELIVERED]: {
+      fcmType: NotificationType.ORDER_DELIVERED,
+      title: 'Order delivered',
+      body: `Order #${order.orderNumber} has been delivered. Enjoy!`,
+    },
+    [OrderStatus.COLLECTED]: {
+      fcmType: NotificationType.ORDER_DELIVERED,
+      title: 'Order collected',
+      body: `Order #${order.orderNumber} has been collected. Enjoy!`,
+    },
+    [OrderStatus.CANCELLED]: {
+      fcmType: NotificationType.ORDER_CANCELLED,
+      title: 'Order cancelled',
+      body: `Order #${order.orderNumber} was cancelled.`,
+    },
+  };
+
+  const entry = map[status];
+  if (!entry) return;
+
+  await NotifyService.notifyUser(
+    order.userId,
+    {
+      persistType: 'order',
+      fcmType: entry.fcmType,
+      title: entry.title,
+      body: entry.body,
+      data: { orderId: order.id, orderNumber: order.orderNumber, status },
+      fcmVariables: { orderNumber: order.orderNumber },
+      fcmData: { kind: 'ORDER_STATUS', orderId: order.id, status },
+    },
+    prisma,
+  );
 }
 
 /**
@@ -91,6 +153,65 @@ export class OrderItemResolver {
     const byId = new Map(tastes.map((t) => [t.id, t.title]));
     // Preserve order + repeats (one entry per chosen scoop).
     return item.boxTasteIds.map((id) => byId.get(id) ?? '—');
+  }
+}
+
+/**
+ * Resolves an order message's display sender (spot / courier / client) so the
+ * chat can show the right name, avatar and alignment. Mirrors NewsCommentResolver.
+ */
+@Resolver(() => OrderMessageType)
+export class OrderMessageResolver {
+  @FieldResolver(() => String)
+  senderRole(@Root() m: OrderMessageType): string {
+    if (m.asSpotId) return 'spot';
+    if (m.asCourierId) return 'courier';
+    return 'client';
+  }
+
+  @FieldResolver(() => String, { nullable: true })
+  async senderName(
+    @Root() m: OrderMessageType,
+    @Ctx() { prisma }: Context
+  ): Promise<string | null> {
+    if (m.asSpotId) {
+      const spot = await prisma.spot.findUnique({
+        where: { id: m.asSpotId },
+        select: { name: true },
+      });
+      if (spot) return spot.name;
+    }
+    // Courier messages show the person's first name (a generic "Courier" label
+    // is applied client-side by role for privacy consistency).
+    const user = await prisma.user.findUnique({
+      where: { id: m.userId },
+      select: { firstName: true, surname: true, name: true, email: true },
+    });
+    if (!user) return null;
+    return (
+      [user.firstName, user.surname].filter(Boolean).join(' ') ||
+      user.name ||
+      user.email.split('@')[0]
+    );
+  }
+
+  @FieldResolver(() => String, { nullable: true })
+  async senderAvatar(
+    @Root() m: OrderMessageType,
+    @Ctx() { prisma }: Context
+  ): Promise<string | null> {
+    if (m.asSpotId) {
+      const spot = await prisma.spot.findUnique({
+        where: { id: m.asSpotId },
+        select: { logoUrl: true },
+      });
+      if (spot?.logoUrl) return spot.logoUrl;
+    }
+    const user = await prisma.user.findUnique({
+      where: { id: m.userId },
+      select: { profilePicture: true },
+    });
+    return user?.profilePicture ?? null;
   }
 }
 
@@ -617,6 +738,192 @@ export class OrderResolver {
   }
 
   /**
+   * The chat thread on an order (client ↔ spot ↔ courier), oldest first.
+   * Visible to the order's client, the spot's staff, and the assigned courier.
+   */
+  @Authorized()
+  @Query(() => [OrderMessageType])
+  async orderMessages(
+    @Arg('orderId', () => ID) orderId: string,
+    @Ctx() { req, prisma }: Context
+  ): Promise<OrderMessageType[]> {
+    await this.assertCanAccessOrderChat(req.user!, orderId, prisma);
+    const rows = await prisma.orderMessage.findMany({
+      where: { orderId },
+      orderBy: { createdAt: 'asc' },
+    });
+    return rows as OrderMessageType[];
+  }
+
+  /**
+   * Post a message to an order's chat.
+   *  - CLIENT (order owner): anytime.
+   *  - Spot staff of the order's spot: anytime (attributed as the spot).
+   *  - Assigned courier: only while the delivery is active
+   *    (COURIER_ASSIGNED / PICKED_UP / IN_TRANSIT), attributed as the courier.
+   * Notifies the other parties (bell + push), deep-linking to the message.
+   */
+  @Authorized()
+  @Mutation(() => OrderMessageType)
+  async postOrderMessage(
+    @Arg('orderId', () => ID) orderId: string,
+    @Arg('body', () => String) body: string,
+    @Ctx() { req, prisma }: Context
+  ): Promise<OrderMessageType> {
+    const user = req.user!;
+    const text = body.trim();
+    if (!text) throw new Error('Message cannot be empty');
+
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: { id: true, orderNumber: true, userId: true, spotId: true, courierId: true, status: true },
+    });
+    if (!order) throw new Error('Order not found');
+
+    // Determine the sender's role on THIS order + set attribution.
+    let asSpotId: string | null = null;
+    let asCourierId: string | null = null;
+
+    const isClient = order.userId === user.id;
+
+    // Spot staff (global admins, or an admin/employee of the order's spot).
+    let isSpotStaff = false;
+    if (user.roles.includes(Role.SUPER_ADMIN) || user.roles.includes(Role.SPOTS_ADMIN)) {
+      isSpotStaff = true;
+    } else if (user.roles.includes(Role.SPOT_ADMIN) || user.roles.includes(Role.EMPLOYEE)) {
+      const [spotAdmin, employee] = await Promise.all([
+        prisma.spotAdminProfile.findFirst({ where: { userId: user.id, spotId: order.spotId } }),
+        prisma.employeeProfile.findFirst({ where: { userId: user.id, spotId: order.spotId } }),
+      ]);
+      isSpotStaff = !!(spotAdmin || employee);
+    }
+
+    // Assigned courier — courierId is a CourierProfile id, so resolve via profile.
+    let isAssignedCourier = false;
+    if (!isSpotStaff && !isClient && order.courierId) {
+      const profile = await prisma.courierProfile.findUnique({ where: { userId: user.id }, select: { id: true } });
+      isAssignedCourier = !!profile && profile.id === order.courierId;
+    }
+
+    if (isSpotStaff) {
+      asSpotId = order.spotId;
+    } else if (isAssignedCourier) {
+      // Courier may only chat while the delivery is in progress.
+      const active: OrderStatus[] = [OrderStatus.COURIER_ASSIGNED, OrderStatus.PICKED_UP, OrderStatus.IN_TRANSIT];
+      if (!active.includes(order.status)) {
+        throw new Error('You can only message during an active delivery');
+      }
+      asCourierId = order.courierId;
+    } else if (!isClient) {
+      throw new Error('You are not allowed to message on this order');
+    }
+
+    const message = await prisma.orderMessage.create({
+      data: { orderId, userId: user.id, body: text, asSpotId, asCourierId },
+    });
+
+    // Notify the OTHER parties (best-effort; never blocks the post).
+    void this.notifyOrderMessage(order, message, { isSpotStaff, isAssignedCourier, isClient }, prisma).catch(
+      (e) => console.error('notifyOrderMessage failed:', e),
+    );
+
+    return message as OrderMessageType;
+  }
+
+  /**
+   * Shared read-access check for an order's chat: order owner, the spot's staff,
+   * or the assigned courier.
+   */
+  private async assertCanAccessOrderChat(user: any, orderId: string, prisma: any): Promise<void> {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: { userId: true, spotId: true, courierId: true },
+    });
+    if (!order) throw new Error('Order not found');
+
+    if (order.userId === user.id) return; // client
+    if (user.roles.includes(Role.SUPER_ADMIN) || user.roles.includes(Role.SPOTS_ADMIN)) return;
+
+    const [spotAdmin, employee] = await Promise.all([
+      prisma.spotAdminProfile.findFirst({ where: { userId: user.id, spotId: order.spotId } }),
+      prisma.employeeProfile.findFirst({ where: { userId: user.id, spotId: order.spotId } }),
+    ]);
+    if (spotAdmin || employee) return; // spot staff
+
+    if (order.courierId) {
+      const profile = await prisma.courierProfile.findUnique({ where: { userId: user.id }, select: { id: true } });
+      if (profile && profile.id === order.courierId) return; // assigned courier
+    }
+
+    throw new Error('You cannot access this order chat');
+  }
+
+  /**
+   * Notify the parties who did NOT send an order message. Best-effort.
+   */
+  private async notifyOrderMessage(
+    order: { id: string; orderNumber: string; userId: string; spotId: string; courierId: string | null },
+    message: { id: string; body: string },
+    sender: { isSpotStaff: boolean; isAssignedCourier: boolean; isClient: boolean },
+    prisma: any,
+  ): Promise<void> {
+    const preview = message.body.length > 80 ? message.body.slice(0, 77) + '…' : message.body;
+
+    // Resolve the sender's display label for the push body.
+    let senderLabel = 'Message';
+    if (sender.isSpotStaff) {
+      const spot = await prisma.spot.findUnique({ where: { id: order.spotId }, select: { name: true } });
+      senderLabel = spot?.name ?? 'Spot';
+    } else if (sender.isAssignedCourier) {
+      senderLabel = 'Courier';
+    } else {
+      senderLabel = 'Customer';
+    }
+
+    // Build the recipient set: everyone on the order except the sender.
+    const recipients = new Set<string>();
+
+    // The client (unless they sent it).
+    if (!sender.isClient) recipients.add(order.userId);
+
+    // Spot staff (unless a staff member sent it).
+    if (!sender.isSpotStaff) {
+      const [admins, employees] = await Promise.all([
+        prisma.spotAdminProfile.findMany({ where: { spotId: order.spotId }, select: { userId: true } }),
+        prisma.employeeProfile.findMany({ where: { spotId: order.spotId }, select: { userId: true } }),
+      ]);
+      admins.forEach((a: any) => recipients.add(a.userId));
+      employees.forEach((e: any) => recipients.add(e.userId));
+    }
+
+    // The assigned courier (unless the courier sent it) — resolve profile→userId.
+    if (!sender.isAssignedCourier && order.courierId) {
+      const profile = await prisma.courierProfile.findUnique({
+        where: { id: order.courierId },
+        select: { userId: true },
+      });
+      if (profile) recipients.add(profile.userId);
+    }
+
+    const userIds = Array.from(recipients);
+    if (userIds.length === 0) return;
+
+    await NotifyService.notifyUsers(
+      userIds,
+      {
+        persistType: 'order_message',
+        fcmType: NotificationType.ORDER_MESSAGE,
+        title: `New message · #${order.orderNumber}`,
+        body: `${senderLabel}: ${preview}`,
+        data: { orderId: order.id, orderNumber: order.orderNumber, messageId: message.id },
+        fcmVariables: { orderNumber: order.orderNumber, sender: senderLabel, preview },
+        fcmData: { kind: 'ORDER_MESSAGE', orderId: order.id, messageId: message.id },
+      },
+      prisma,
+    );
+  }
+
+  /**
    * Get orders for a spot (for spot staff)
    */
   @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN, Role.EMPLOYEE])
@@ -883,6 +1190,16 @@ export class OrderResolver {
     // Publish order status change
     await PubSubService.publishOrderStatusChanged(updatedOrder);
 
+    // Notify the customer of the new status (bell + push). Guard on an actual
+    // status change so re-setting the same status doesn't double-notify.
+    if (order.status !== status) {
+      await notifyClientOrderStatus(
+        { id, orderNumber: updatedOrder.orderNumber, userId: updatedOrder.userId },
+        status,
+        prisma,
+      ).catch((e) => console.error('notifyClientOrderStatus failed:', e));
+    }
+
     // When an order becomes READY and has no courier yet, broadcast it to the
     // spot's online couriers (first-to-accept model) + push-notify them.
     if (
@@ -1130,6 +1447,13 @@ export class OrderResolver {
 
     await PubSubService.publishOrderStatusChanged(updated);
 
+    // Notify the customer their pickup order was collected (bell + push).
+    await notifyClientOrderStatus(
+      { id: updated.id, orderNumber: updated.orderNumber, userId: updated.userId },
+      OrderStatus.COLLECTED,
+      prisma,
+    ).catch((e) => console.error('notifyClientOrderStatus (collect) failed:', e));
+
     console.log(`✅ Pickup order ${order.orderNumber} collected (points awarded: ${pointsAwarded})`);
 
     return {
@@ -1174,13 +1498,20 @@ export class OrderResolver {
 
       if (userIds.length === 0) return;
 
-      const { FCMService, NotificationType } = await import('../services/FCMService');
-      await FCMService.sendToUsers(
+      // Persist a bell row for each online courier + push, so the broadcast
+      // also shows in their in-app notification list.
+      await NotifyService.notifyUsers(
         Array.from(new Set<string>(userIds)),
-        NotificationType.ORDER_READY,
-        { orderNumber: order.orderNumber },
-        { orderId: order.id, spotId: order.spotId, kind: 'DELIVERY_BROADCAST' },
-        prisma
+        {
+          persistType: 'DELIVERY_BROADCAST',
+          fcmType: NotificationType.ORDER_READY,
+          title: 'New delivery available',
+          body: `Order #${order.orderNumber} is ready for delivery.`,
+          data: { orderId: order.id, orderNumber: order.orderNumber, spotId: order.spotId },
+          fcmVariables: { orderNumber: order.orderNumber },
+          fcmData: { orderId: order.id, spotId: order.spotId, kind: 'DELIVERY_BROADCAST' },
+        },
+        prisma,
       );
       console.log(`📢 Broadcast order ${order.id} to ${userIds.length} online courier(s)`);
     } catch (e) {

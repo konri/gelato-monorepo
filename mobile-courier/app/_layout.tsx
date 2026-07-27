@@ -10,6 +10,7 @@ import { StripeProvider } from '@stripe/stripe-react-native'
 import { onSessionExpired } from '@/shared/api-client/src/session'
 import { CartProvider } from '@/hooks/useCart'
 import { ToastProvider } from '@/components/organisms/ToastProvider'
+import { NotificationBridge } from '@/components/NotificationBridge'
 import { config } from '@/config'
 import '../translations'
 import './global.css'
@@ -47,12 +48,15 @@ export default function RootLayout() {
         >
           <CartProvider>
           <ToastProvider>
+          <NotificationBridge />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="apply-spot" options={{ headerShown: false }} />
             <Stack.Screen name="selfie/index" options={{ headerShown: false }} />
             <Stack.Screen name="delivery" options={{ headerShown: false }} />
+            <Stack.Screen name="notification-center/index" options={{ headerShown: false }} />
+            <Stack.Screen name="notification/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" options={{ headerShown: true }} />
           </Stack>
           </ToastProvider>

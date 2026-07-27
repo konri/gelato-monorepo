@@ -166,6 +166,7 @@ model User {
   spotsAdminProfile      SpotsAdminProfile?
   newsLikes              NewsLike[]
   newsComments           NewsComment[]
+  orderMessages          OrderMessage[]
   tasteLikes             TasteLike[]
   tasteComments          TasteComment[]
   staffLoginSessions     StaffLoginSession[]
@@ -508,10 +509,32 @@ model Order {
   items             OrderItem[]
   review            Review?
   courierLocations  CourierLocation[]
+  messages          OrderMessage[]
 
   @@index([userId, createdAt])
   @@index([spotId, status])
   @@index([courierId, status])
+}
+
+// A flat chat thread on an order between the client, the spot staff, and the
+// assigned courier. Attribution mirrors NewsComment: when asSpotId is set the
+// message shows the spot's name+logo; when asCourierId is set it shows the
+// courier; otherwise it's the client's own message.
+model OrderMessage {
+  id         String   @id @default(uuid())
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId    String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  body       String   @db.Text
+  createdAt  DateTime @default(now())
+
+  // Posted "as the spot" (staff) — shows spot name + logo.
+  asSpotId    String?
+  // Posted "as the courier" (assigned courier) — shows a courier badge.
+  asCourierId String?
+
+  @@index([orderId, createdAt])
 }
 
 model OrderItem {

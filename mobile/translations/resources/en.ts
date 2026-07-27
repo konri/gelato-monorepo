@@ -186,7 +186,28 @@ export default {
     today: 'Today',
     yesterday: 'Yesterday',
     noNotifications: 'No notifications yet',
-    unreadCount: '{{count}} unread notifications'
+    unreadCount: '{{count}} unread notifications',
+    detailTitle: 'Notification',
+    empty: 'This notification is no longer available',
+    viewOrder: 'View order',
+    viewNews: 'Read news',
+    order: {
+      preparing: { title: 'Order accepted', body: 'Order #{{number}} is being prepared.' },
+      ready: { title: 'Order ready', body: 'Order #{{number}} is ready.' },
+      delivered: { title: 'Order delivered', body: 'Order #{{number}} has been delivered. Enjoy!' },
+      collected: { title: 'Order collected', body: 'Order #{{number}} has been collected. Enjoy!' },
+      cancelled: { title: 'Order cancelled', body: 'Order #{{number}} was cancelled.' },
+      generic: { title: 'Order update', body: 'Order #{{number}} was updated.' }
+    },
+    news: { title: 'News', body: '{{title}}' }
+  },
+  OrderChat: {
+    title: 'Messages',
+    empty: 'No messages yet. Ask the spot or courier a question here.',
+    placeholder: 'Write a message…',
+    roleSpot: 'Spot',
+    roleCourier: 'Courier',
+    roleYou: 'You'
   },
   Complaint: {
     report: 'Report a problem',

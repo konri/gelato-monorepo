@@ -153,6 +153,32 @@ export class NotificationResolver {
   }
 
   /**
+   * A single notification by id (must belong to the caller). Lets the per-type
+   * detail screen fetch directly instead of re-fetching the whole list.
+   */
+  @Authorized()
+  @Query(() => NotificationObjectType, { nullable: true })
+  async notification(
+    @Arg('id', () => ID) id: string,
+    @Ctx() { req, prisma }: Context
+  ): Promise<NotificationObjectType | null> {
+    const n = await prisma.notification.findFirst({
+      where: { id, userId: req.user!.id },
+    });
+    if (!n) return null;
+    return {
+      id: n.id,
+      title: n.title,
+      body: n.body,
+      imageUrl: n.imageUrl ?? undefined,
+      type: n.type,
+      data: n.data ?? undefined,
+      isRead: n.isRead,
+      createdAt: n.createdAt,
+    };
+  }
+
+  /**
    * Count of the current user's unread notifications (for a badge).
    */
   @Authorized()

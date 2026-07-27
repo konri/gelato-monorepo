@@ -18,7 +18,7 @@ import { PromoCodeResolver } from './resolvers/PromoCodeResolver';
 import { NotificationResolver } from './resolvers/NotificationResolver';
 import { SubscriptionResolver } from './resolvers/SubscriptionResolver';
 import { TasteResolver } from './resolvers/TasteResolver';
-import { OrderResolver, OrderItemResolver } from './resolvers/OrderResolver';
+import { OrderResolver, OrderItemResolver, OrderMessageResolver } from './resolvers/OrderResolver';
 import { CourierResolver, CourierApplicationResolver } from './resolvers/CourierResolver';
 import { PointsResolver } from './resolvers/PointsResolver';
 import { NewsResolver, NewsCommentResolver } from './resolvers/NewsResolver';
@@ -117,6 +117,7 @@ async function startServer() {
       PromoCodeResolver,
       OrderResolver,
       OrderItemResolver,
+      OrderMessageResolver,
       CourierResolver,
       CourierApplicationResolver,
       PointsResolver,

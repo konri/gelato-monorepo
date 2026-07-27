@@ -193,6 +193,13 @@ const ua = {
     cityPlaceholder: 'Кельце',
     confirm: 'Підтвердити'
   },
+  OrderChat: {
+    title: 'Повідомлення',
+    empty: 'Повідомлень ще немає. Напишіть клієнту тут.',
+    placeholderStaff: 'Написати клієнту…',
+    roleSpot: 'Точка',
+    roleCustomer: 'Клієнт'
+  },
   Notifications: {
     headerTitle: 'Дозволити сповіщення',
     title: 'Сповіщення',
@@ -210,7 +217,16 @@ const ua = {
     today: 'Сьогодні',
     yesterday: 'Вчора',
     noNotifications: 'Поки що немає сповіщень',
-    unreadCount: '{{count}} непрочитаних сповіщень'
+    unreadCount: '{{count}} непрочитаних сповіщень',
+    listTitle: 'Сповіщення',
+    detailTitle: 'Сповіщення',
+    empty: 'Це сповіщення більше недоступне',
+    markAllRead: 'Позначити всі',
+    viewDelivery: 'Перейти до доставки',
+    approved: { title: 'Заявку схвалено', body: 'Вас схвалено для доставки для {{spot}}.' },
+    rejected: { title: 'Заявку відхилено', body: 'Вашу заявку для {{spot}} відхилено.' },
+    broadcast: { title: 'Нова доставка', body: 'Замовлення #{{number}} готове до доставки.' },
+    generic: { title: 'Сповіщення', body: '' }
   },
   Common: {
     error: 'Помилка',

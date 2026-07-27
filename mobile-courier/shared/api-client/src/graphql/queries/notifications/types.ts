@@ -1,14 +1,35 @@
 import { ApolloServerConfig } from '../../types';
 
-export type NotificationCategory = 'PROMOTIONS' | 'GENERAL' | 'SECURITY';
+/**
+ * Notification kind emitted by the backend. Persisted bell rows use lowercase/
+ * kind strings (e.g. 'order', 'COURIER_APPROVED'); consumers should tolerate
+ * unknown values.
+ */
+export type NotificationType =
+  | 'order'
+  | 'NEWS'
+  | 'COURIER_APPROVED'
+  | 'COURIER_REJECTED'
+  | 'DELIVERY_INCIDENT'
+  | 'DELIVERY_BROADCAST'
+  | string;
+
+export type NotificationData = {
+  orderId?: string;
+  orderNumber?: string;
+  spotId?: string;
+  spotName?: string;
+  status?: string;
+  [key: string]: unknown;
+};
 
 export type AppNotification = {
   id: string;
-  category: NotificationCategory;
-  type: string;
   title: string;
-  message: string;
+  body: string;
   imageUrl: string | null;
+  type: NotificationType;
+  data?: NotificationData | null;
   isRead: boolean;
   createdAt: string;
 };
@@ -17,14 +38,23 @@ export type MyNotificationsResponse = {
   myNotifications: AppNotification[];
 };
 
-export type UnreadNotificationsCountResponse = {
-  unreadNotificationsCount: number;
+export type NotificationResponse = {
+  notification: AppNotification | null;
 };
 
-export type MarkNotificationAsReadResponse = {
-  markNotificationAsRead: boolean;
+export type UnreadNotificationCountResponse = {
+  unreadNotificationCount: number;
+};
+
+export type MarkNotificationReadResponse = {
+  markNotificationRead: boolean;
+};
+
+export type MarkAllNotificationsReadResponse = {
+  markAllNotificationsRead: boolean;
 };
 
 export type NotificationsQueryOptions = ApolloServerConfig & {
-  category?: NotificationCategory;
+  unreadOnly?: boolean;
+  limit?: number;
 };

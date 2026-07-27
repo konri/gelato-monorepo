@@ -169,6 +169,13 @@ export default {
     cityPlaceholder: 'Kielce',
     confirm: 'Confirm'
   },
+  OrderChat: {
+    title: 'Messages',
+    empty: 'No messages yet. Write to the customer here.',
+    placeholderStaff: 'Message the customer…',
+    roleCourier: 'Courier',
+    roleCustomer: 'Customer'
+  },
   Notifications: {
     headerTitle: 'Allow notifications',
     title: 'Notifications',

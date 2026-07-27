@@ -9,6 +9,7 @@ import { onSessionExpired } from '@/shared/api-client/src/session'
 import { useAuthState } from '@/hooks/useAuthState'
 import { OrderAlertProvider } from '@/components/organisms/OrderAlertProvider'
 import { ToastProvider } from '@/components/organisms/ToastProvider'
+import { NotificationBridge } from '@/components/NotificationBridge'
 import '../translations'
 import './global.css'
 
@@ -61,6 +62,8 @@ export default function RootLayout() {
           </Stack>
           {/* App-wide incoming-order alert (non-dismissable, audible). */}
           <OrderAlertProvider enabled={isLoggedIn} />
+          {/* Bridges push notifications → toast / deep-link. */}
+          <NotificationBridge />
         </ToastProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

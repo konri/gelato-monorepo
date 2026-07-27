@@ -193,6 +193,13 @@ export default {
     cityPlaceholder: 'Kielce',
     confirm: 'Confirm'
   },
+  OrderChat: {
+    title: 'Messages',
+    empty: 'No messages yet. Write to the customer here.',
+    placeholderStaff: 'Message the customer…',
+    roleSpot: 'Spot',
+    roleCustomer: 'Customer'
+  },
   Notifications: {
     headerTitle: 'Allow notifications',
     title: 'Notifications',
@@ -210,7 +217,16 @@ export default {
     today: 'Today',
     yesterday: 'Yesterday',
     noNotifications: 'No notifications yet',
-    unreadCount: '{{count}} unread notifications'
+    unreadCount: '{{count}} unread notifications',
+    listTitle: 'Notifications',
+    detailTitle: 'Notification',
+    empty: 'This notification is no longer available',
+    markAllRead: 'Mark all read',
+    viewDelivery: 'Go to delivery',
+    approved: { title: 'Application approved', body: 'You were approved to deliver for {{spot}}.' },
+    rejected: { title: 'Application declined', body: 'Your application for {{spot}} was declined.' },
+    broadcast: { title: 'New delivery available', body: 'Order #{{number}} is ready for delivery.' },
+    generic: { title: 'Notification', body: '' }
   },
   Common: {
     error: 'Error',

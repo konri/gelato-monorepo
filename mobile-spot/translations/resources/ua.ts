@@ -169,6 +169,13 @@ const ua = {
     cityPlaceholder: 'Кельце',
     confirm: 'Підтвердити'
   },
+  OrderChat: {
+    title: 'Повідомлення',
+    empty: 'Повідомлень ще немає. Напишіть клієнту тут.',
+    placeholderStaff: 'Написати клієнту…',
+    roleCourier: 'Курʼєр',
+    roleCustomer: 'Клієнт'
+  },
   Notifications: {
     headerTitle: 'Дозволити сповіщення',
     title: 'Сповіщення',

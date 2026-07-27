@@ -1,12 +1,13 @@
 import { STATUS_STYLE, trackingSteps, trackingStepIndex, isTerminal } from '@/components/ordering/orderStatus';
 import { OrderReviewSection } from '@/components/ordering/OrderReviewSection';
+import { OrderChat } from '@/components/ordering/OrderChat';
 import { useOrderTracking } from '@/hooks/useOrders';
 import { staticMapUrl } from '@/services/googlePlaces';
 import { createComplaint } from '@repo/api-client';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -28,9 +29,24 @@ export default function OrderTrackingScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, messageId } = useLocalSearchParams<{ id: string; messageId?: string }>();
   const { order, loading } = useOrderTracking(id ?? null);
   const [complaintOpen, setComplaintOpen] = useState(false);
+
+  // Scroll-to-chat when deep-linked from an order-message notification.
+  const scrollRef = useRef<ScrollView>(null);
+  const chatYRef = useRef<number | null>(null);
+  const didScrollToChat = useRef(false);
+  const maybeScrollToChat = () => {
+    if (messageId && !didScrollToChat.current && chatYRef.current != null) {
+      didScrollToChat.current = true;
+      // Defer so layout is settled.
+      setTimeout(() => scrollRef.current?.scrollTo({ y: chatYRef.current!, animated: true }), 300);
+    }
+  };
+  useEffect(() => {
+    didScrollToChat.current = false;
+  }, [messageId]);
 
   const isPickup = order?.fulfillmentType === 'PICKUP';
   const mapUrl = useMemo(() => {
@@ -83,7 +99,7 @@ export default function OrderTrackingScreen() {
         </Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 24 }}>
+      <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 24 }}>
         {/* Status banner */}
         <View className={`rounded-2xl px-4 py-3 ${style.bg} flex-row items-center`}>
           <View className="w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: style.dot }} />
@@ -237,6 +253,16 @@ export default function OrderTrackingScreen() {
           orderId={order.id}
           delivered={order.status === 'DELIVERED'}
           hasCourier={!!order.courierName || !!order.courierLocation}
+        />
+
+        {/* Chat with the spot / courier */}
+        <OrderChat
+          orderId={order.id}
+          highlightId={messageId ?? null}
+          onMeasureY={(y) => {
+            chatYRef.current = y;
+            maybeScrollToChat();
+          }}
         />
 
         {/* Report a problem */}

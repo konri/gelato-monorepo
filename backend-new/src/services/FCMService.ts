@@ -26,6 +26,7 @@ export enum NotificationType {
   NEWS_PUBLISHED = 'NEWS_PUBLISHED',
   SPOT_ANNOUNCEMENT = 'SPOT_ANNOUNCEMENT',
   REFERRAL_REWARD = 'REFERRAL_REWARD',
+  ORDER_MESSAGE = 'ORDER_MESSAGE',
 }
 
 /**
@@ -310,6 +311,20 @@ const notificationTemplates: Record<
     ua: {
       title: 'Винагорода за рекомендацію!',
       body: 'Ви отримали {points} балів за рекомендацію друга!',
+    },
+  },
+  [NotificationType.ORDER_MESSAGE]: {
+    pl: {
+      title: 'Nowa wiadomość · #{orderNumber}',
+      body: '{sender}: {preview}',
+    },
+    en: {
+      title: 'New message · #{orderNumber}',
+      body: '{sender}: {preview}',
+    },
+    ua: {
+      title: 'Нове повідомлення · #{orderNumber}',
+      body: '{sender}: {preview}',
     },
   },
 };

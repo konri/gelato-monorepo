@@ -1,6 +1,7 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
 import { ScreenHeader } from '@/components/molecules/ScreenHeader';
+import { OrderChat } from '@/components/organisms/OrderChat';
 import { staticMapUrl } from '@/services/googlePlaces';
 import { getOrderById, terminateOrder, type OrderDetail } from '@repo/api-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -27,7 +28,7 @@ const LIVE_STATUSES = ['COURIER_ASSIGNED', 'PICKED_UP', 'IN_TRANSIT'];
 export default function OrderTrackScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, messageId } = useLocalSearchParams<{ id: string; messageId?: string }>();
   const { width } = useWindowDimensions();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -210,6 +211,9 @@ export default function OrderTrackScreen() {
                 </Typography>
               </Pressable>
             )}
+
+            {/* Chat with the customer (spot staff can message anytime). */}
+            {!!order && <OrderChat orderId={order.id} highlightId={messageId ?? null} />}
 
             {/* Terminate — refunds the customer, keeps their points. Only while
                 the order is still in progress. */}

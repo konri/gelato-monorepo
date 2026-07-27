@@ -303,6 +303,7 @@ type Mutation {
   logout: Boolean!
   markAllNotificationsRead: Boolean!
   markNotificationRead(id: ID!): Boolean!
+  postOrderMessage(body: String!, orderId: ID!): OrderMessageType!
   redeemPrize(prizeId: ID!): UserPrizeType!
   redispatchOrder(id: ID!): Boolean!
   refreshToken(refreshToken: String!): String!
@@ -419,6 +420,19 @@ type OrderItemType {
   quantity: Int!
   tasteId: ID
   total: Float!
+}
+
+type OrderMessageType {
+  asCourierId: ID
+  asSpotId: ID
+  body: String!
+  createdAt: DateTime!
+  id: ID!
+  orderId: ID!
+  senderAvatar: String
+  senderName: String
+  senderRole: String!
+  userId: ID!
 }
 
 type OrderSpotSummary {
@@ -664,7 +678,9 @@ type Query {
   news(id: ID!): NewsType
   newsComments(limit: Int = 50, newsId: ID!): [NewsCommentType!]!
   newsFeed(cityId: ID, limit: Int = 20): [NewsType!]!
+  notification(id: ID!): NotificationType
   order(id: ID!): OrderType
+  orderMessages(orderId: ID!): [OrderMessageType!]!
   pendingReviews: [PendingReviewType!]!
   prize(id: ID!): PrizeType
   prizes(includeInactive: Boolean = false): [PrizeType!]!

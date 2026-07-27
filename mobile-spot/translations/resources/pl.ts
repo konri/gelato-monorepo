@@ -169,6 +169,13 @@ export default {
     cityPlaceholder: 'Kielce',
     confirm: 'Potwierdź'
   },
+  OrderChat: {
+    title: 'Wiadomości',
+    empty: 'Brak wiadomości. Napisz tutaj do klienta.',
+    placeholderStaff: 'Napisz do klienta…',
+    roleCourier: 'Kurier',
+    roleCustomer: 'Klient'
+  },
   Notifications: {
     headerTitle: 'Zezwól na powiadomienia',
     title: 'Powiadomienia',

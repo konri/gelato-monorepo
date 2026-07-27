@@ -24,18 +24,31 @@ export type NotificationType =
   | 'SPOT_ANNOUNCEMENT'
   | 'REFERRAL_REWARD';
 
+export type NotificationData = {
+  orderId?: string;
+  orderNumber?: string;
+  newsId?: string;
+  status?: string;
+  [key: string]: unknown;
+};
+
 export type AppNotification = {
   id: string;
   title: string;
   body: string;
   imageUrl: string | null;
   type: NotificationType | string;
+  data?: NotificationData | null;
   isRead: boolean;
   createdAt: string;
 };
 
 export type MyNotificationsResponse = {
   myNotifications: AppNotification[];
+};
+
+export type NotificationResponse = {
+  notification: AppNotification | null;
 };
 
 export type UnreadNotificationCountResponse = {

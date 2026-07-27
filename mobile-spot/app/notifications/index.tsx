@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { localizeNotification } from '@/utils/notificationDisplay';
+import { refreshEmitter } from '@/hooks/useRefreshEmitter';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -29,6 +30,8 @@ function iconFor(type: string): { name: any; color: string; bg: string } {
       return { name: 'alert-circle', color: '#DC2626', bg: '#FEE2E2' };
     case 'order':
       return { name: 'receipt', color: '#EC2828', bg: '#FEECEC' };
+    case 'order_message':
+      return { name: 'chatbubble-ellipses', color: '#2563EB', bg: '#DBEAFE' };
     default:
       return { name: 'notifications', color: '#6B7280', bg: '#F3F4F6' };
   }
@@ -50,6 +53,9 @@ export default function NotificationsScreen() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Refetch when a push arrives while this screen is mounted.
+  useEffect(() => refreshEmitter.subscribe(() => void load()), [load]);
 
   const onRefresh = async () => {
     setRefreshing(true);

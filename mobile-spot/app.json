@@ -15,6 +15,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.konradhopek.gelato.spot",
       "googleServicesFile": "./GoogleService-Info.plist",
+      "entitlements": {
+        "aps-environment": "development"
+      },
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Ta aplikacja potrzebuje dostępu do lokalizacji, aby pokazywać odpowiednie oferty w Twojej okolicy.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Ta aplikacja potrzebuje dostępu do lokalizacji, aby pokazywać odpowiednie oferty w Twojej okolicy.",
@@ -69,7 +72,18 @@
       ],
       "expo-localization",
       "expo-web-browser",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "@react-native-firebase/app",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static",
+            "forceStaticLinking": ["RNFBApp", "RNFBMessaging"]
+          }
+        }
+      ],
+      "./plugins/withNonModularHeaders"
     ],
     "experiments": {
       "typedRoutes": true

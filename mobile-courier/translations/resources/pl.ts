@@ -193,6 +193,13 @@ export default {
     cityPlaceholder: 'Kielce',
     confirm: 'Potwierdź'
   },
+  OrderChat: {
+    title: 'Wiadomości',
+    empty: 'Brak wiadomości. Napisz tutaj do klienta.',
+    placeholderStaff: 'Napisz do klienta…',
+    roleSpot: 'Lokal',
+    roleCustomer: 'Klient'
+  },
   Notifications: {
     headerTitle: 'Zezwól na powiadomienia',
     title: 'Powiadomienia',
@@ -210,7 +217,16 @@ export default {
     today: 'Dzisiaj',
     yesterday: 'Wczoraj',
     noNotifications: 'Brak powiadomień',
-    unreadCount: '{{count}} nieprzeczytanych powiadomień'
+    unreadCount: '{{count}} nieprzeczytanych powiadomień',
+    listTitle: 'Powiadomienia',
+    detailTitle: 'Powiadomienie',
+    empty: 'To powiadomienie nie jest już dostępne',
+    markAllRead: 'Oznacz wszystkie',
+    viewDelivery: 'Przejdź do dostawy',
+    approved: { title: 'Wniosek zaakceptowany', body: 'Zostałeś zaakceptowany do dostaw dla {{spot}}.' },
+    rejected: { title: 'Wniosek odrzucony', body: 'Twój wniosek dla {{spot}} został odrzucony.' },
+    broadcast: { title: 'Nowa dostawa', body: 'Zamówienie #{{number}} jest gotowe do dostawy.' },
+    generic: { title: 'Powiadomienie', body: '' }
   },
   Common: {
     error: 'Błąd',

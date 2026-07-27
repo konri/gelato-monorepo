@@ -186,7 +186,28 @@ export default {
     today: 'Dzisiaj',
     yesterday: 'Wczoraj',
     noNotifications: 'Brak powiadomień',
-    unreadCount: '{{count}} nieprzeczytanych powiadomień'
+    unreadCount: '{{count}} nieprzeczytanych powiadomień',
+    detailTitle: 'Powiadomienie',
+    empty: 'To powiadomienie nie jest już dostępne',
+    viewOrder: 'Zobacz zamówienie',
+    viewNews: 'Czytaj aktualność',
+    order: {
+      preparing: { title: 'Zamówienie przyjęte', body: 'Zamówienie #{{number}} jest przygotowywane.' },
+      ready: { title: 'Zamówienie gotowe', body: 'Zamówienie #{{number}} jest gotowe.' },
+      delivered: { title: 'Zamówienie dostarczone', body: 'Zamówienie #{{number}} zostało dostarczone. Smacznego!' },
+      collected: { title: 'Zamówienie odebrane', body: 'Zamówienie #{{number}} zostało odebrane. Smacznego!' },
+      cancelled: { title: 'Zamówienie anulowane', body: 'Zamówienie #{{number}} zostało anulowane.' },
+      generic: { title: 'Aktualizacja zamówienia', body: 'Zamówienie #{{number}} zostało zaktualizowane.' }
+    },
+    news: { title: 'Aktualności', body: '{{title}}' }
+  },
+  OrderChat: {
+    title: 'Wiadomości',
+    empty: 'Brak wiadomości. Zadaj tutaj pytanie lokalowi lub kurierowi.',
+    placeholder: 'Napisz wiadomość…',
+    roleSpot: 'Lokal',
+    roleCourier: 'Kurier',
+    roleYou: 'Ty'
   },
   Complaint: {
     report: 'Zgłoś problem',

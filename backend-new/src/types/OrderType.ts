@@ -237,6 +237,47 @@ export class CollectOrderResult {
 }
 
 /**
+ * A single message in an order's chat thread (client ↔ spot ↔ courier).
+ * Attribution fields mirror NewsComment: when asSpotId/asCourierId is set the
+ * message displays that party instead of the raw author.
+ */
+@ObjectType()
+export class OrderMessageType {
+  @Field(() => ID)
+  id!: string;
+
+  @Field(() => ID)
+  orderId!: string;
+
+  @Field(() => ID)
+  userId!: string;
+
+  @Field(() => ID, { nullable: true })
+  asSpotId?: string;
+
+  @Field(() => ID, { nullable: true })
+  asCourierId?: string;
+
+  @Field()
+  body!: string;
+
+  // Display name: spot name for spot messages, "Courier" (localized client-side
+  // by role) for courier messages, else the author's name.
+  @Field({ nullable: true })
+  senderName?: string;
+
+  @Field({ nullable: true })
+  senderAvatar?: string;
+
+  // Which party sent it, so the UI can align/badge: 'spot' | 'courier' | 'client'.
+  @Field()
+  senderRole!: string;
+
+  @Field()
+  createdAt!: Date;
+}
+
+/**
  * Order Item Input
  */
 @InputType()

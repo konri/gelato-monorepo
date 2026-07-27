@@ -21,6 +21,58 @@ import {
   NewsCommentType,
 } from '../types/NewsType';
 import { PubSubService } from '../services/PubSubService';
+import { NotifyService } from '../services/NotifyService';
+import { NotificationType } from '../services/FCMService';
+
+/**
+ * Resolve the CLIENT userIds that should be notified about a news post, and
+ * send them a bell row + push. Audience mirrors the `newsFeed` read-side rules:
+ *   - global   (spotId null + no target cities) → every client
+ *   - targeted (targetCityIds set)              → clients whose preferredCityId is targeted
+ *   - spot-authored (spotId set)                → clients in that spot's city
+ * Best-effort and fire-and-forget by the caller — never blocks the mutation.
+ */
+async function notifyNewsAudience(
+  news: { id: string; title: string; spotId?: string | null; targetCityIds?: string[]; images?: string[] },
+  prisma: Context['prisma'],
+): Promise<void> {
+  let cityFilter: { preferredCityId?: { in: string[] } | string } = {};
+
+  if (news.spotId) {
+    const spot = await prisma.spot.findUnique({
+      where: { id: news.spotId },
+      select: { cityId: true },
+    });
+    if (!spot?.cityId) return; // spot has no city → nobody to target
+    cityFilter = { preferredCityId: spot.cityId };
+  } else if (news.targetCityIds && news.targetCityIds.length > 0) {
+    cityFilter = { preferredCityId: { in: news.targetCityIds } };
+  }
+  // else: global — no city filter, all clients.
+
+  const users = await prisma.user.findMany({
+    where: { roles: { has: Role.CLIENT }, ...cityFilter },
+    select: { id: true },
+  });
+  const userIds = users.map((u) => u.id);
+  if (userIds.length === 0) return;
+
+  await NotifyService.notifyUsers(
+    userIds,
+    {
+      persistType: 'NEWS',
+      fcmType: NotificationType.NEWS_PUBLISHED,
+      title: 'News',
+      body: news.title,
+      data: { newsId: news.id },
+      imageUrl: news.images?.[0],
+      fcmVariables: { newsTitle: news.title },
+      fcmData: { kind: 'NEWS_PUBLISHED', newsId: news.id },
+    },
+    prisma,
+  );
+  console.log(`📰 News ${news.id} notified to ${userIds.length} client(s)`);
+}
 
 /**
  * Resolves NewsCommentType.userName from the related user.
@@ -214,6 +266,12 @@ export class NewsResolver {
     await PubSubService.publishNewsPublished(news);
     console.log(`✅ News created + published: ${news.id} - ${news.title}`);
 
+    // Notify the audience (bell + push). Fire-and-forget — a large client
+    // fan-out must never block or fail the mutation.
+    void notifyNewsAudience(news, prisma).catch((e) =>
+      console.error('notifyNewsAudience (createNews) failed:', e),
+    );
+
     return news as NewsType;
   }
 
@@ -255,6 +313,11 @@ export class NewsResolver {
 
     await PubSubService.publishNewsPublished(news);
     console.log(`✅ Spot news created + published: ${news.id} by spot ${input.spotId}`);
+
+    // Notify clients in the spot's city (bell + push). Fire-and-forget.
+    void notifyNewsAudience(news, prisma).catch((e) =>
+      console.error('notifyNewsAudience (createSpotNews) failed:', e),
+    );
 
     return news as NewsType;
   }
@@ -323,6 +386,13 @@ export class NewsResolver {
     @Arg('input') input: UpdateNewsInput,
     @Ctx() { prisma }: Context
   ): Promise<NewsType> {
+    // Read the prior publish state so we can detect a genuine false→true
+    // transition (and only notify/publish then).
+    const before = await prisma.news.findUnique({
+      where: { id },
+      select: { isPublished: true },
+    });
+
     const data: any = {};
 
     if (input.title !== undefined) data.title = input.title;
@@ -345,9 +415,15 @@ export class NewsResolver {
       data,
     });
 
-    // Publish event if news was just published
-    if (input.isPublished && !data.publishedAt) {
+    // Fire publish side-effects only on the genuine unpublished→published
+    // transition (previously guarded on `!data.publishedAt`, which — because
+    // publishedAt is set right above whenever isPublished is true — never fired).
+    const justPublished = input.isPublished === true && before?.isPublished === false;
+    if (justPublished) {
       await PubSubService.publishNewsPublished(news);
+      void notifyNewsAudience(news, prisma).catch((e) =>
+        console.error('notifyNewsAudience (updateNews) failed:', e),
+      );
     }
 
     console.log(`✅ News updated: ${id}`);

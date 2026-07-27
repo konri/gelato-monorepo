@@ -8,6 +8,22 @@ export const MY_NOTIFICATIONS = gql`
       body
       imageUrl
       type
+      data
+      isRead
+      createdAt
+    }
+  }
+`;
+
+export const NOTIFICATION = gql`
+  query Notification($id: ID!) {
+    notification(id: $id) {
+      id
+      title
+      body
+      imageUrl
+      type
+      data
       isRead
       createdAt
     }

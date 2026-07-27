@@ -27,6 +27,7 @@ export * from './src/graphql/queries/products';
 export * from './src/graphql/queries/orders';
 export * from './src/graphql/queries/prizes';
 export * from './src/graphql/queries/news';
+export * from './src/graphql/queries/orderMessages';
 export * from './src/graphql/queries/spotOrders';
 export * from './src/graphql/queries/spotMenu';
 export * from './src/graphql/queries/spotDetails';

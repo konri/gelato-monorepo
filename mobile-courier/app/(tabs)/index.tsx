@@ -10,6 +10,7 @@ import {
   useMyApprovedSpots,
   useMyCourierApplications,
 } from '@/hooks/useCourierApplications';
+import { useUnreadNotificationsCount } from '@/hooks/useUnreadNotificationsCount';
 import {
   CourierApplication,
   acceptDelivery,
@@ -18,7 +19,7 @@ import {
 } from '@repo/api-client';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -82,16 +83,26 @@ export default function CourierHomeScreen() {
   const { data: activeSession, refetch: refetchSession } = useMyActiveWorkSession();
   const { data: deliveries, refetch: refetchDeliveries } = useAvailableDeliveries();
   const { data: activeDelivery, refetch: refetchActiveDelivery } = useMyActiveDelivery();
+  const { data: unreadCount, refetch: refetchUnread } = useUnreadNotificationsCount();
   const [refreshing, setRefreshing] = useState(false);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // If a delivery is in progress, jump straight to the active-delivery screen.
+  // If a delivery is in progress, jump to the active-delivery screen — but only
+  // ONCE per delivery. The pool is polled every 15s and each poll returns a new
+  // object reference for the same delivery; keying the redirect on the delivery
+  // *id* (not the object) stops it from re-navigating every few seconds.
+  const redirectedDeliveryId = useRef<string | null>(null);
   useEffect(() => {
-    if (activeDelivery) {
+    const id = activeDelivery?.id ?? null;
+    if (id && redirectedDeliveryId.current !== id) {
+      redirectedDeliveryId.current = id;
       router.replace('/delivery');
+    } else if (!id) {
+      // Delivery finished/cleared — allow a future one to redirect again.
+      redirectedDeliveryId.current = null;
     }
-  }, [activeDelivery]);
+  }, [activeDelivery?.id]);
 
   // Refetch everything whenever the tab regains focus (e.g. after applying).
   useFocusEffect(
@@ -101,12 +112,14 @@ export default function CourierHomeScreen() {
       void refetchSession();
       void refetchDeliveries();
       void refetchActiveDelivery();
+      void refetchUnread();
     }, [
       refetch,
       refetchApproved,
       refetchSession,
       refetchDeliveries,
       refetchActiveDelivery,
+      refetchUnread,
     ]),
   );
 
@@ -246,9 +259,24 @@ export default function CourierHomeScreen() {
             </Typography>
           </View>
         </View>
-        <Pressable onPress={() => router.push('/settings' as any)}>
-          <Ionicons name="settings-outline" size={24} color="#212121" />
-        </Pressable>
+        <View className="flex-row items-center">
+          <Pressable onPress={() => router.push('/notification-center' as any)} className="mr-4">
+            <Ionicons name="notifications-outline" size={24} color="#212121" />
+            {!!unreadCount && unreadCount > 0 && (
+              <View
+                className="absolute -right-1.5 -top-1.5 min-w-[16px] h-4 items-center justify-center rounded-full px-1"
+                style={{ backgroundColor: '#EC2828' }}
+              >
+                <Typography variant="body-very-small-medium" className="text-white" style={{ fontSize: 10 }}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Typography>
+              </View>
+            )}
+          </Pressable>
+          <Pressable onPress={() => router.push('/settings' as any)}>
+            <Ionicons name="settings-outline" size={24} color="#212121" />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView

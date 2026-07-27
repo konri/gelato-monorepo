@@ -1,6 +1,7 @@
 import { Typography } from '@/components/atoms/Typography';
 import { DeliveryMap } from '@/components/molecules/DeliveryMap';
 import { ScreenHeader } from '@/components/molecules/ScreenHeader';
+import { OrderChat } from '@/components/organisms/OrderChat';
 import { useMyActiveDelivery } from '@/hooks/useCourierApplications';
 import { useCourierLocationPing } from '@/hooks/useCourierLocationPing';
 import { useCurrentLocation } from '@/hooks/useCurrentLocation';
@@ -220,6 +221,9 @@ export default function ActiveDeliveryScreen() {
             </Typography>
           )}
         </Pressable>
+
+        {/* Chat with the customer — courier may only send once picked up. */}
+        <OrderChat orderId={delivery.id} disabled={!pickedUp} />
 
         {/* Report a problem */}
         <Pressable

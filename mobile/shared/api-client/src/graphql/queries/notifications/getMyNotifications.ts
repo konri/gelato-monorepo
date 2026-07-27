@@ -1,6 +1,7 @@
 import { executeGraphQLQuery } from '../../client';
 import {
   MY_NOTIFICATIONS,
+  NOTIFICATION,
   UNREAD_NOTIFICATION_COUNT,
   MARK_NOTIFICATION_READ,
 } from './myNotifications';
@@ -8,6 +9,7 @@ import {
   AppNotification,
   MarkNotificationReadResponse,
   MyNotificationsResponse,
+  NotificationResponse,
   NotificationsQueryOptions,
   UnreadNotificationCountResponse,
 } from './types';
@@ -25,6 +27,21 @@ export const getMyNotifications = async (
   return {
     ...result,
     data: result.data ? result.data.myNotifications : null,
+  };
+};
+
+export const getNotification = async (
+  options: NotificationsQueryOptions & { id: string },
+): Promise<GraphQLResult<AppNotification | null>> => {
+  const { id, unreadOnly, limit, ...apolloOptions } = options;
+  const result = await executeGraphQLQuery<NotificationResponse>(NOTIFICATION, {
+    ...apolloOptions,
+    variables: { id },
+  });
+
+  return {
+    ...result,
+    data: result.data ? result.data.notification : null,
   };
 };
 

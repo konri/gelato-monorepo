@@ -1,6 +1,7 @@
 import { logger } from '@/utils/logger';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
+import messaging from '@react-native-firebase/messaging';
 import { Platform } from 'react-native';
 
 // Configure notification behavior
@@ -26,15 +27,13 @@ export class NotificationService {
   }
 
   async requestPermissions(): Promise<boolean> {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
+    // Ask via Firebase Messaging so iOS registers the app with APNs/FCM.
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-
-    if (finalStatus !== 'granted') {
+    if (!enabled) {
       logger.warn('Failed to get push notification permissions');
       return false;
     }
@@ -53,14 +52,50 @@ export class NotificationService {
         return null;
       }
 
-      // Use native device token for direct Firebase Admin SDK integration
-      const nativeToken = await Notifications.getDevicePushTokenAsync();
-      this.fcmToken = nativeToken.data as string;
+      // On iOS the device must be registered for remote messages before the FCM
+      // token can be minted; without this getToken() throws messaging/unregistered.
+      if (Platform.OS === 'ios') {
+        await messaging().registerDeviceForRemoteMessages();
+        // Give APNs a beat to hand back the token to Firebase.
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+
+      // Fetch the real FCM registration token (firebase-admin can route to this,
+      // unlike the raw APNs token expo-notifications returns on iOS). Retry a few
+      // times because iOS can briefly report messaging/unregistered on first run.
+      let token: string | null = null;
+      for (let attempt = 0; attempt < 3 && !token; attempt++) {
+        try {
+          token = await messaging().getToken();
+          if (token) break;
+        } catch (tokenError: any) {
+          logger.warn(`getToken attempt ${attempt + 1} failed:`, tokenError?.code ?? tokenError);
+          if (Platform.OS === 'ios' && tokenError?.code === 'messaging/unregistered') {
+            await messaging().registerDeviceForRemoteMessages();
+          }
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+      }
+
+      if (!token) {
+        logger.warn('Could not obtain an FCM token after retries');
+        return null;
+      }
+
+      this.fcmToken = token;
       return this.fcmToken;
     } catch (error) {
       logger.error('Error getting FCM token:', error);
       return null;
     }
+  }
+
+  /** Subscribe to FCM token refreshes; the callback re-registers the new token. */
+  onTokenRefresh(callback: (token: string) => void) {
+    return messaging().onTokenRefresh((token) => {
+      this.fcmToken = token;
+      callback(token);
+    });
   }
 
   async getDeviceInfo() {

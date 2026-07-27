@@ -17,6 +17,8 @@ function iconFor(type: string): { name: any; color: string; bg: string } {
       return { name: 'alert-circle', color: '#DC2626', bg: '#FEE2E2' };
     case 'order':
       return { name: 'receipt', color: '#EC2828', bg: '#FEECEC' };
+    case 'order_message':
+      return { name: 'chatbubble-ellipses', color: '#2563EB', bg: '#DBEAFE' };
     default:
       return { name: 'notifications', color: '#6B7280', bg: '#F3F4F6' };
   }
@@ -46,6 +48,12 @@ export default function NotificationDetailScreen() {
   };
 
   const orderId = item?.data?.orderId as string | undefined;
+  const messageId = item?.data?.messageId as string | undefined;
+  const orderHref = orderId
+    ? messageId
+      ? `/order/${orderId}?messageId=${messageId}`
+      : `/order/${orderId}`
+    : null;
   const incidentType = item?.data?.incidentType as string | undefined;
   const note = (item?.data?.note as string | undefined)?.trim();
   const ic = iconFor(item?.type ?? '');
@@ -109,9 +117,9 @@ export default function NotificationDetailScreen() {
                 {t('SpotNotif.reportedAt')}: {fmt(item.createdAt)}
               </Typography>
 
-              {!!orderId && (
+              {!!orderHref && (
                 <Pressable
-                  onPress={() => router.push(`/order/${orderId}` as never)}
+                  onPress={() => router.push(orderHref as never)}
                   className="mt-5 flex-row items-center justify-center rounded-xl py-3.5"
                   style={{ backgroundColor: '#EC2828' }}
                 >
