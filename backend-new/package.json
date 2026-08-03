@@ -1,7 +1,7 @@
 {
-  "name": "gelato-backend",
+  "name": "loodly-backend",
   "version": "1.0.0",
-  "description": "Gelato Ice Cream Delivery Backend - GraphQL API with Prisma ORM",
+  "description": "Loodly Ice Cream Delivery Backend - GraphQL API with Prisma ORM",
   "main": "dist/index.js",
   "license": "MIT",
   "scripts": {

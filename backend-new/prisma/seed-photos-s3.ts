@@ -19,7 +19,7 @@ const TASTE_PHOTOS: Record<string, string> = {
   'Strawberry Sorbet': U('photo-1633933358116-a27b902fad35'), // pink scoop
   'Raspberry Sorbet': U('photo-1488900128323-21503983a07e'), // red berry ice cream
   'Mango Sorbet': U('photo-1501443762994-82bd5dace89a'), // orange gelato case
-  'Pistachio Gelato': U('photo-1560008581-09826d1de69e'), // green pistachio
+  'Pistachio Loodly': U('photo-1560008581-09826d1de69e'), // green pistachio
   'Dark Chocolate': U('photo-1563805042-7684c019e1cb'), // chocolate scoop
   'Vanilla Bean': U('photo-1497034825429-c343d7c6a68f'), // vanilla cone
   'Salted Caramel': U('photo-1587563871167-1ee9c731aefb'), // caramel

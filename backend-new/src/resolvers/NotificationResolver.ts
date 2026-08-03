@@ -323,7 +323,7 @@ export class NotificationResolver {
       NotificationType.SPOT_ANNOUNCEMENT,
       language,
       {
-        spotName: 'Gelato Admin',
+        spotName: 'Loodly Admin',
         message: body,
       },
       {
@@ -347,7 +347,7 @@ export class NotificationResolver {
       NotificationType.SPOT_ANNOUNCEMENT,
       language,
       {
-        spotName: 'Gelato Admin',
+        spotName: 'Loodly Admin',
         message: body,
       },
       {
@@ -371,7 +371,7 @@ export class NotificationResolver {
       userId,
       NotificationType.SPOT_ANNOUNCEMENT,
       {
-        spotName: 'Gelato Admin',
+        spotName: 'Loodly Admin',
         message: body,
       },
       {

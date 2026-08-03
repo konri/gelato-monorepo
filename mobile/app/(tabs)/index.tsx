@@ -4,8 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import Logo from '@/assets/images/logo.svg';
-import Wordmark from '@/assets/images/bonapka.svg';
+import Lockup from '@/assets/images/loodly_lockup.svg';
 import { NewsFeed, NewsFeedHandle } from '@/components/molecules/NewsFeed';
 import { TasksTabContent } from '@/components/molecules/Quests/TasksTabContent';
 import { usePointBalance } from '@/hooks/usePointBalance';
@@ -238,8 +237,7 @@ export default function StartScreen() {
       {/* Header with title and icons */}
       <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-200">
         <View className="flex-1 flex-row items-center">
-          <Logo width={30} height={30} />
-          <Wordmark width={104} height={22} style={{ marginLeft: 6 }} />
+          <Lockup width={88} height={61} />
         </View>
 
         <View className="flex-row items-center gap-4">

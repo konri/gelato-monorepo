@@ -13,7 +13,7 @@ export default {
     },
     slide2: {
       title: 'We give you a special delivery box',
-      description: 'Every courier gets our insulated Gelato box so the ice cream arrives perfectly frozen. It is provided by us — you just ride.'
+      description: 'Every courier gets our insulated Loodly box so the ice cream arrives perfectly frozen. It is provided by us — you just ride.'
     },
     slide3: {
       title: 'Get approved by a spot to start',
@@ -46,7 +46,7 @@ export default {
     passwordPlaceholder: 'Min. 8 chars, 1 upper, 1 number',
     referralCode: 'Referral code (optional)',
     referralCodePlaceholder: 'XXXXXX123',
-    agreeToTerms: 'I agree to Gelato',
+    agreeToTerms: 'I agree to Loodly',
     termsAndConditions: 'Terms & Conditions.',
     signUp: 'Sign up',
     alreadyHaveAccount: 'Already have an account?',
@@ -243,7 +243,7 @@ export default {
   Sections: {
     rewards: 'Rewards and challenges',
     seeAll: 'SEE ALL',
-    visitNewPlace: 'Visit new place with Gelato',
+    visitNewPlace: 'Visit new place with Loodly',
     getFreeCoffee: 'Get free coffee',
     points: 'pts',
     nearbyStores: 'Nearby stores',
@@ -404,7 +404,7 @@ export default {
     referralModalTitle: 'Invite a friend',
     referralRuleReferee: 'Your friend gets +700 points instantly when they sign up with your code.',
     referralRuleReferrer: 'You get +500 points after your friend makes their first purchase.',
-    referralShareMessage: 'Join me on Gelato! Use my code {{code}} to get 700 bonus points on sign up. 🍦',
+    referralShareMessage: 'Join me on Loodly! Use my code {{code}} to get 700 bonus points on sign up. 🍦',
     shareCode: 'Share code',
     referralCodeUnavailable: "Couldn't load your referral code. Please try again.",
     shareFailed: 'Could not open the share sheet. Please try again.',
@@ -899,7 +899,7 @@ export default {
     preparedTitle: "Today's prepared orders",
     noPrepared: 'Nothing prepared yet today.',
     note: 'Note',
-    loginTitle: 'Gelato Spot',
+    loginTitle: 'Loodly Spot',
     loginSubtitle: 'Sign in to manage your spot',
     email: 'Email',
     password: 'Password',
@@ -1023,7 +1023,7 @@ export default {
     points: 'points',
     redeemPoints: 'Redeem Points',
     yourQrCode: 'Your QR Code',
-    qrInstructions: 'Show this QR code at any Gelato spot to earn points',
+    qrInstructions: 'Show this QR code at any Loodly spot to earn points',
     accountNumber: 'Account Number',
     rewardsAvailable: 'Rewards available',
     totalOrders: 'Total orders',

@@ -1,6 +1,6 @@
-# Gelato Backend - Ice Cream Delivery Platform
+# Loodly Backend - Ice Cream Delivery Platform
 
-GraphQL API backend for the Gelato ice cream delivery ecosystem, built with TypeScript, Prisma, and Apollo Server.
+GraphQL API backend for the Loodly ice cream delivery ecosystem, built with TypeScript, Prisma, and Apollo Server.
 
 ## 🎨 Brand Colors
 

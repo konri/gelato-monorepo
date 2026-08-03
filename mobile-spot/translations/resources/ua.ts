@@ -13,7 +13,7 @@ const ua = {
     },
     slide2: {
       title: 'Ми даємо вам спеціальну сумку для доставки',
-      description: 'Кожен кур’єр отримує нашу термосумку Gelato, щоб морозиво доставлялося ідеально замороженим. Її надаємо ми — ви лише їдете.'
+      description: 'Кожен кур’єр отримує нашу термосумку Loodly, щоб морозиво доставлялося ідеально замороженим. Її надаємо ми — ви лише їдете.'
     },
     slide3: {
       title: 'Почніть після схвалення закладом',
@@ -46,7 +46,7 @@ const ua = {
     passwordPlaceholder: 'Мін. 8 символів, 1 велика, 1 цифра',
     referralCode: 'Реферальний код (необов\'язково)',
     referralCodePlaceholder: 'XXXXXX123',
-    agreeToTerms: 'Я погоджуюсь з Gelato',
+    agreeToTerms: 'Я погоджуюсь з Loodly',
     termsAndConditions: 'Положення та умови.',
     signUp: 'Зареєструватися',
     alreadyHaveAccount: 'Вже маєте акаунт?',
@@ -243,7 +243,7 @@ const ua = {
   Sections: {
     rewards: 'Винагороди та челенджі',
     seeAll: 'ПЕРЕГЛЯНУТИ ВСЕ',
-    visitNewPlace: 'Відвідайте нове місце з Gelato',
+    visitNewPlace: 'Відвідайте нове місце з Loodly',
     getFreeCoffee: 'Отримайте безкоштовну каву',
     points: 'балів',
     nearbyStores: 'Найближчі магазини',
@@ -404,7 +404,7 @@ const ua = {
     referralModalTitle: 'Запросіть друга',
     referralRuleReferee: 'Ваш друг миттєво отримує +700 балів, коли реєструється з вашим кодом.',
     referralRuleReferrer: 'Ви отримуєте +500 балів після того, як ваш друг зробить першу покупку.',
-    referralShareMessage: 'Приєднуйся до мене в Gelato! Використай мій код {{code}}, щоб отримати 700 бонусних балів при реєстрації. 🍦',
+    referralShareMessage: 'Приєднуйся до мене в Loodly! Використай мій код {{code}}, щоб отримати 700 бонусних балів при реєстрації. 🍦',
     shareCode: 'Поділитися кодом',
     referralCodeUnavailable: "Не вдалося завантажити ваш реферальний код. Будь ласка, спробуйте ще раз.",
     shareFailed: 'Не вдалося відкрити вікно поширення. Будь ласка, спробуйте ще раз.',
@@ -898,7 +898,7 @@ const ua = {
     preparedTitle: 'Сьогоднішні приготовані замовлення',
     noPrepared: 'Сьогодні ще нічого не приготовано.',
     note: 'Примітка',
-    loginTitle: 'Gelato Spot',
+    loginTitle: 'Loodly Spot',
     loginSubtitle: 'Увійдіть, щоб керувати точкою',
     email: 'Ел. пошта',
     password: 'Пароль',
@@ -1023,7 +1023,7 @@ const ua = {
     points: 'балів',
     redeemPoints: 'Обміняти бали',
     yourQrCode: 'Ваш QR-код',
-    qrInstructions: 'Покажіть цей QR-код у будь-якому закладі Gelato, щоб отримати бали',
+    qrInstructions: 'Покажіть цей QR-код у будь-якому закладі Loodly, щоб отримати бали',
     accountNumber: 'Номер акаунта',
     rewardsAvailable: 'Доступні нагороди',
     totalOrders: 'Усього замовлень',

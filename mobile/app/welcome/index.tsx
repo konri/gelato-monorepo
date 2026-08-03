@@ -1,5 +1,4 @@
-import Bonapka from "@/assets/images/bonapka.svg";
-import Logo from "@/assets/images/logo.svg";
+import Lockup from "@/assets/images/loodly_lockup.svg";
 import { Button } from "@/components/atoms/Button";
 import { Typography } from "@/components/atoms/Typography";
 import { CustomSafeAreaView } from "@/components/CustomSafeAreaView";
@@ -13,6 +12,8 @@ export default function MainLoginScreen() {
   const { t } = useTranslation();
   const {
     isGoogleLoading,
+    isAppleLoading,
+    isAppleAvailable,
     handleSignUp,
     handleSignIn,
     handleGoogleLogin,
@@ -26,8 +27,7 @@ export default function MainLoginScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View className="items-center">
-          <Logo width={79} height={74} />
-          <Bonapka width={200} height={51} />
+          <Lockup width={240} height={166} />
         </View>
 
         <View className="items-center w-full mt-14">
@@ -52,6 +52,8 @@ export default function MainLoginScreen() {
             googleText={t("SignUp.continueWithGoogle")}
             appleText={t("SignUp.continueWithApple")}
             isGoogleLoading={isGoogleLoading}
+            isAppleLoading={isAppleLoading}
+            showApple={isAppleAvailable}
           />
         </View>
 

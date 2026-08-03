@@ -155,7 +155,7 @@ function InviteModal({ code, onClose }: { code: string; onClose: () => void }) {
     const text = t("quests.referral_share_message", { code });
     if (navigator.share) {
       try {
-        await navigator.share({ title: "Gelato", text });
+        await navigator.share({ title: "Loodly", text });
         return;
       } catch {
         /* user cancelled */

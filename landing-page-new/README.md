@@ -1,6 +1,6 @@
-# Gelato Landing Page
+# Loodly Landing Page
 
-Landing page for the Gelato ice cream delivery platform, inspired by goodlood.com.
+Landing page for the Loodly ice cream delivery platform, inspired by goodlood.com.
 
 ## 🎨 Brand Colors
 

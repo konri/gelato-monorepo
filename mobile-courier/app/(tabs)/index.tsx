@@ -1,4 +1,4 @@
-import Logo from '@/assets/images/logo.svg';
+import Lockup from '@/assets/images/loodly_lockup.svg';
 import { Typography } from '@/components/atoms/Typography';
 import { DeliveryPoolCard } from '@/components/molecules/DeliveryPoolCard';
 import { SpotSelectionModal } from '@/components/molecules/SpotSelectionModal';
@@ -244,16 +244,18 @@ export default function CourierHomeScreen() {
         className="flex-row items-center justify-between px-6 py-4 border-b border-gray-200 bg-white"
         style={{ paddingTop: insets.top + 12 }}
       >
-        <View className="flex-row items-center">
-          <Logo width={32} height={32} />
-          <View className="ml-2">
-            <Typography variant="body-lg-bold" className="text-text-primary leading-5">
-              Gelato
-            </Typography>
+        {/* COURIER is absolutely positioned so it tucks under the cone rather
+            than sitting beside the wordmark. The cone centres at ~32% of the
+            lockup width, hence the left offset. */}
+        <View style={{ width: 88, height: 61 }}>
+          <Lockup width={88} height={61} />
+          <View
+            style={{ position: 'absolute', left: 26, width: 56, bottom: -3, alignItems: 'center' }}
+          >
             <Typography
               variant="body-very-small-medium"
-              className="text-primary tracking-[2px]"
-              style={{ color: '#EC2828' }}
+              className="tracking-[2px]"
+              style={{ color: '#EC2828', fontSize: 9 }}
             >
               COURIER
             </Typography>

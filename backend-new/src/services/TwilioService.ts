@@ -309,9 +309,9 @@ export class TwilioService {
    */
   private static async sendSMS(phone: string, code: string, language: 'pl' | 'en' | 'ua'): Promise<void> {
     const messages = {
-      pl: `Twój kod weryfikacyjny Gelato: ${code}\nWażny przez ${this.OTP_EXPIRY_MINUTES} minut.`,
-      en: `Your Gelato verification code: ${code}\nValid for ${this.OTP_EXPIRY_MINUTES} minutes.`,
-      ua: `Ваш код верифікації Gelato: ${code}\nДійсний ${this.OTP_EXPIRY_MINUTES} хвилин.`,
+      pl: `Twój kod weryfikacyjny Loodly: ${code}\nWażny przez ${this.OTP_EXPIRY_MINUTES} minut.`,
+      en: `Your Loodly verification code: ${code}\nValid for ${this.OTP_EXPIRY_MINUTES} minutes.`,
+      ua: `Ваш код верифікації Loodly: ${code}\nДійсний ${this.OTP_EXPIRY_MINUTES} хвилин.`,
     };
 
     const fromNumber = process.env.TWILIO_PHONE_NUMBER;

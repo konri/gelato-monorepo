@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Gelato Spot",
+    "name": "Loodly Spot",
     "slug": "gelato-spot",
     "version": "1.0.0",
     "sdkVersion": "54.0.0",
@@ -58,8 +58,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/logo_full_spot.png",
-          "imageWidth": 200,
+          "image": "./assets/images/splash_spot.png",
+          "imageWidth": 260,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }

@@ -72,9 +72,9 @@ const RESET_CODE_TTL_MS = 24 * 60 * 60 * 1000;
 
 // Footer tagline for the berry-branded admin/spot invite emails.
 const INVITE_FOOTER: Record<Language, string> = {
-  PL: 'Zrobione z ❤️ dla miłośników lodów · Gelato',
-  EN: 'Made with ❤️ for ice cream lovers · Gelato',
-  UA: 'Зроблено з ❤️ для любителів морозива · Gelato',
+  PL: 'Zrobione z ❤️ dla miłośników lodów · Loodly',
+  EN: 'Made with ❤️ for ice cream lovers · Loodly',
+  UA: 'Зроблено з ❤️ для любителів морозива · Loodly',
 };
 
 // Localized copy for the admin-account invite email.
@@ -92,37 +92,37 @@ const ADMIN_INVITE_COPY: Record<
   }
 > = {
   PL: {
-    subject: 'Twoje konto administratora Gelato',
-    heading: 'Witamy w Gelato Admin',
+    subject: 'Twoje konto administratora Loodly',
+    heading: 'Witamy w Loodly Admin',
     createdAs: (role) => `Utworzono dla Ciebie konto jako <b style="color:#c026a3;">${role}</b>.`,
     codeIntro: 'Użyj tego kodu na stronie administratora, aby ustawić hasło:',
     cta: 'Ustaw hasło',
     orCopyLink: 'Lub skopiuj ten link do przeglądarki:',
     expiry: 'Ten kod wygasa za 24 godziny.',
     text: (role, code, url) =>
-      `Utworzono dla Ciebie konto administratora Gelato (${role}). Twój kod ustawienia hasła to ${code} (wygasa za 24 godziny). Ustaw hasło na ${url}`,
+      `Utworzono dla Ciebie konto administratora Loodly (${role}). Twój kod ustawienia hasła to ${code} (wygasa za 24 godziny). Ustaw hasło na ${url}`,
   },
   EN: {
-    subject: 'Your Gelato admin account',
-    heading: 'Welcome to Gelato Admin',
+    subject: 'Your Loodly admin account',
+    heading: 'Welcome to Loodly Admin',
     createdAs: (role) => `An account was created for you as <b style="color:#c026a3;">${role}</b>.`,
     codeIntro: 'Use this code on the admin site to set your password:',
     cta: 'Set your password',
     orCopyLink: 'Or copy this link into your browser:',
     expiry: 'This code expires in 24 hours.',
     text: (role, code, url) =>
-      `A Gelato admin account was created for you (${role}). Your set-password code is ${code} (expires in 24 hours). Set your password at ${url}`,
+      `A Loodly admin account was created for you (${role}). Your set-password code is ${code} (expires in 24 hours). Set your password at ${url}`,
   },
   UA: {
-    subject: 'Ваш обліковий запис адміністратора Gelato',
-    heading: 'Ласкаво просимо до Gelato Admin',
+    subject: 'Ваш обліковий запис адміністратора Loodly',
+    heading: 'Ласкаво просимо до Loodly Admin',
     createdAs: (role) => `Для вас створено обліковий запис як <b style="color:#c026a3;">${role}</b>.`,
     codeIntro: 'Використайте цей код на сайті адміністратора, щоб встановити пароль:',
     cta: 'Встановити пароль',
     orCopyLink: 'Або скопіюйте це посилання у браузер:',
     expiry: 'Цей код дійсний 24 години.',
     text: (role, code, url) =>
-      `Для вас створено обліковий запис адміністратора Gelato (${role}). Ваш код встановлення пароля — ${code} (дійсний 24 години). Встановіть пароль на ${url}`,
+      `Для вас створено обліковий запис адміністратора Loodly (${role}). Ваш код встановлення пароля — ${code} (дійсний 24 години). Встановіть пароль на ${url}`,
   },
 };
 
@@ -153,7 +153,7 @@ const localizeRole = (label: string, language: Language) =>
   ROLE_LABELS[language]?.[label] ?? label;
 
 // Email a newly-created admin their initial set-password code.
-// Styled to match the Gelato landing page (berry gradient, cream background).
+// Styled to match the Loodly landing page (berry gradient, cream background).
 // `target` picks which app the set-password link points at:
 //   - 'spot'  → spot app (spot admins manage their spot there)
 //   - 'admin' → super-admin / spots-admin web panel
@@ -260,14 +260,14 @@ const SPOT_STAFF_COPY: Record<
   }
 > = {
   PL: {
-    subjectInvite: (spot) => `Zaproszenie do ${spot} w Gelato`,
-    subjectReset: (spot) => `Zresetuj hasło do ${spot} w Gelato`,
+    subjectInvite: (spot) => `Zaproszenie do ${spot} w Loodly`,
+    subjectReset: (spot) => `Zresetuj hasło do ${spot} w Loodly`,
     introInvite: (spot, role) =>
       `Zaproszono Cię do <b style="color:#c026a3;">${spot}</b> jako <b style="color:#c026a3;">${role}</b>.`,
     introReset: (spot, role) =>
       `Poproszono o reset hasła dla Twojego konta w <b style="color:#c026a3;">${spot}</b> (<b style="color:#c026a3;">${role}</b>).`,
-    codeIntroInvite: 'Użyj tego kodu w aplikacji Gelato Spot, aby ustawić hasło:',
-    codeIntroReset: 'Użyj tego kodu w aplikacji Gelato Spot, aby ustawić nowe hasło:',
+    codeIntroInvite: 'Użyj tego kodu w aplikacji Loodly Spot, aby ustawić hasło:',
+    codeIntroReset: 'Użyj tego kodu w aplikacji Loodly Spot, aby ustawić nowe hasło:',
     introTextInvite: (spot, role) => `Zaproszono Cię do ${spot} jako ${role}.`,
     introTextReset: (spot, role) => `Poproszono o reset hasła dla Twojego konta w ${spot} (${role}).`,
     labelSpot: 'Lokal',
@@ -277,17 +277,17 @@ const SPOT_STAFF_COPY: Record<
     orCopyLink: 'Lub skopiuj ten link do przeglądarki:',
     expiry: 'Ten kod wygasa za 24 godziny.',
     text: (intro, code, isReset, url) =>
-      `${intro} Użyj kodu ${code} w aplikacji Gelato Spot, aby ustawić ${isReset ? 'nowe' : 'swoje'} hasło (wygasa za 24 godziny). Ustaw je na ${url}`,
+      `${intro} Użyj kodu ${code} w aplikacji Loodly Spot, aby ustawić ${isReset ? 'nowe' : 'swoje'} hasło (wygasa za 24 godziny). Ustaw je na ${url}`,
   },
   EN: {
-    subjectInvite: (spot) => `You've been invited to ${spot} on Gelato`,
-    subjectReset: (spot) => `Reset your password for ${spot} on Gelato`,
+    subjectInvite: (spot) => `You've been invited to ${spot} on Loodly`,
+    subjectReset: (spot) => `Reset your password for ${spot} on Loodly`,
     introInvite: (spot, role) =>
       `You've been invited to join <b style="color:#c026a3;">${spot}</b> as <b style="color:#c026a3;">${role}</b>.`,
     introReset: (spot, role) =>
       `A password reset was requested for your <b style="color:#c026a3;">${spot}</b> account (<b style="color:#c026a3;">${role}</b>).`,
-    codeIntroInvite: 'Use this code in the Gelato Spot app to set your password:',
-    codeIntroReset: 'Use this code in the Gelato Spot app to set a new password:',
+    codeIntroInvite: 'Use this code in the Loodly Spot app to set your password:',
+    codeIntroReset: 'Use this code in the Loodly Spot app to set a new password:',
     introTextInvite: (spot, role) => `You've been invited to ${spot} as ${role}.`,
     introTextReset: (spot, role) => `A password reset was requested for your ${spot} account (${role}).`,
     labelSpot: 'Spot',
@@ -297,17 +297,17 @@ const SPOT_STAFF_COPY: Record<
     orCopyLink: 'Or copy this link into your browser:',
     expiry: 'This code expires in 24 hours.',
     text: (intro, code, isReset, url) =>
-      `${intro} Use code ${code} in the Gelato Spot app to set ${isReset ? 'a new' : 'your'} password (expires in 24 hours). Set it at ${url}`,
+      `${intro} Use code ${code} in the Loodly Spot app to set ${isReset ? 'a new' : 'your'} password (expires in 24 hours). Set it at ${url}`,
   },
   UA: {
-    subjectInvite: (spot) => `Вас запросили до ${spot} у Gelato`,
-    subjectReset: (spot) => `Скиньте пароль для ${spot} у Gelato`,
+    subjectInvite: (spot) => `Вас запросили до ${spot} у Loodly`,
+    subjectReset: (spot) => `Скиньте пароль для ${spot} у Loodly`,
     introInvite: (spot, role) =>
       `Вас запросили приєднатися до <b style="color:#c026a3;">${spot}</b> як <b style="color:#c026a3;">${role}</b>.`,
     introReset: (spot, role) =>
       `Запитано скидання пароля для вашого облікового запису <b style="color:#c026a3;">${spot}</b> (<b style="color:#c026a3;">${role}</b>).`,
-    codeIntroInvite: 'Використайте цей код у застосунку Gelato Spot, щоб встановити пароль:',
-    codeIntroReset: 'Використайте цей код у застосунку Gelato Spot, щоб встановити новий пароль:',
+    codeIntroInvite: 'Використайте цей код у застосунку Loodly Spot, щоб встановити пароль:',
+    codeIntroReset: 'Використайте цей код у застосунку Loodly Spot, щоб встановити новий пароль:',
     introTextInvite: (spot, role) => `Вас запросили до ${spot} як ${role}.`,
     introTextReset: (spot, role) =>
       `Запитано скидання пароля для вашого облікового запису ${spot} (${role}).`,
@@ -318,7 +318,7 @@ const SPOT_STAFF_COPY: Record<
     orCopyLink: 'Або скопіюйте це посилання у браузер:',
     expiry: 'Цей код дійсний 24 години.',
     text: (intro, code, isReset, url) =>
-      `${intro} Використайте код ${code} у застосунку Gelato Spot, щоб встановити ${isReset ? 'новий' : 'свій'} пароль (дійсний 24 години). Встановіть його на ${url}`,
+      `${intro} Використайте код ${code} у застосунку Loodly Spot, щоб встановити ${isReset ? 'новий' : 'свій'} пароль (дійсний 24 години). Встановіть його на ${url}`,
   },
 };
 
@@ -840,7 +840,7 @@ export class AdminResolver {
    * Admin-initiated password reset for a staff member of a spot the caller
    * manages. Instead of setting a password directly, this emails the staff
    * member a set-password code (branded for their spot) so THEY choose their
-   * own password via the Gelato Spot app (same flow as the invite). Existing
+   * own password via the Loodly Spot app (same flow as the invite). Existing
    * sessions are invalidated immediately (tokenVersion bump) so the old
    * password can't be used while they set a new one.
    */
@@ -912,7 +912,7 @@ export class AdminResolver {
       roleLabel: isAdminRole ? 'Spot Admin' : 'Employee',
       spot: spot
         ? { name: spot.name, address: spot.address, phone: spot.phone, logoUrl: spot.logoUrl }
-        : { name: 'Gelato' },
+        : { name: 'Loodly' },
       variant: 'reset',
       language: target.language,
     });

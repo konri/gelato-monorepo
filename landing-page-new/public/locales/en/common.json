@@ -1,6 +1,6 @@
 {
   "site": {
-    "title": "Gelato — Artisan Ice Cream & Coffee Delivery",
+    "title": "Loodly — Artisan Ice Cream & Coffee Delivery",
     "description": "Order premium artisan ice cream and coffee from local spots. Fast delivery, live courier tracking, and loyalty rewards in one app."
   },
   "nav": {
@@ -30,7 +30,7 @@
     "users": "happy customers"
   },
   "features": {
-    "title": "Why Gelato?",
+    "title": "Why Loodly?",
     "subtitle": "No artificial shortcuts — just natural ingredients and an honest approach.",
     "natural": {
       "title": "Natural ingredients",
@@ -98,7 +98,7 @@
   },
   "cta": {
     "ready": "Ready for the best ice cream in town?",
-    "subtitle": "Download the Gelato app and order your first loodbox today.",
+    "subtitle": "Download the Loodly app and order your first loodbox today.",
     "download_now": "Download the app"
   },
   "auth": {
@@ -112,7 +112,7 @@
     "phone": "Phone number",
     "login_title": "Welcome back",
     "login_subtitle": "Log in to order and collect points.",
-    "signup_title": "Join Gelato",
+    "signup_title": "Join Loodly",
     "signup_subtitle": "Create an account and earn points on every order.",
     "login_cta": "Log in",
     "signup_cta": "Create account",
@@ -182,7 +182,7 @@
     "referral_copy": "Copy code",
     "referral_copied": "Copied!",
     "referral_share": "Share",
-    "referral_share_message": "Join Gelato and use my code {{code}} to get 700 points to start!",
+    "referral_share_message": "Join Loodly and use my code {{code}} to get 700 points to start!",
     "referral_stats": "{{completed}} completed · {{pending}} pending",
     "birthday_title": "Add your birthday",
     "birthday_desc": "Add your birth date to receive +700 points. You can only do this once — after that the date can't be changed.",
@@ -218,7 +218,7 @@
   },
   "spots": {
     "title": "Our spots",
-    "subtitle": "Pick a city and find the nearest Gelato spot on the map.",
+    "subtitle": "Pick a city and find the nearest Loodly spot on the map.",
     "all_cities": "All cities",
     "select_city": "Select a city",
     "count_one": "{{count}} spot",
@@ -306,7 +306,7 @@
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
     "made": "Made with ❤️ for ice cream lovers",
-    "copyright": "© 2026 Gelato. All rights reserved."
+    "copyright": "© 2026 Loodly. All rights reserved."
   },
   "checkout": {
     "pay_now": "Pay now",

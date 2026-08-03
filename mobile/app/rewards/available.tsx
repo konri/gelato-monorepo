@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const MOCK_AVAILABLE_PRIZES = [
   {
     id: '1',
-    title: 'Free Gelato Scoop',
+    title: 'Free Loodly Scoop',
     description: 'Redeem for one free scoop of any flavor',
     imageUrl: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400',
     pointsCost: 500,
@@ -35,7 +35,7 @@ const MOCK_AVAILABLE_PRIZES = [
   },
   {
     id: '3',
-    title: 'Gelato Merchandise',
+    title: 'Loodly Merchandise',
     description: 'Limited edition branded t-shirt',
     imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400',
     pointsCost: 1500,

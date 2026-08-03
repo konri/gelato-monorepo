@@ -2,8 +2,7 @@ import React from 'react';
 import { View, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import Logo from '@/assets/images/logo.svg';
-import Wordmark from '@/assets/images/bonapka.svg';
+import Lockup from '@/assets/images/loodly_lockup.svg';
 
 interface BasicHeaderProps {
   onBack?: () => void;
@@ -21,8 +20,7 @@ export const BasicHeader = ({ onBack, showBackButton = true, rightActions }: Bas
           </Pressable>
         )}
         <View className={`flex-row items-center ${showBackButton ? 'pl-2' : ''}`}>
-          <Logo width={26} height={26} />
-          <Wordmark width={96} height={20} style={{ marginLeft: 6 }} />
+          <Lockup width={80} height={55} />
         </View>
       </View>
       

@@ -1,7 +1,7 @@
 import type { SVGProps } from "react";
 
 /**
- * Custom hand-built ice cream SVG illustrations for the Gelato landing page.
+ * Custom hand-built ice cream SVG illustrations for the Loodly landing page.
  * Each graphic is self-contained and scales via width/height or className.
  */
 

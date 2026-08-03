@@ -21,11 +21,9 @@ export function AppLayout() {
       {/* Sidebar */}
       <aside className="flex w-60 flex-col border-r border-gray-200 bg-white">
         <div className="flex items-center gap-2 px-5 py-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand text-sm font-bold text-white">
-            G
-          </div>
+          <img src="/loodly-mark.svg" alt="Loodly" className="h-9 w-9" />
           <div>
-            <div className="text-sm font-bold leading-4 text-gray-900">Gelato</div>
+            <div className="text-sm font-bold leading-4 text-gray-900">Loodly</div>
             <div className="text-xs font-semibold tracking-wide text-brand">{t('Nav.adminBadge')}</div>
           </div>
         </div>

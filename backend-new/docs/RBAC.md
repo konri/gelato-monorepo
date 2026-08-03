@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Gelato backend implements comprehensive Role-Based Access Control (RBAC) using TypeGraphQL's `@Authorized()` decorator and custom permission checkers.
+The Loodly backend implements comprehensive Role-Based Access Control (RBAC) using TypeGraphQL's `@Authorized()` decorator and custom permission checkers.
 
 ## Roles
 
@@ -248,7 +248,7 @@ query {
 mutation {
   createSpot(
     id: "new-spot-id"
-    name: "Gelato Test Spot"
+    name: "Loodly Test Spot"
     address: "ul. Test 1"
     cityId: "city-id-here"
     latitude: 52.2297

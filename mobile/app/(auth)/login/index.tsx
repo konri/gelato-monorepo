@@ -11,7 +11,13 @@ import { ScrollView, View } from "react-native";
 
 export default function LoginScreen() {
   const { t } = useTranslation();
-  const { isGoogleLoading, handleGoogleLogin, handleAppleLogin } = useLogin();
+  const {
+    isGoogleLoading,
+    isAppleLoading,
+    isAppleAvailable,
+    handleGoogleLogin,
+    handleAppleLogin,
+  } = useLogin();
 
   return (
     <ScrollView
@@ -67,6 +73,8 @@ export default function LoginScreen() {
             appleText={t("SignIn.continueWithApple")}
             phoneText={t("SignIn.loginWithPhone")}
             isGoogleLoading={isGoogleLoading}
+            isAppleLoading={isAppleLoading}
+            showApple={isAppleAvailable}
           />
         </View>
       </View>

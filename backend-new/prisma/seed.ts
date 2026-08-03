@@ -92,7 +92,7 @@ async function main() {
   // Create Spots in Warsaw
   const spotWarsaw1 = await prisma.spot.create({
     data: {
-      name: 'Gelato Espresso Warsaw Center',
+      name: 'Loodly Espresso Warsaw Center',
       description: 'Premium artisan ice cream in the heart of Warsaw',
       address: 'ul. Nowy Świat 15, 00-029 Warszawa',
       cityId: warsaw.id,
@@ -120,7 +120,7 @@ async function main() {
 
   const spotWarsaw2 = await prisma.spot.create({
     data: {
-      name: 'Gelato Amber Mokotów',
+      name: 'Loodly Amber Mokotów',
       description: 'Cozy ice cream spot in Mokotów district',
       address: 'ul. Puławska 120, 02-620 Warszawa',
       cityId: warsaw.id,
@@ -149,7 +149,7 @@ async function main() {
   // Create Spots in Krakow
   const spotKrakow1 = await prisma.spot.create({
     data: {
-      name: 'Gelato Rynek Krakow',
+      name: 'Loodly Rynek Krakow',
       description: 'Ice cream paradise on the Main Square',
       address: 'Rynek Główny 10, 31-042 Kraków',
       cityId: krakow.id,
@@ -279,8 +279,8 @@ async function main() {
       allergens: [],
     },
     {
-      title: 'Pistachio Gelato',
-      titleLocal: { pl: 'Pistacjowe Gelato', en: 'Pistachio Gelato', ua: 'Фісташкове Джелато' },
+      title: 'Pistachio Loodly',
+      titleLocal: { pl: 'Pistacjowe Loodly', en: 'Pistachio Loodly', ua: 'Фісташкове Джелато' },
       subtitle: 'Sicilian style',
       description: 'Authentic Italian pistachio from Bronte, Sicily',
       descriptionLocal: {
@@ -537,10 +537,10 @@ async function main() {
         ua: 'Нові літні смаки!',
       },
       description:
-        'Try our new seasonal summer tastes: Watermelon Sorbet and Lemon Basil Gelato!',
+        'Try our new seasonal summer tastes: Watermelon Sorbet and Lemon Basil Loodly!',
       descriptionLocal: {
-        pl: 'Spróbuj naszych nowych sezonowych letnich smaków: Sorbet Arbuzowy i Gelato Cytrynowo-Bazyliowe!',
-        en: 'Try our new seasonal summer tastes: Watermelon Sorbet and Lemon Basil Gelato!',
+        pl: 'Spróbuj naszych nowych sezonowych letnich smaków: Sorbet Arbuzowy i Loodly Cytrynowo-Bazyliowe!',
+        en: 'Try our new seasonal summer tastes: Watermelon Sorbet and Lemon Basil Loodly!',
         ua: 'Спробуйте наші нові сезонні літні смаки: Кавуновий Сорбет та Лимонно-Базилікове Джелато!',
       },
       images: [],

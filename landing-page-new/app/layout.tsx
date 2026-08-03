@@ -18,7 +18,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Gelato — Rzemieślnicze lody i kawa z dostawą",
+  title: "Loodly — Rzemieślnicze lody i kawa z dostawą",
   description:
     "Zamów premium lody rzemieślnicze i kawę z lokalnych punktów. Szybka dostawa, śledzenie kuriera na żywo i program lojalnościowy w jednej aplikacji.",
   icons: { icon: "/favicon.ico" },

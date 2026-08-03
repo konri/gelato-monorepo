@@ -53,6 +53,16 @@ export type GoogleLoginResponse = {
   isFirstTimeGoogleLogin?: boolean;
 };
 
+export type AppleLoginResponse = {
+  token: {
+    access_token: string;
+    type: string;
+  };
+  refreshToken?: string;
+  user: User;
+  isFirstTimeAppleLogin?: boolean;
+};
+
 export type PhoneSendCodeResponse = {
   success: boolean;
   message: string;

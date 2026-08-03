@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Gelato Courier",
+    "name": "Loodly Courier",
     "slug": "gelato-courier",
     "version": "1.0.0",
     "sdkVersion": "54.0.0",
@@ -69,8 +69,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/logo_full_courier.png",
-          "imageWidth": 200,
+          "image": "./assets/images/splash_courier.png",
+          "imageWidth": 260,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }

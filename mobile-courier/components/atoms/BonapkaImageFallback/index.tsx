@@ -1,4 +1,4 @@
-import GelatoLogo from '@/assets/images/gelato_logo.svg';
+import LoodlyLogo from '@/assets/images/loodly_logo.svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { View } from 'react-native';
@@ -17,7 +17,7 @@ export const BonapkaImageFallback = ({
         style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
       >
         <View style={{ opacity: 0.85 }}>
-          <GelatoLogo width={logoSize} height={logoSize} />
+          <LoodlyLogo width={logoSize} height={logoSize} />
         </View>
       </LinearGradient>
     </View>

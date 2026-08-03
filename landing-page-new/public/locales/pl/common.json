@@ -1,6 +1,6 @@
 {
   "site": {
-    "title": "Gelato — Rzemieślnicze Lody i Kawa z Dostawą",
+    "title": "Loodly — Rzemieślnicze Lody i Kawa z Dostawą",
     "description": "Zamów premium lody rzemieślnicze i kawę z lokalnych punktów. Szybka dostawa, śledzenie kuriera na żywo i program lojalnościowy w jednej aplikacji."
   },
   "nav": {
@@ -30,7 +30,7 @@
     "users": "zadowolonych użytkowników"
   },
   "features": {
-    "title": "Dlaczego Gelato?",
+    "title": "Dlaczego Loodly?",
     "subtitle": "Bez sztucznego podkręcania smaku — tylko naturalne składniki i uczciwe podejście.",
     "natural": {
       "title": "Naturalne składniki",
@@ -98,7 +98,7 @@
   },
   "cta": {
     "ready": "Gotowy na najlepsze lody w mieście?",
-    "subtitle": "Pobierz aplikację Gelato i zamów swój pierwszy loodboks już dziś.",
+    "subtitle": "Pobierz aplikację Loodly i zamów swój pierwszy loodboks już dziś.",
     "download_now": "Pobierz aplikację"
   },
   "auth": {
@@ -112,7 +112,7 @@
     "phone": "Numer telefonu",
     "login_title": "Witaj ponownie",
     "login_subtitle": "Zaloguj się, aby zamawiać i zbierać punkty.",
-    "signup_title": "Dołącz do Gelato",
+    "signup_title": "Dołącz do Loodly",
     "signup_subtitle": "Załóż konto i zdobywaj punkty za każde zamówienie.",
     "login_cta": "Zaloguj się",
     "signup_cta": "Utwórz konto",
@@ -182,7 +182,7 @@
     "referral_copy": "Kopiuj kod",
     "referral_copied": "Skopiowano!",
     "referral_share": "Udostępnij",
-    "referral_share_message": "Dołącz do Gelato i użyj mojego kodu {{code}}, aby zdobyć 700 punktów na start!",
+    "referral_share_message": "Dołącz do Loodly i użyj mojego kodu {{code}}, aby zdobyć 700 punktów na start!",
     "referral_stats": "{{completed}} ukończonych · {{pending}} oczekujących",
     "birthday_title": "Uzupełnij datę urodzenia",
     "birthday_desc": "Podaj datę urodzenia, aby otrzymać +700 punktów. Możesz to zrobić tylko raz — potem daty nie da się zmienić.",
@@ -218,7 +218,7 @@
   },
   "spots": {
     "title": "Nasze punkty",
-    "subtitle": "Wybierz miasto i znajdź najbliższy punkt Gelato na mapie.",
+    "subtitle": "Wybierz miasto i znajdź najbliższy punkt Loodly na mapie.",
     "all_cities": "Wszystkie miasta",
     "select_city": "Wybierz miasto",
     "count_one": "{{count}} punkt",
@@ -306,7 +306,7 @@
     "privacy": "Polityka prywatności",
     "terms": "Regulamin",
     "made": "Zrobione z ❤️ dla miłośników lodów",
-    "copyright": "© 2026 Gelato. Wszelkie prawa zastrzeżone."
+    "copyright": "© 2026 Loodly. Wszelkie prawa zastrzeżone."
   },
   "checkout": {
     "pay_now": "Zapłać",

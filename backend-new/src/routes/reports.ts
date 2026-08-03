@@ -154,7 +154,7 @@ function header(
       /* unreadable image — skip */
     }
   }
-  doc.font(F_BOLD).fillColor(BRAND).fontSize(22).text('Gelato', 48, top, { continued: true });
+  doc.font(F_BOLD).fillColor(BRAND).fontSize(22).text('Loodly', 48, top, { continued: true });
   doc.font(F_REGULAR).fillColor(MUTED).fontSize(12).text(`  ${t.reportKicker}`);
   doc.moveDown(0.3);
   doc.font(F_BOLD).fillColor(INK).fontSize(16).text(title);

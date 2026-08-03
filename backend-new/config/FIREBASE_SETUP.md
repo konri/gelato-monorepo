@@ -1,6 +1,6 @@
 # Firebase setup — one project, three apps, one backend
 
-Gelato has three mobile apps (client, courier, spot). They all share **one
+Loodly has three mobile apps (client, courier, spot). They all share **one
 Firebase project** and **one backend service account**. You do **not** create a
 project per app.
 

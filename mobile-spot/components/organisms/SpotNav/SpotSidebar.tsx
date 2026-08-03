@@ -49,7 +49,7 @@ export function SpotSidebar({ state, navigation }: BottomTabBarProps) {
         </View>
         <View style={{ marginLeft: 10 }}>
           <Typography variant="body-lg-bold" className="text-text-primary leading-5">
-            Gelato
+            Loodly
           </Typography>
           <Typography variant="body-very-small-medium" style={{ color: BRAND, letterSpacing: 2 }}>
             SPOT

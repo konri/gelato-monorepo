@@ -21,17 +21,17 @@ const MOCK_TRANSACTIONS = [
     createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     referenceType: 'order',
     referenceId: 'order-1',
-    spotName: 'Gelato Centro',
+    spotName: 'Loodly Centro',
   },
   {
     id: '2',
     type: 'EARNED', // In-person scan
     amount: 25,
-    description: 'In-person purchase at Gelato Paradise',
+    description: 'In-person purchase at Loodly Paradise',
     createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
     referenceType: 'scan',
     referenceId: null,
-    spotName: 'Gelato Paradise',
+    spotName: 'Loodly Paradise',
   },
   {
     id: '3',
@@ -41,17 +41,17 @@ const MOCK_TRANSACTIONS = [
     createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     referenceType: 'order',
     referenceId: 'order-2',
-    spotName: 'Sweet Gelato',
+    spotName: 'Sweet Loodly',
   },
   {
     id: '4',
     type: 'EARNED', // In-person scan
     amount: 18,
-    description: 'In-person purchase at Gelato Centro',
+    description: 'In-person purchase at Loodly Centro',
     createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
     referenceType: 'scan',
     referenceId: null,
-    spotName: 'Gelato Centro',
+    spotName: 'Loodly Centro',
   },
   {
     id: '5',
@@ -71,7 +71,7 @@ const MOCK_TRANSACTIONS = [
     createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
     referenceType: 'order',
     referenceId: 'order-4',
-    spotName: 'Gelato Centro',
+    spotName: 'Loodly Centro',
   },
   {
     id: '7',
@@ -87,11 +87,11 @@ const MOCK_TRANSACTIONS = [
     id: '8',
     type: 'EARNED', // In-person scan
     amount: 30,
-    description: 'In-person purchase at Gelato Paradise',
+    description: 'In-person purchase at Loodly Paradise',
     createdAt: new Date(Date.now() - 16 * 24 * 60 * 60 * 1000).toISOString(),
     referenceType: 'scan',
     referenceId: null,
-    spotName: 'Gelato Paradise',
+    spotName: 'Loodly Paradise',
   },
 ];
 

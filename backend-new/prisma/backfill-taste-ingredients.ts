@@ -22,7 +22,7 @@ const INGREDIENTS_BY_TITLE: Record<string, { en: string; pl: string; ua: string 
     pl: '<p><b>Przecier truskawkowy</b> (60%), woda, cukier, sok z cytryny.</p>',
     ua: '<p><b>Полуничне пюре</b> (60%), вода, цукор, лимонний сік.</p>',
   },
-  'Pistachio Gelato': {
+  'Pistachio Loodly': {
     en: '<p><b>Milk</b>, cream, sugar, <span style="color:#b45309">Sicilian pistachio</span> (15%), <b>tree nuts</b>.</p>',
     pl: '<p><b>Mleko</b>, śmietanka, cukier, <span style="color:#b45309">pistacje sycylijskie</span> (15%), <b>orzechy</b>.</p>',
     ua: '<p><b>Молоко</b>, вершки, цукор, <span style="color:#b45309">сицилійські фісташки</span> (15%), <b>горіхи</b>.</p>',

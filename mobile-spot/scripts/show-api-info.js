@@ -39,7 +39,7 @@ const graphqlApiUrl = env === 'dev'
   : extractUrl('EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_PROD', 'https://api.bonapka.pl/graphql');
 
 console.log('\n' + '='.repeat(60));
-console.log('🚀 Starting Gelato Mobile App');
+console.log('🚀 Starting Loodly Mobile App');
 console.log('='.repeat(60));
 console.log(`📡 Environment: ${env.toUpperCase()}`);
 console.log(`🔗 REST API: ${restApiUrl}`);

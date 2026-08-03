@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Gelato backend implements Firebase Cloud Messaging for push notifications across all mobile applications:
+The Loodly backend implements Firebase Cloud Messaging for push notifications across all mobile applications:
 - **Client App**: Order updates, points earned, prizes, news
 - **Courier App**: Delivery assignments, route updates
 - **Spot Admin App**: New orders, courier updates, announcements
@@ -69,7 +69,7 @@ Add to `app.json`:
       "icon": "./assets/notification-icon.png",
       "color": "#4a044e",
       "androidMode": "default",
-      "androidCollapsedTitle": "Gelato"
+      "androidCollapsedTitle": "Loodly"
     }
   }
 }
@@ -234,7 +234,7 @@ await FCMService.sendToUser(
   userId,
   NotificationType.ORDER_CONFIRMED,
   {
-    spotName: 'Gelato Espresso Warsaw',
+    spotName: 'Loodly Espresso Warsaw',
   },
   {
     orderId: order.id,
@@ -261,7 +261,7 @@ await FCMService.sendToUsers(
   courierIds.map(c => c.id),
   NotificationType.SPOT_ANNOUNCEMENT,
   {
-    spotName: 'Gelato Admin',
+    spotName: 'Loodly Admin',
     message: 'New peak hour bonuses available'
   },
   {},
@@ -516,7 +516,7 @@ android: {
 Mobile apps should create the channel:
 ```typescript
 await Notifications.setNotificationChannelAsync('gelato_notifications', {
-  name: 'Gelato Notifications',
+  name: 'Loodly Notifications',
   importance: Notifications.AndroidImportance.HIGH,
   sound: 'default',
   vibrationPattern: [0, 250, 250, 250],

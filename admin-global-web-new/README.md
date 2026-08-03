@@ -1,4 +1,4 @@
-# Gelato Admin Global Web
+# Loodly Admin Global Web
 
 Central admin dashboard (Vite + React + TypeScript).
 

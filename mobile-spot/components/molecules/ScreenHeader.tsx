@@ -20,7 +20,7 @@ type Props = {
 };
 
 /**
- * Floating rounded "pill" header, matching the Gelato client app. Sits over the
+ * Floating rounded "pill" header, matching the Loodly client app. Sits over the
  * grey screen background with the status-bar inset baked in, a circular back
  * button on the left and a centered title (+ optional subtitle).
  */

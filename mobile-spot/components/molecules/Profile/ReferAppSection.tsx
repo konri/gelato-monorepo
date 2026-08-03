@@ -2,12 +2,11 @@ import React from 'react';
 import { View, Pressable, Alert, Clipboard } from 'react-native';
 import { RoundedCard } from '@/components/atoms/RoundedCard';
 import { Typography } from '@/components/atoms/Typography';
-import { Image } from '@/components/atoms/Image';
 import { Button } from '@/components/atoms/Button';
 import { StepItem } from '@/components/atoms/StepItem';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import BonapkaLogo from '@/assets/images/bonapka.svg';
+import Lockup from '@/assets/images/loodly_lockup.svg';
 import { useReferralCode } from '@/hooks/useReferralCode';
 import { router } from 'expo-router';
 
@@ -40,15 +39,7 @@ export const ReferAppSection = () => {
 
       <RoundedCard variant="less-rounded" shadow className="pt-4 pb-4 px-4">
         <View className="flex-row items-center mb-4">
-          <Image
-            source={require('@/assets/images/logo_glow.png')}
-            className="w-10 h-10 mr-1"
-            resizeMode="contain"
-            fallbackWidth={48}
-            fallbackHeight={44}
-            fallbackLogoSize={6}
-          />
-          <BonapkaLogo width={80} height={20} />
+          <Lockup width={96} height={66} />
         </View>
         
         <View className="mb-4">

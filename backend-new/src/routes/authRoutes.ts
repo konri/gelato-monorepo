@@ -14,13 +14,13 @@ const EMAIL_CODE_TTL_MS = 15 * 60 * 1000;
 
 // The footer tagline is localized alongside the body copy below.
 const CODE_EMAIL_FOOTER: Record<Language, string> = {
-  PL: 'Zrobione z ❤️ dla miłośników lodów · Gelato',
-  EN: 'Made with ❤️ for ice cream lovers · Gelato',
-  UA: 'Зроблено з ❤️ для любителів морозива · Gelato',
+  PL: 'Zrobione z ❤️ dla miłośników lodów · Loodly',
+  EN: 'Made with ❤️ for ice cream lovers · Loodly',
+  UA: 'Зроблено з ❤️ для любителів морозива · Loodly',
 };
 
 /**
- * Branded one-time-code email (Gelato red), shared by the verification and
+ * Branded one-time-code email (Loodly red), shared by the verification and
  * password-reset flows for both the client and courier apps.
  */
 const codeEmailHtml = (opts: {
@@ -73,25 +73,25 @@ const VERIFICATION_EMAIL: Record<
   { subject: string; heading: string; intro: string; expiry: string; text: (code: string) => string }
 > = {
   PL: {
-    subject: 'Twój kod weryfikacyjny Gelato',
-    heading: 'Witamy w Gelato! 🍦',
+    subject: 'Twój kod weryfikacyjny Loodly',
+    heading: 'Witamy w Loodly! 🍦',
     intro: 'Twój kod weryfikacyjny to:',
     expiry: 'Ten kod wygasa za 15 minut.',
-    text: (code) => `Twój kod weryfikacyjny Gelato to ${code}. Wygasa za 15 minut.`,
+    text: (code) => `Twój kod weryfikacyjny Loodly to ${code}. Wygasa za 15 minut.`,
   },
   EN: {
-    subject: 'Your Gelato verification code',
-    heading: 'Welcome to Gelato! 🍦',
+    subject: 'Your Loodly verification code',
+    heading: 'Welcome to Loodly! 🍦',
     intro: 'Your verification code is:',
     expiry: 'This code expires in 15 minutes.',
-    text: (code) => `Your Gelato verification code is ${code}. It expires in 15 minutes.`,
+    text: (code) => `Your Loodly verification code is ${code}. It expires in 15 minutes.`,
   },
   UA: {
-    subject: 'Ваш код підтвердження Gelato',
-    heading: 'Ласкаво просимо до Gelato! 🍦',
+    subject: 'Ваш код підтвердження Loodly',
+    heading: 'Ласкаво просимо до Loodly! 🍦',
     intro: 'Ваш код підтвердження:',
     expiry: 'Цей код дійсний 15 хвилин.',
-    text: (code) => `Ваш код підтвердження Gelato — ${code}. Він дійсний 15 хвилин.`,
+    text: (code) => `Ваш код підтвердження Loodly — ${code}. Він дійсний 15 хвилин.`,
   },
 };
 
@@ -101,25 +101,25 @@ const ADMIN_RESET_EMAIL: Record<
   { subject: string; heading: string; intro: string; expiry: string; text: (code: string) => string }
 > = {
   PL: {
-    subject: 'Kod resetowania hasła administratora Gelato',
+    subject: 'Kod resetowania hasła administratora Loodly',
     heading: 'Reset hasła 🔒',
     intro: 'Twój kod resetowania hasła to:',
     expiry: 'Ten kod wygasa za 15 minut.',
-    text: (code) => `Twój kod resetowania hasła administratora Gelato to ${code}. Wygasa za 15 minut.`,
+    text: (code) => `Twój kod resetowania hasła administratora Loodly to ${code}. Wygasa za 15 minut.`,
   },
   EN: {
-    subject: 'Your Gelato admin password reset code',
+    subject: 'Your Loodly admin password reset code',
     heading: 'Password reset 🔒',
     intro: 'Your password reset code is:',
     expiry: 'This code expires in 15 minutes.',
-    text: (code) => `Your Gelato admin password reset code is ${code}. It expires in 15 minutes.`,
+    text: (code) => `Your Loodly admin password reset code is ${code}. It expires in 15 minutes.`,
   },
   UA: {
-    subject: 'Код скидання пароля адміністратора Gelato',
+    subject: 'Код скидання пароля адміністратора Loodly',
     heading: 'Скидання пароля 🔒',
     intro: 'Ваш код скидання пароля:',
     expiry: 'Цей код дійсний 15 хвилин.',
-    text: (code) => `Ваш код скидання пароля адміністратора Gelato — ${code}. Він дійсний 15 хвилин.`,
+    text: (code) => `Ваш код скидання пароля адміністратора Loodly — ${code}. Він дійсний 15 хвилин.`,
   },
 };
 

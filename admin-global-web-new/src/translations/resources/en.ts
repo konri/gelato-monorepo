@@ -44,7 +44,7 @@ export default {
     ua: 'Українська',
   },
   Login: {
-    title: 'Gelato Admin',
+    title: 'Loodly Admin',
     signInToManage: 'Sign in to manage spots',
     resetYourPassword: 'Reset your password',
     enterCodeSetPassword: 'Enter your code and set a password',

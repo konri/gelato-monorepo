@@ -60,7 +60,7 @@ const translations = {
 
     orderDelivered: 'Zamówienie dostarczone',
     deliveredSuccess: 'Świetne wiadomości! Twoje zamówienie zostało pomyślnie dostarczone. Mamy nadzieję, że będziesz cieszyć się pysznymi lodami!',
-    thankYouAgain: 'Dziękujemy za wybór Gelato. Nie możemy się doczekać, aby obsłużyć Cię ponownie!',
+    thankYouAgain: 'Dziękujemy za wybór Loodly. Nie możemy się doczekać, aby obsłużyć Cię ponownie!',
     rateOrder: 'Oceń zamówienie',
     orderAgain: 'Zamów ponownie',
   },
@@ -96,7 +96,7 @@ const translations = {
 
     orderDelivered: 'Order Delivered',
     deliveredSuccess: 'Great news! Your order has been delivered successfully. We hope you enjoy your delicious ice cream!',
-    thankYouAgain: "Thank you for choosing Gelato. We can't wait to serve you again!",
+    thankYouAgain: "Thank you for choosing Loodly. We can't wait to serve you again!",
     rateOrder: 'Rate Your Order',
     orderAgain: 'Order Again',
   },
@@ -132,7 +132,7 @@ const translations = {
 
     orderDelivered: 'Замовлення доставлено',
     deliveredSuccess: 'Чудові новини! Ваше замовлення успішно доставлено. Сподіваємось, вам сподобається смачне морозиво!',
-    thankYouAgain: 'Дякуємо, що обрали Gelato. Ми з нетерпінням чекаємо можливості обслужити вас знову!',
+    thankYouAgain: 'Дякуємо, що обрали Loodly. Ми з нетерпінням чекаємо можливості обслужити вас знову!',
     rateOrder: 'Оцінити замовлення',
     orderAgain: 'Замовити знову',
   },
@@ -268,7 +268,7 @@ export class EmailTemplates {
                 ${t.needHelp} <a href="mailto:support@gelato.com" style="color: #f59e0b; text-decoration: none;">support@gelato.com</a>
               </p>
               <p style="margin: 16px 0 0 0; font-size: 12px; color: #9ca3af;">
-                © ${new Date().getFullYear()} Gelato. ${t.allRights}.
+                © ${new Date().getFullYear()} Loodly. ${t.allRights}.
               </p>
             </td>
           </tr>
@@ -369,7 +369,7 @@ export class EmailTemplates {
                 ${t.needHelp} <a href="mailto:support@gelato.com" style="color: #f59e0b; text-decoration: none;">support@gelato.com</a>
               </p>
               <p style="margin: 16px 0 0 0; font-size: 12px; color: #9ca3af;">
-                © ${new Date().getFullYear()} Gelato. ${t.allRights}.
+                © ${new Date().getFullYear()} Loodly. ${t.allRights}.
               </p>
             </td>
           </tr>
@@ -436,7 +436,7 @@ export class EmailTemplates {
                 ${t.needHelp} <a href="mailto:support@gelato.com" style="color: #f59e0b; text-decoration: none;">support@gelato.com</a>
               </p>
               <p style="margin: 16px 0 0 0; font-size: 12px; color: #9ca3af;">
-                © ${new Date().getFullYear()} Gelato. ${t.allRights}.
+                © ${new Date().getFullYear()} Loodly. ${t.allRights}.
               </p>
             </td>
           </tr>

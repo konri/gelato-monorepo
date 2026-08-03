@@ -44,7 +44,7 @@ export default {
     ua: 'Українська',
   },
   Login: {
-    title: 'Gelato Admin',
+    title: 'Loodly Admin',
     signInToManage: 'Увійдіть, щоб керувати закладами',
     resetYourPassword: 'Скиньте пароль',
     enterCodeSetPassword: 'Введіть код і встановіть пароль',

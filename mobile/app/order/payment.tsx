@@ -116,7 +116,7 @@ export default function PaymentScreen() {
 
       // 3. Present the PaymentSheet (card / Apple Pay / Google Pay / BLIK).
       const initRes = await initPaymentSheet({
-        merchantDisplayName: 'Gelato',
+        merchantDisplayName: 'Loodly',
         paymentIntentClientSecret: clientSecret,
         applePay: { merchantCountryCode: 'PL' },
         googlePay: { merchantCountryCode: 'PL', currencyCode: 'PLN', testEnv: true },

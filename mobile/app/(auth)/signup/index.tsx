@@ -13,7 +13,13 @@ import { ScrollView, View } from "react-native";
 
 export default function SignUpScreen() {
   const { t } = useTranslation();
-  const { isGoogleLoading, handleGoogleSignUp, handleAppleSignUp } =
+  const {
+    isGoogleLoading,
+    isAppleLoading,
+    isAppleAvailable,
+    handleGoogleSignUp,
+    handleAppleSignUp,
+  } =
     useSignUp();
 
   return (
@@ -60,6 +66,8 @@ export default function SignUpScreen() {
               googleText={t("SignUp.continueWithGoogle")}
               appleText={t("SignUp.continueWithApple")}
               isGoogleLoading={isGoogleLoading}
+              isAppleLoading={isAppleLoading}
+              showApple={isAppleAvailable}
             />
 
             <Button

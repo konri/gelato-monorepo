@@ -32,7 +32,7 @@ export class EmailService {
   private static getFromEmail() {
     return {
       email: process.env.SENDGRID_FROM_EMAIL || 'noreply@gelato.com',
-      name: process.env.SENDGRID_FROM_NAME || 'Gelato',
+      name: process.env.SENDGRID_FROM_NAME || 'Loodly',
     };
   }
 

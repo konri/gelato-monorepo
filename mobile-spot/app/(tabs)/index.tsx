@@ -1,4 +1,4 @@
-import Logo from '@/assets/images/logo.svg';
+import Lockup from '@/assets/images/loodly_lockup.svg';
 import { Typography } from '@/components/atoms/Typography';
 import { SpotOrderCard } from '@/components/molecules/SpotOrderCard';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
@@ -113,13 +113,17 @@ export default function SpotOrdersScreen() {
                 {t('SpotTabs.orders')}
               </Typography>
             ) : (
-              <View className="flex-row items-center">
-                <Logo width={30} height={30} />
-                <View className="ml-2">
-                  <Typography variant="body-lg-bold" className="text-text-primary leading-5">
-                    Gelato
-                  </Typography>
-                  <Typography variant="body-very-small-medium" style={{ color: '#EC2828', letterSpacing: 2 }}>
+              // SPOT tucks under the cone (centred on the cone axis, which sits
+              // at ~32% of the lockup width) rather than beside it.
+              <View style={{ width: 88, height: 61 }}>
+                <Lockup width={88} height={61} />
+                <View
+                  style={{ position: 'absolute', left: 26, width: 56, bottom: -3, alignItems: 'center' }}
+                >
+                  <Typography
+                    variant="body-very-small-medium"
+                    style={{ color: '#EC2828', letterSpacing: 2, fontSize: 9 }}
+                  >
                     SPOT
                   </Typography>
                 </View>

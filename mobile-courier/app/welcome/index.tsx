@@ -1,4 +1,4 @@
-import Logo from "@/assets/images/logo.svg";
+import Lockup from "@/assets/images/loodly_lockup.svg";
 import { Button } from "@/components/atoms/Button";
 import { Typography } from "@/components/atoms/Typography";
 import { CustomSafeAreaView } from "@/components/CustomSafeAreaView";
@@ -25,17 +25,22 @@ export default function MainLoginScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View className="items-center">
-          <Logo width={79} height={74} />
-          <Typography variant="heading-32-bold" className="text-text-primary mt-3">
-            Gelato
-          </Typography>
-          <Typography
-            variant="body-base-bold"
-            className="tracking-[4px] mt-1"
-            style={{ color: '#EC2828' }}
-          >
-            COURIER
-          </Typography>
+          {/* COURIER sits under the cone, centred on the cone axis (~32% of the
+              lockup width) — same treatment as the home header. */}
+          <View style={{ width: 240, height: 166 }}>
+            <Lockup width={240} height={166} />
+            <View
+              style={{ position: 'absolute', left: 70, width: 152, bottom: 6, alignItems: 'center' }}
+            >
+              <Typography
+                variant="body-base-bold"
+                className="tracking-[4px]"
+                style={{ color: '#EC2828' }}
+              >
+                COURIER
+              </Typography>
+            </View>
+          </View>
         </View>
 
         <View className="items-center w-full mt-14">

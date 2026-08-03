@@ -37,11 +37,9 @@ export function Header() {
       }`}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="text-2xl" aria-hidden>
-            🍦
-          </span>
-          <span className="text-xl font-black tracking-tight text-berry">Gelato</span>
+        <Link href="/" className="flex items-center" aria-label="Loodly">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/loodly-logo.svg" alt="Loodly" className="h-11 w-auto" />
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex">

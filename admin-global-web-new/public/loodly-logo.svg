@@ -1,0 +1,43 @@
+<svg width="200" height="117" viewBox="4 10 232 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <text x="8" y="112" font-family="Urbanist, Avenir Next, Arial Rounded MT Bold, Helvetica, sans-serif" font-size="74" font-weight="800" fill="#EC2828">l</text>
+  <g transform="translate(-23.35 -19.35) scale(2.0208)">
+  <path d="M30.18 46.00 L69.82 46.00 L50.00 92.00 Z" fill="#FFB020"/>
+  <path d="M31.88 47.70 L68.12 47.70 L50.00 89.76 Z" fill="#FFF7F0"/>
+  <clipPath id="coneClip"><path d="M31.88 47.70 L68.12 47.70 L50.00 89.76 Z"/></clipPath>
+  <g clip-path="url(#coneClip)">
+    <path d="M-10.00 -36.20 L110.00 83.80" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 83.80 L110.00 -36.20" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 -28.80 L110.00 91.20" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 91.20 L110.00 -28.80" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 -21.40 L110.00 98.60" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 98.60 L110.00 -21.40" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 -14.00 L110.00 106.00" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 106.00 L110.00 -14.00" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 -6.60 L110.00 113.40" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 113.40 L110.00 -6.60" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 0.80 L110.00 120.80" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 120.80 L110.00 0.80" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 8.20 L110.00 128.20" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 128.20 L110.00 8.20" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 15.60 L110.00 135.60" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 135.60 L110.00 15.60" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 23.00 L110.00 143.00" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 143.00 L110.00 23.00" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 30.40 L110.00 150.40" stroke="#FFB020" stroke-width="1.5"/>
+    <path d="M-10.00 150.40 L110.00 30.40" stroke="#FFB020" stroke-width="1.5"/>
+  </g>
+  <circle cx="34.69" cy="38.31" r="8.90" fill="#FFF7F0" stroke="#EC2828" stroke-width="1.6"/>
+  <circle cx="65.31" cy="38.31" r="8.90" fill="#FFF7F0" stroke="#EC2828" stroke-width="1.6"/>
+  <circle cx="44.48" cy="30.30" r="8.19" fill="#FFF7F0" stroke="#EC2828" stroke-width="1.6"/>
+  <circle cx="55.52" cy="30.30" r="8.19" fill="#FFF7F0" stroke="#EC2828" stroke-width="1.6"/>
+  <circle cx="50.00" cy="23.18" r="7.66" fill="#FFF7F0" stroke="#EC2828" stroke-width="1.6"/>
+  <circle cx="40.92" cy="43.83" r="9.44" fill="#FFF7F0" stroke="#EC2828" stroke-width="1.6"/>
+  <circle cx="59.08" cy="43.83" r="9.44" fill="#FFF7F0" stroke="#EC2828" stroke-width="1.6"/>
+  <circle cx="50.00" cy="36.53" r="9.79" fill="#FFF7F0" stroke="#EC2828" stroke-width="1.6"/>
+  <ellipse cx="38.60" cy="52.00" rx="12.20" ry="13.00" fill="#EC2828"/>
+  <ellipse cx="61.40" cy="52.00" rx="12.20" ry="13.00" fill="#EC2828"/>
+  <ellipse cx="38.60" cy="52.00" rx="7.20" ry="8.00" fill="#FFF7F0"/>
+  <ellipse cx="61.40" cy="52.00" rx="7.20" ry="8.00" fill="#FFF7F0"/>
+  </g>
+  <text x="125.4" y="112" font-family="Urbanist, Avenir Next, Arial Rounded MT Bold, Helvetica, sans-serif" font-size="74" font-weight="800" fill="#EC2828">dly</text>
+</svg>

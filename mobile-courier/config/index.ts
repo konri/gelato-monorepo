@@ -1,7 +1,7 @@
 const ENV = process.env.EXPO_PUBLIC_ENV || 'dev'; // 'dev' or 'prod'
 
 export const config = {
-  // API Configuration. Dev fallback is port 4002 (the Gelato backend) — NOT
+  // API Configuration. Dev fallback is port 4002 (the Loodly backend) — NOT
   // 4000 — so a missing env var doesn't silently point at the wrong port.
   API_URL: ENV === 'prod'
     ? (process.env.EXPO_PUBLIC_BACKEND_API_URL_PROD || 'https://api.bonapka.pl')

@@ -261,7 +261,7 @@ export function AppSection() {
             <div className="mx-auto mb-3 h-1.5 w-16 rounded-full bg-espresso/20" />
             <div className="rounded-[1.5rem] bg-gradient-to-b from-cream-soft to-cream p-4">
               <div className="flex items-center justify-between">
-                <span className="text-lg font-black text-berry">Gelato</span>
+                <span className="text-lg font-black text-berry">Loodly</span>
                 <span className="text-xl" aria-hidden>🍦</span>
               </div>
               <div className="mt-4 flex justify-center">
@@ -345,7 +345,7 @@ export function Footer() {
         <div className="sm:col-span-2 lg:col-span-2">
           <div className="flex items-center gap-2">
             <span className="text-2xl" aria-hidden>🍦</span>
-            <span className="text-xl font-black text-white">Gelato</span>
+            <span className="text-xl font-black text-white">Loodly</span>
           </div>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-cream/60">
             {t("footer.tagline")}

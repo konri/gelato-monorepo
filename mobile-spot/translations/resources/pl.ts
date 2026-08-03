@@ -13,7 +13,7 @@ export default {
     },
     slide2: {
       title: 'Dajemy Ci specjalną torbę na dostawy',
-      description: 'Każdy kurier dostaje naszą izolowaną torbę Gelato, aby lody dotarły idealnie zmrożone. Zapewniamy ją my — Ty tylko jedziesz.'
+      description: 'Każdy kurier dostaje naszą izolowaną torbę Loodly, aby lody dotarły idealnie zmrożone. Zapewniamy ją my — Ty tylko jedziesz.'
     },
     slide3: {
       title: 'Zacznij po akceptacji przez lokal',
@@ -46,7 +46,7 @@ export default {
     passwordPlaceholder: 'Min. 8 znaków, 1 wielka, 1 cyfra',
     referralCode: 'Kod polecający (opcjonalnie)',
     referralCodePlaceholder: 'XXXXXX123',
-    agreeToTerms: 'Akceptuję regulamin Gelato',
+    agreeToTerms: 'Akceptuję regulamin Loodly',
     termsAndConditions: 'Regulamin i warunki.',
     signUp: 'Zarejestruj się',
     alreadyHaveAccount: 'Masz już konto?',
@@ -243,8 +243,8 @@ export default {
   Sections: {
     rewards: 'Nagrody i wyzwania',
     seeAll: 'ZOBACZ WSZYSTKIE',
-    visitNewPlace: 'Odwiedź nowy punkt z Gelato',
-    visitNewPointWithBonApp: 'Odwiedź nowy punkt z Gelato',
+    visitNewPlace: 'Odwiedź nowy punkt z Loodly',
+    visitNewPointWithBonApp: 'Odwiedź nowy punkt z Loodly',
     getFreeCoffee: 'Odbierz darmową kawę',
     points: 'pkt',
     nearbyStores: 'Sklepy w okolicy',
@@ -405,7 +405,7 @@ export default {
     referralModalTitle: 'Zaproś znajomego',
     referralRuleReferee: 'Twój znajomy otrzyma +700 punktów od razu po rejestracji z Twoim kodem.',
     referralRuleReferrer: 'Ty otrzymasz +500 punktów po pierwszym zakupie znajomego.',
-    referralShareMessage: 'Dołącz do mnie w Gelato! Użyj mojego kodu {{code}}, aby otrzymać 700 punktów bonusowych przy rejestracji. 🍦',
+    referralShareMessage: 'Dołącz do mnie w Loodly! Użyj mojego kodu {{code}}, aby otrzymać 700 punktów bonusowych przy rejestracji. 🍦',
     shareCode: 'Udostępnij kod',
     referralCodeUnavailable: 'Nie udało się załadować Twojego kodu polecającego. Spróbuj ponownie.',
     shareFailed: 'Nie udało się otworzyć okna udostępniania. Spróbuj ponownie.',
@@ -899,7 +899,7 @@ export default {
     preparedTitle: 'Dzisiejsze przygotowane zamówienia',
     noPrepared: 'Nic jeszcze dziś nie przygotowano.',
     note: 'Notatka',
-    loginTitle: 'Gelato Spot',
+    loginTitle: 'Loodly Spot',
     loginSubtitle: 'Zaloguj się, aby zarządzać punktem',
     email: 'E-mail',
     password: 'Hasło',
@@ -1024,7 +1024,7 @@ export default {
     points: 'punktów',
     redeemPoints: 'Wymień punkty',
     yourQrCode: 'Twój kod QR',
-    qrInstructions: 'Pokaż ten kod QR w dowolnym lokalu Gelato, aby zdobyć punkty',
+    qrInstructions: 'Pokaż ten kod QR w dowolnym lokalu Loodly, aby zdobyć punkty',
     accountNumber: 'Numer konta',
     rewardsAvailable: 'Dostępne nagrody',
     totalOrders: 'Wszystkie zamówienia',

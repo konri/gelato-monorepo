@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Gelato backend implements WebSocket support for real-time updates using GraphQL Subscriptions with `graphql-ws`. This enables instant notifications for:
+The Loodly backend implements WebSocket support for real-time updates using GraphQL Subscriptions with `graphql-ws`. This enables instant notifications for:
 - Order status changes
 - Courier GPS location updates  
 - New order alerts for spot admins

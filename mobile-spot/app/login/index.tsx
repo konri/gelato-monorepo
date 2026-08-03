@@ -1,4 +1,4 @@
-import Logo from '@/assets/images/logo.svg';
+import Lockup from '@/assets/images/loodly_lockup.svg';
 import { Typography } from '@/components/atoms/Typography';
 import { useUserSync } from '@/hooks/useUserSync';
 import { storeSpotContext } from '@/hooks/useSpotOrders';
@@ -161,11 +161,22 @@ export default function SpotLoginScreen() {
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top + 40 }}>
       <View className="w-full max-w-[420px] self-center px-6">
         <View className="items-center mb-8">
-          <Logo width={56} height={56} />
-          <Typography variant="heading-32-bold" className="text-text-primary mt-3">
-            {t('Spot.loginTitle')}
-          </Typography>
-          <Typography variant="body-base-regular" className="text-gray-500 mt-1">
+          {/* The lockup already reads "loodly", so the old "Loodly Spot" title
+              would repeat it — SPOT is a badge under the cone instead. */}
+          <View style={{ width: 180, height: 124 }}>
+            <Lockup width={180} height={124} />
+            <View
+              style={{ position: 'absolute', left: 52, width: 114, bottom: 4, alignItems: 'center' }}
+            >
+              <Typography
+                variant="body-base-bold"
+                style={{ color: '#EC2828', letterSpacing: 4 }}
+              >
+                SPOT
+              </Typography>
+            </View>
+          </View>
+          <Typography variant="body-base-regular" className="text-gray-500 mt-3">
             {subtitle}
           </Typography>
         </View>
