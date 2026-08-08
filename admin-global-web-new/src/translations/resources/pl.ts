@@ -119,6 +119,7 @@ export default {
     deliveryRadius: 'Promień dostawy (km)',
     descriptionOptional: 'Opis (opcjonalnie)',
     createSpot: 'Utwórz lokal',
+    coordsFromAddress: 'Współrzędne uzupełnione automatycznie',
   },
   City: {
     addCity: 'Dodaj miasto',

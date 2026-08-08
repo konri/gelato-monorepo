@@ -1,5 +1,5 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 /**
  * S3 Upload Service
@@ -96,7 +96,7 @@ export class S3Service {
 
     // Generate unique filename
     const extension = filename.split('.').pop();
-    const uniqueFilename = `${uuidv4()}.${extension}`;
+    const uniqueFilename = `${randomUUID()}.${extension}`;
     const key = `${folder}/${uniqueFilename}`;
 
     // Upload to S3

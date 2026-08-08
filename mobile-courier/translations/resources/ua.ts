@@ -260,7 +260,7 @@ const ua = {
     search: 'ПОШУК',
     enterSixDigitCode: 'Введіть 6-значний код',
     facebookNotImplemented: 'Вхід через Facebook ще не реалізовано',
-    appleNotImplemented: 'Вхід через Apple ще не реалізовано',
+    appleLoginFailed: 'Не вдалося увійти через Apple',
     off: 'ВИМК'
   },
   Mapbox: {

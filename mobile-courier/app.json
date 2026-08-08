@@ -14,6 +14,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.konradhopek.gelato.courier",
+      "usesAppleSignIn": true,
       "googleServicesFile": "./GoogleService-Info.plist",
       "entitlements": {
         "aps-environment": "development"
@@ -38,8 +39,15 @@
               "gelato",
               "com.googleusercontent.apps.268509902642-pa9ad931n8507bknd4njd9ol8abdp4v3"
             ]
+          },
+          {
+            "CFBundleURLSchemes": [
+              "gelato",
+              "com.googleusercontent.apps.268509902642-pa9ad931n8507bknd4njd9ol8abdp4v3"
+            ]
           }
-        ]
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -64,6 +72,7 @@
       "expo-router",
       "expo-font",
       "@react-native-google-signin/google-signin",
+      "expo-apple-authentication",
       "expo-location",
       "expo-notifications",
       [
@@ -84,20 +93,17 @@
       "expo-localization",
       "expo-web-browser",
       "@react-native-community/datetimepicker",
-      [
-        "@stripe/stripe-react-native",
-        {
-          "merchantIdentifier": "merchant.com.konradhopek.gelato.client",
-          "enableGooglePay": true
-        }
-      ],
       "@react-native-firebase/app",
       [
         "expo-build-properties",
         {
           "ios": {
             "useFrameworks": "static",
-            "forceStaticLinking": ["RNFBApp", "RNFBMessaging"]
+            "forceStaticLinking": [
+              "RNFBApp",
+              "RNFBMessaging"
+            ],
+            "deploymentTarget": "16.4"
           }
         }
       ],

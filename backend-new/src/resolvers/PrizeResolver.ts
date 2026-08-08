@@ -3,7 +3,7 @@ import { Role, TransactionType } from '@prisma/client';
 import { GraphQLJSON } from 'graphql-type-json';
 import { Context } from '../types/Context';
 import { PrizeType, UserPrizeType } from '../types/PrizeType';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { PubSubService } from '../services/PubSubService';
 
 /**
@@ -397,6 +397,6 @@ export class PrizeResolver {
    * Helper: Generate unique QR code
    */
   private generateQRCode(): string {
-    return `PRIZE-${uuidv4().toUpperCase()}`;
+    return `PRIZE-${randomUUID().toUpperCase()}`;
   }
 }

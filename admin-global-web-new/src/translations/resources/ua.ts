@@ -119,6 +119,7 @@ export default {
     deliveryRadius: 'Радіус доставки (км)',
     descriptionOptional: 'Опис (необовʼязково)',
     createSpot: 'Створити заклад',
+    coordsFromAddress: 'Координати заповнено автоматично',
   },
   City: {
     addCity: 'Додати місто',

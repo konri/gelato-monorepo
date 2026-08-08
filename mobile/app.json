@@ -28,8 +28,15 @@
               "gelato",
               "com.googleusercontent.apps.268509902642-fs458nip621upn9ops28edfdjvqi5ml8"
             ]
+          },
+          {
+            "CFBundleURLSchemes": [
+              "gelato",
+              "com.googleusercontent.apps.268509902642-fs458nip621upn9ops28edfdjvqi5ml8"
+            ]
           }
-        ]
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -39,7 +46,11 @@
       },
       "package": "com.konradhopek.gelato.client",
       "googleServicesFile": "./google-services.json",
-      "useNextNotificationsApi": true
+      "useNextNotificationsApi": true,
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -84,7 +95,11 @@
         {
           "ios": {
             "useFrameworks": "static",
-            "forceStaticLinking": ["RNFBApp", "RNFBMessaging"]
+            "forceStaticLinking": [
+              "RNFBApp",
+              "RNFBMessaging"
+            ],
+            "deploymentTarget": "16.4"
           }
         }
       ],

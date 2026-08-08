@@ -195,6 +195,7 @@ async function startServer() {
     }),
     introspection: process.env.NODE_ENV !== 'production',
     playground: process.env.NODE_ENV !== 'production',
+    persistedQueries: false,
     plugins: [
       {
         async serverWillStart() {

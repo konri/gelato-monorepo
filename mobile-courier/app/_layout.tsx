@@ -6,12 +6,10 @@ import { useEffect } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import 'react-native-reanimated'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { StripeProvider } from '@stripe/stripe-react-native'
 import { onSessionExpired } from '@/shared/api-client/src/session'
 import { CartProvider } from '@/hooks/useCart'
 import { ToastProvider } from '@/components/organisms/ToastProvider'
 import { NotificationBridge } from '@/components/NotificationBridge'
-import { config } from '@/config'
 import '../translations'
 import './global.css'
 
@@ -42,26 +40,21 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <StripeProvider
-          publishableKey={config.STRIPE_PUBLISHABLE_KEY}
-          merchantIdentifier="merchant.com.konradhopek.gelato.courier"
-        >
-          <CartProvider>
-          <ToastProvider>
-          <NotificationBridge />
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="apply-spot" options={{ headerShown: false }} />
-            <Stack.Screen name="selfie/index" options={{ headerShown: false }} />
-            <Stack.Screen name="delivery" options={{ headerShown: false }} />
-            <Stack.Screen name="notification-center/index" options={{ headerShown: false }} />
-            <Stack.Screen name="notification/[id]" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" options={{ headerShown: true }} />
-          </Stack>
-          </ToastProvider>
-          </CartProvider>
-        </StripeProvider>
+        <CartProvider>
+        <ToastProvider>
+        <NotificationBridge />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="apply-spot" options={{ headerShown: false }} />
+          <Stack.Screen name="selfie/index" options={{ headerShown: false }} />
+          <Stack.Screen name="delivery" options={{ headerShown: false }} />
+          <Stack.Screen name="notification-center/index" options={{ headerShown: false }} />
+          <Stack.Screen name="notification/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" options={{ headerShown: true }} />
+        </Stack>
+        </ToastProvider>
+        </CartProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

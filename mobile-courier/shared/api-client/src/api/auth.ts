@@ -1,6 +1,7 @@
 import { apiPost } from "./client";
 import type {
     ApiResponse,
+    AppleLoginResponse,
     GoogleLoginResponse,
     LoginRequest,
     LoginResponse,
@@ -26,8 +27,28 @@ export async function signupUser(
 export async function loginWithGoogleMobile(
   serverAuthCode: string
 ): Promise<ApiResponse<GoogleLoginResponse>> {
+  // Courier app: scope the account to the COURIER namespace.
   return apiPost<GoogleLoginResponse>("/authorization/login/google/mobile", {
     serverAuthCode,
+    loginContext: "MOBILE_COURIER",
+  });
+}
+
+/** Apple Sign-In: the native SDK gives us an identityToken (a JWT) plus, on the
+ *  FIRST authorisation only, the user's name. Apple never re-sends the name, so
+ *  it has to be forwarded on that first call or it is lost for good. */
+export async function loginWithAppleMobile(
+  identityToken: string,
+  user?: {
+    email?: string | null;
+    fullName?: { givenName?: string | null; familyName?: string | null } | null;
+  },
+): Promise<ApiResponse<AppleLoginResponse>> {
+  // Courier app: scope the account to the COURIER namespace.
+  return apiPost<AppleLoginResponse>("/authorization/login/apple/mobile", {
+    identityToken,
+    user,
+    loginContext: "MOBILE_COURIER",
   });
 }
 

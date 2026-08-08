@@ -12,6 +12,8 @@ export default function MainLoginScreen() {
   const { t } = useTranslation();
   const {
     isGoogleLoading,
+    isAppleLoading,
+    isAppleAvailable,
     handleSignUp,
     handleSignIn,
     handleGoogleLogin,
@@ -65,6 +67,8 @@ export default function MainLoginScreen() {
             googleText={t("SignUp.continueWithGoogle")}
             appleText={t("SignUp.continueWithApple")}
             isGoogleLoading={isGoogleLoading}
+            isAppleLoading={isAppleLoading}
+            showApple={isAppleAvailable}
           />
         </View>
 

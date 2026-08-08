@@ -1,3 +1,4 @@
+import { useAppleSignIn } from "@/hooks/useAppleSignIn";
 import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -7,6 +8,11 @@ export const useLogin = () => {
   const { t } = useTranslation();
   const { signIn: googleSignIn, isLoading: isGoogleLoading } =
     useGoogleSignIn();
+  const {
+    signIn: appleSignIn,
+    isLoading: isAppleLoading,
+    isAvailable: isAppleAvailable,
+  } = useAppleSignIn();
 
   const handleGoogleLogin = async () => {
     try {
@@ -29,11 +35,27 @@ export const useLogin = () => {
   };
 
   const handleAppleLogin = async () => {
-    Alert.alert(t("Common.error"), t("Common.appleNotImplemented"));
+    try {
+      const result = await appleSignIn();
+      if (result) {
+        if (result.isFirstTimeAppleLogin) {
+          router.replace("/location");
+        } else {
+          router.replace("/");
+        }
+      }
+    } catch (error) {
+      Alert.alert(
+        t("Common.error"),
+        error instanceof Error ? error.message : t("Common.appleLoginFailed")
+      );
+    }
   };
 
   return {
     isGoogleLoading,
+    isAppleLoading,
+    isAppleAvailable,
     handleGoogleLogin,
     handleAppleLogin,
   };

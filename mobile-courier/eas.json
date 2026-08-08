@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 10.2.3"
+    "version": ">= 10.2.3",
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
@@ -8,9 +9,22 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_ENV": "prod",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "268509902642-tiajg536hrhbl6rk2i8e7c1u6r5fq6jd.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "268509902642-pa9ad931n8507bknd4njd9ol8abdp4v3.apps.googleusercontent.com"
+      }
     },
-    "production": {}
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_ENV": "prod",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "268509902642-tiajg536hrhbl6rk2i8e7c1u6r5fq6jd.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "268509902642-pa9ad931n8507bknd4njd9ol8abdp4v3.apps.googleusercontent.com"
+      }
+    }
   },
   "submit": {
     "production": {}

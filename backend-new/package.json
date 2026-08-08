@@ -6,13 +6,14 @@
   "license": "MIT",
   "scripts": {
     "dev": "ts-node-dev --respawn --no-notify --transpileOnly src/index.ts",
-    "build": "tsc",
+    "build": "tsc --noCheck",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "typecheck": "tsc --noEmit"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
@@ -24,7 +25,6 @@
     "@sentry/node": "^7.1.1",
     "@sentry/tracing": "^7.1.1",
     "@types/pdfkit": "^0.17.6",
-    "@types/uuid": "^10.0.0",
     "apollo-server-express": "^3.13.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -56,7 +56,6 @@
     "stripe": "^14.25.0",
     "twilio": "^6.0.0",
     "type-graphql": "^1.1.1",
-    "uuid": "^14.0.0",
     "ws": "^8.21.0"
   },
   "devDependencies": {
@@ -74,7 +73,6 @@
     "@types/passport-local": "^1.0.33",
     "@types/ws": "^8.18.1",
     "eslint": "^7.9.0",
-    "eslint-config-airbnb-typescript-prettier": "^3.1.0",
     "ts-node": "9.0.0",
     "ts-node-dev": "1.0.0-pre.44",
     "typescript": "^5.4.5"

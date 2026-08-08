@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +9,12 @@ import {
   MY_ADMIN_SPOTS,
   type City,
 } from '../graphql/spots';
+import {
+  fetchPlacePredictions,
+  geocodePlaceId,
+  placesConfigured,
+  type PlacePrediction,
+} from '../lib/places';
 
 // Slug + short random suffix → a stable, human-ish spot id.
 function makeSpotId(name: string) {
@@ -47,11 +53,39 @@ export function CreateSpotPage() {
   const [deliveryEnabled, setDeliveryEnabled] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cityModalOpen, setCityModalOpen] = useState(false);
+  const [addressPredictions, setAddressPredictions] = useState<PlacePrediction[]>([]);
+  const [addressResolved, setAddressResolved] = useState(false);
+  const addressDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const set =
     (k: keyof typeof form) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
       setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const onAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((f) => ({ ...f, address: e.target.value }));
+    setAddressResolved(false);
+    if (!placesConfigured) return;
+    if (addressDebounce.current) clearTimeout(addressDebounce.current);
+    const query = e.target.value;
+    addressDebounce.current = setTimeout(async () => {
+      setAddressPredictions(await fetchPlacePredictions(query));
+    }, 350);
+  };
+
+  const pickAddressPrediction = useCallback(async (p: PlacePrediction) => {
+    setAddressPredictions([]);
+    setForm((f) => ({ ...f, address: p.description }));
+    const place = await geocodePlaceId(p.placeId);
+    if (!place) return;
+    setForm((f) => ({
+      ...f,
+      address: place.address,
+      latitude: String(place.latitude),
+      longitude: String(place.longitude),
+    }));
+    setAddressResolved(true);
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,9 +157,33 @@ export function CreateSpotPage() {
           </select>
         </div>
 
-        <div>
+        <div className="relative">
           <label className={label}>{t('Common.address')}</label>
-          <input className={input} value={form.address} onChange={set('address')} required />
+          <input
+            className={input}
+            value={form.address}
+            onChange={onAddressChange}
+            autoComplete="off"
+            required
+          />
+          {addressPredictions.length > 0 && (
+            <ul className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg">
+              {addressPredictions.map((p) => (
+                <li key={p.placeId}>
+                  <button
+                    type="button"
+                    onClick={() => pickAddressPrediction(p)}
+                    className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
+                  >
+                    {p.description}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {addressResolved && (
+            <p className="mt-1 text-xs text-green-600">{t('CreateSpot.coordsFromAddress')}</p>
+          )}
         </div>
 
         <div>
@@ -229,10 +287,34 @@ function CreateCityModal({
     country: 'Poland',
   });
   const [error, setError] = useState<string | null>(null);
+  const [namePredictions, setNamePredictions] = useState<PlacePrediction[]>([]);
+  const [coordsResolved, setCoordsResolved] = useState(false);
+  const nameDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const set =
     (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const onNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((f) => ({ ...f, name: e.target.value }));
+    setCoordsResolved(false);
+    if (!placesConfigured) return;
+    if (nameDebounce.current) clearTimeout(nameDebounce.current);
+    const query = e.target.value;
+    nameDebounce.current = setTimeout(async () => {
+      setNamePredictions(await fetchPlacePredictions(query, '(cities)'));
+    }, 350);
+  };
+
+  const pickNamePrediction = useCallback(async (p: PlacePrediction) => {
+    setNamePredictions([]);
+    const cityName = p.description.split(',')[0]?.trim() || p.description;
+    setForm((f) => ({ ...f, name: cityName }));
+    const place = await geocodePlaceId(p.placeId);
+    if (!place) return;
+    setForm((f) => ({ ...f, latitude: String(place.latitude), longitude: String(place.longitude) }));
+    setCoordsResolved(true);
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -267,9 +349,34 @@ function CreateCityModal({
           <div className="mb-3 rounded-lg bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>
         )}
         <form onSubmit={submit} className="space-y-3">
-          <div>
+          <div className="relative">
             <label className={label}>{t('City.nameCanonical')}</label>
-            <input className={input} value={form.name} onChange={set('name')} required placeholder="Gdansk" />
+            <input
+              className={input}
+              value={form.name}
+              onChange={onNameChange}
+              autoComplete="off"
+              required
+              placeholder="Gdansk"
+            />
+            {namePredictions.length > 0 && (
+              <ul className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg">
+                {namePredictions.map((p) => (
+                  <li key={p.placeId}>
+                    <button
+                      type="button"
+                      onClick={() => pickNamePrediction(p)}
+                      className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
+                    >
+                      {p.description}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {coordsResolved && (
+              <p className="mt-1 text-xs text-green-600">{t('CreateSpot.coordsFromAddress')}</p>
+            )}
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>

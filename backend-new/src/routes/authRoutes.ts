@@ -755,7 +755,7 @@ router.post('/login/google/mobile', async (req, res) => {
           name: name,
           firstName: firstName,
           surname: surname,
-          picture: picture,
+          profilePicture: picture,
           roles: gIsCourier ? ['COURIER'] : ['CLIENT'],
           emailVerified: true,
           phoneVerified: false,
@@ -784,7 +784,7 @@ router.post('/login/google/mobile', async (req, res) => {
 
       // Handle referral code if provided
       if (referralCode) {
-        const referralCodeRecord = await prisma.userReferralCode.findUnique({
+        const referralCodeRecord = await prisma.referralCode.findUnique({
           where: { code: referralCode },
         });
 
@@ -793,9 +793,11 @@ router.post('/login/google/mobile', async (req, res) => {
             data: {
               referrerId: referralCodeRecord.userId,
               referredUserId: user.id,
-              referralCode: referralCode,
-              pointsAwarded: 500, // Standard referral points
-              isCompleted: true,
+              // Referral.code holds the code used; pointsAwarded is a BOOLEAN
+              // flag flipped once the referrer is actually credited (after the
+              // referee's first purchase), not a point amount.
+              code: referralCode,
+              pointsAwarded: false,
             },
           });
 
@@ -842,7 +844,7 @@ router.post('/login/google/mobile', async (req, res) => {
         name: user.name,
         firstName: user.firstName,
         surname: user.surname,
-        picture: user.picture,
+        picture: user.profilePicture,
         phone: user.phone,
         roles: user.roles,
         language: user.language,
@@ -949,7 +951,7 @@ router.post('/login/apple/mobile', async (req, res) => {
 
       // Handle referral code if provided
       if (referralCode) {
-        const referralCodeRecord = await prisma.userReferralCode.findUnique({
+        const referralCodeRecord = await prisma.referralCode.findUnique({
           where: { code: referralCode },
         });
 
@@ -958,9 +960,8 @@ router.post('/login/apple/mobile', async (req, res) => {
             data: {
               referrerId: referralCodeRecord.userId,
               referredUserId: user.id,
-              referralCode: referralCode,
-              pointsAwarded: 500,
-              isCompleted: true,
+              code: referralCode,
+              pointsAwarded: false,
             },
           });
 

@@ -119,6 +119,7 @@ export default {
     deliveryRadius: 'Delivery radius (km)',
     descriptionOptional: 'Description (optional)',
     createSpot: 'Create spot',
+    coordsFromAddress: 'Coordinates filled in automatically',
   },
   City: {
     addCity: 'Add city',

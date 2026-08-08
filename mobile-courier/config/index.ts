@@ -26,9 +26,6 @@ export const config = {
 
   // Mapbox Configuration
   MAPBOX_ACCESS_TOKEN: process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '',
-
-  // Stripe Configuration
-  STRIPE_PUBLISHABLE_KEY: process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
 } as const;
 
 export const GOOGLE_SIGNIN_CONFIG = {

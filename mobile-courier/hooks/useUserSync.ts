@@ -6,7 +6,7 @@ import { useAuthState } from './useAuthState';
 export const useUserSync = () => {
   const { updateAuthState } = useAuthState();
 
-  const syncUserData = async (loginMethod: 'email' | 'google' | 'phone' = 'email') => {
+  const syncUserData = async (loginMethod: 'email' | 'google' | 'apple' | 'phone' = 'email') => {
     try {
       const result = await getWhoAmI();
       
@@ -25,7 +25,7 @@ export const useUserSync = () => {
     }
   };
 
-  const handlePostLogin = async (user: any, token: string, loginMethod: 'email' | 'google' | 'phone' = 'email', refreshToken?: string) => {
+  const handlePostLogin = async (user: any, token: string, loginMethod: 'email' | 'google' | 'apple' | 'phone' = 'email', refreshToken?: string) => {
     await updateAuthState(user, token, refreshToken);
     
     // For phone auth, we already have all user data from the response

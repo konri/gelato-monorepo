@@ -260,7 +260,7 @@ export default {
     search: 'SEARCH',
     enterSixDigitCode: 'Enter 6-digit code',
     facebookNotImplemented: 'Facebook login is not implemented yet',
-    appleNotImplemented: 'Apple login is not implemented yet',
+    appleLoginFailed: 'Failed to log in with Apple',
     off: 'OFF'
   },
   Mapbox: {

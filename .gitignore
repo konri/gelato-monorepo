@@ -59,7 +59,8 @@ backend/migration.sql
 *.p12
 *.jks
 *.mobileprovision
-**/GoogleService-Info.plist
-**/google-services.json
+# GoogleService-Info.plist / google-services.json are intentionally committed
+# (per-app, non-secret client config needed for EAS local builds) — see
+# mobile/GoogleService-Info.plist, mobile/google-services.json, etc.
 **/*firebase-adminsdk*.json
 **/service-account*.json
