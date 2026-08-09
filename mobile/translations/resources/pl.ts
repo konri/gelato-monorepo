@@ -813,4 +813,18 @@ export default {
     redeemFailed: 'Nie udało się aktywować nagrody',
     showAtSpot: 'Pokaż ten kod w lokalu',
   },
+  News: {
+    empty: 'Brak aktualności',
+    justNow: 'przed chwilą',
+    minutesAgo: '{{count}} min temu',
+    hoursAgo: '{{count}} godz. temu',
+    daysAgo: '{{count}} dni temu',
+  },
+  PointsHistory: {
+    title: 'Historia punktów',
+    subtitle: 'Twoja historia zdobywania punktów z zamówień, skanów w lokalu i bonusów',
+    emptyTitle: 'Brak historii punktów',
+    emptySubtitle: 'Zamów lody lub zeskanuj kod QR w lokalu, aby zacząć zdobywać punkty',
+    startOrdering: 'Zamów teraz',
+  },
 }

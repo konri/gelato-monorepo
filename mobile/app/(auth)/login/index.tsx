@@ -3,7 +3,9 @@ import { Typography } from "@/components/atoms/Typography";
 import { AuthHeader } from "@/components/molecules/AuthHeader";
 import { LoginForm } from "@/components/molecules/LoginForm";
 import { SocialMediaButtons } from "@/components/molecules/SocialMediaButtons";
+import { config } from "@/config";
 import { useLogin } from "@/hooks/useLogin";
+import Constants from "expo-constants";
 import { router } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -76,6 +78,16 @@ export default function LoginScreen() {
             isAppleLoading={isAppleLoading}
             showApple={isAppleAvailable}
           />
+        </View>
+
+        {/* Debug info to verify which backend a TestFlight build is hitting. */}
+        <View className="items-center pb-4">
+          <Typography variant="body-very-small-regular" className="text-text-subtitle text-center">
+            v{Constants.expoConfig?.version} · {process.env.EXPO_PUBLIC_ENV === "prod" ? "production" : "development"}
+          </Typography>
+          <Typography variant="body-very-small-regular" className="text-text-subtitle text-center">
+            {config.API_URL}
+          </Typography>
         </View>
       </View>
     </ScrollView>

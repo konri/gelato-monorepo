@@ -11,6 +11,7 @@ export * from './src/graphql/queries/merchants/types';
 export * from './src/graphql/queries/referralCode/getMyReferralCode';
 export * from './src/graphql/queries/referralCode/types';
 export * from './src/graphql/queries/points/getMyPointBalance';
+export * from './src/graphql/queries/points/getMyPointTransactions';
 export * from './src/graphql/queries/points/types';
 export * from './src/graphql/queries/activity/getMyActivityTimeline';
 export * from './src/graphql/queries/activity/types';

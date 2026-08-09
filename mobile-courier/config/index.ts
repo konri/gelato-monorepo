@@ -4,17 +4,17 @@ export const config = {
   // API Configuration. Dev fallback is port 4002 (the Loodly backend) — NOT
   // 4000 — so a missing env var doesn't silently point at the wrong port.
   API_URL: ENV === 'prod'
-    ? (process.env.EXPO_PUBLIC_BACKEND_API_URL_PROD || 'https://api.bonapka.pl')
+    ? (process.env.EXPO_PUBLIC_BACKEND_API_URL_PROD || 'https://loodly-be-production.up.railway.app')
     : (process.env.EXPO_PUBLIC_BACKEND_API_URL_DEV || 'http://localhost:4002'),
 
   // REST API URL (separate from GraphQL)
   REST_API_URL: ENV === 'prod'
-    ? (process.env.EXPO_PUBLIC_BACKEND_REST_API_URL_PROD || 'https://api.bonapka.pl')
+    ? (process.env.EXPO_PUBLIC_BACKEND_REST_API_URL_PROD || 'https://loodly-be-production.up.railway.app')
     : (process.env.EXPO_PUBLIC_BACKEND_REST_API_URL_DEV || 'http://localhost:4002'),
 
   // GraphQL API URL
   GRAPHQL_API_URL: ENV === 'prod'
-    ? (process.env.EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_PROD || 'https://api.bonapka.pl/graphql')
+    ? (process.env.EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_PROD || 'https://loodly-be-production.up.railway.app/graphql')
     : (process.env.EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_DEV || 'http://localhost:4002/graphql'),
 
   // Google Sign-In Configuration
@@ -26,6 +26,10 @@ export const config = {
 
   // Mapbox Configuration
   MAPBOX_ACCESS_TOKEN: process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '',
+
+  // Legal pages (landing-page-new, static export)
+  TERMS_URL: 'https://loodly.pl/terms',
+  PRIVACY_POLICY_URL: 'https://loodly.pl/policy',
 } as const;
 
 export const GOOGLE_SIGNIN_CONFIG = {

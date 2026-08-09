@@ -7,9 +7,10 @@ interface TermsCheckboxProps {
   onToggle: () => void;
   text: string;
   linkText: string;
+  onLinkPress?: () => void;
 }
 
-export const TermsCheckbox = ({ checked, onToggle, text, linkText }: TermsCheckboxProps) => (
+export const TermsCheckbox = ({ checked, onToggle, text, linkText, onLinkPress }: TermsCheckboxProps) => (
   <View className="flex-row items-center my-5">
     <Pressable
       className={`w-5 h-5 rounded border-2 mr-3 items-center justify-center ${checked ? 'bg-red-500 border-red-500' : 'border-red-500'}`}
@@ -18,7 +19,10 @@ export const TermsCheckbox = ({ checked, onToggle, text, linkText }: TermsCheckb
       {checked && <Ionicons name="checkmark" size={12} color="white" />}
     </Pressable>
     <Text className="flex-1 text-body-small-regular text-gray-500">
-      {text} <Text className="text-red-500">{linkText}</Text>
+      {text}{' '}
+      <Text className="text-red-500" onPress={onLinkPress} suppressHighlighting>
+        {linkText}
+      </Text>
     </Text>
   </View>
 );

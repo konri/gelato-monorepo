@@ -2,26 +2,29 @@ import { Typography } from '@/components/atoms/Typography';
 import { useNewsFeed } from '@/hooks/useNews';
 import { router } from 'expo-router';
 import React, { forwardRef, useImperativeHandle } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, View } from 'react-native';
 import { NewsCard } from './NewsCard';
+import type { TFunction } from 'i18next';
 
 export interface NewsFeedHandle {
   reload: () => Promise<void>;
 }
 
-const timeAgo = (iso?: string | null): string | undefined => {
+const timeAgo = (t: TFunction, iso?: string | null): string | undefined => {
   if (!iso) return undefined;
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t('News.justNow');
+  if (mins < 60) return t('News.minutesAgo', { count: mins });
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
+  if (hrs < 24) return t('News.hoursAgo', { count: hrs });
   const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
+  return t('News.daysAgo', { count: days });
 };
 
 export const NewsFeed = forwardRef<NewsFeedHandle>((_props, ref) => {
+  const { t } = useTranslation();
   const { news, loading, refetch, toggleLike } = useNewsFeed();
 
   useImperativeHandle(ref, () => ({ reload: refetch }));
@@ -38,7 +41,7 @@ export const NewsFeed = forwardRef<NewsFeedHandle>((_props, ref) => {
     return (
       <View className="px-6 py-8 items-center">
         <Typography variant="body-base-regular" className="text-gray-500 text-center">
-          No news available at the moment
+          {t('News.empty')}
         </Typography>
       </View>
     );
@@ -55,7 +58,7 @@ export const NewsFeed = forwardRef<NewsFeedHandle>((_props, ref) => {
           imageUrls={item.images}
           storeName={item.spot?.name}
           storeLogoUrl={item.spot?.logoUrl ?? undefined}
-          timestamp={timeAgo(item.publishedAt ?? item.createdAt)}
+          timestamp={timeAgo(t, item.publishedAt ?? item.createdAt)}
           likes={item.likesCount}
           isLiked={item.isLiked}
           commentsCount={item.commentsCount}

@@ -26,8 +26,14 @@
             "CFBundleURLSchemes": [
               "gelatospot"
             ]
+          },
+          {
+            "CFBundleURLSchemes": [
+              "gelatospot"
+            ]
           }
-        ]
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -77,7 +83,10 @@
         {
           "ios": {
             "useFrameworks": "static",
-            "forceStaticLinking": ["RNFBApp", "RNFBMessaging"]
+            "forceStaticLinking": [
+              "RNFBApp",
+              "RNFBMessaging"
+            ]
           }
         }
       ],

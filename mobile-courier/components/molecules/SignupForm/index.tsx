@@ -1,12 +1,13 @@
 import { FormInput } from "@/components/atoms/FormInput";
 import { Form } from "@/components/molecules/Form";
 import { TermsCheckbox } from "@/components/molecules/TermsCheckbox";
+import { config } from "@/config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { signupUser } from "@repo/api-client";
 import React, { useState } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Alert } from "react-native";
+import { Alert, Linking } from "react-native";
 import { SignupFormData, SignupFormProps } from "./types";
 
 export const SignupForm = ({}: SignupFormProps) => {
@@ -106,6 +107,7 @@ export const SignupForm = ({}: SignupFormProps) => {
         onToggle={() => setAgreeToTerms(!agreeToTerms)}
         text={t("SignUp.agreeToTerms")}
         linkText={t("SignUp.termsAndConditions")}
+        onLinkPress={() => Linking.openURL(config.TERMS_URL)}
       />
     </Form>
   );

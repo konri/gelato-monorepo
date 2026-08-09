@@ -96,7 +96,7 @@ function AccountTab() {
   };
 
   const handleViewRewards = () => {
-    router.push('/rewards/available' as any);
+    router.push('/prizes' as any);
   };
 
   const handleViewOrders = () => {

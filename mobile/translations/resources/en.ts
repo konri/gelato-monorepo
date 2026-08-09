@@ -810,4 +810,18 @@ export default {
     redeemFailed: 'Could not activate prize',
     showAtSpot: 'Show this code at the spot',
   },
+  News: {
+    empty: 'No news available at the moment',
+    justNow: 'just now',
+    minutesAgo: '{{count}}m ago',
+    hoursAgo: '{{count}}h ago',
+    daysAgo: '{{count}}d ago',
+  },
+  PointsHistory: {
+    title: 'Points History',
+    subtitle: 'Your point earning history from app orders, in-person scans, and bonuses',
+    emptyTitle: 'No Points History Yet',
+    emptySubtitle: 'Order gelato or scan your QR code at any spot to start earning points',
+    startOrdering: 'Start Ordering',
+  },
 }

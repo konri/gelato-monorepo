@@ -380,8 +380,8 @@ export function Footer() {
             {t("footer.legal")}
           </h3>
           <ul className="mt-4 space-y-2.5 text-sm">
-            <li><a href="#" className="transition-colors hover:text-white">{t("footer.privacy")}</a></li>
-            <li><a href="#" className="transition-colors hover:text-white">{t("footer.terms")}</a></li>
+            <li><a href="/policy" className="transition-colors hover:text-white">{t("footer.privacy")}</a></li>
+            <li><a href="/terms" className="transition-colors hover:text-white">{t("footer.terms")}</a></li>
           </ul>
         </div>
       </div>

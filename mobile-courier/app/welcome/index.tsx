@@ -3,10 +3,11 @@ import { Button } from "@/components/atoms/Button";
 import { Typography } from "@/components/atoms/Typography";
 import { CustomSafeAreaView } from "@/components/CustomSafeAreaView";
 import { SocialMediaButtons } from "@/components/molecules/SocialMediaButtons";
+import { config } from "@/config";
 import { useWelcome } from "@/hooks/useWelcome";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, View } from "react-native";
+import { Linking, Pressable, ScrollView, View } from "react-native";
 
 export default function MainLoginScreen() {
   const { t } = useTranslation();
@@ -91,24 +92,28 @@ export default function MainLoginScreen() {
         </View>
 
         <View className="flex-row justify-center items-center mb-6 gap-3 mt-14">
-          <Typography
-            variant="body-medium-regular-spaced"
-            className="text-center text-text-subtitle"
-          >
-            {t("Main.privacyPolicy")}
-          </Typography>
+          <Pressable onPress={() => Linking.openURL(config.PRIVACY_POLICY_URL)}>
+            <Typography
+              variant="body-medium-regular-spaced"
+              className="text-center text-text-subtitle"
+            >
+              {t("Main.privacyPolicy")}
+            </Typography>
+          </Pressable>
           <Typography
             variant="body-medium-regular-spaced"
             className="text-center text-text-subtitle"
           >
             •
           </Typography>
-          <Typography
-            variant="body-medium-regular-spaced"
-            className="text-center text-text-subtitle"
-          >
-            {t("Main.termsOfService")}
-          </Typography>
+          <Pressable onPress={() => Linking.openURL(config.TERMS_URL)}>
+            <Typography
+              variant="body-medium-regular-spaced"
+              className="text-center text-text-subtitle"
+            >
+              {t("Main.termsOfService")}
+            </Typography>
+          </Pressable>
         </View>
       </ScrollView>
     </CustomSafeAreaView>

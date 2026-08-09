@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import * as StoreReview from 'expo-store-review';
 import { DropdownItem } from '@/components/atoms/DropdownItem';
+import { config } from '@/config';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useWhoAmI } from '@/hooks/useWhoAmI';
 import { deleteAccount } from '@repo/api-client';
@@ -11,9 +12,6 @@ import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
 import { LanguageSelectorModal } from './LanguageSelectorModal';
 import { CitySelectorModal } from './CitySelectorModal';
 import { ContactFormModal } from './ContactFormModal';
-
-const PRIVACY_URL = 'https://www.goodlood.com/privacy';
-const TERMS_URL = 'https://www.goodlood.com/terms';
 
 export const SettingsItems = () => {
   const { t, i18n } = useTranslation();
@@ -143,13 +141,13 @@ export const SettingsItems = () => {
           label={t('Settings.privacyPolicy')}
           iconName="shield-checkmark-outline"
           position="middle"
-          onPress={() => Linking.openURL(PRIVACY_URL)}
+          onPress={() => Linking.openURL(config.PRIVACY_POLICY_URL)}
         />
         <DropdownItem
           label={t('Settings.terms')}
           iconName="document-text-outline"
           position="last"
-          onPress={() => Linking.openURL(TERMS_URL)}
+          onPress={() => Linking.openURL(config.TERMS_URL)}
         />
       </View>
 

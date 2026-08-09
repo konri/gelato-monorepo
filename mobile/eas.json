@@ -13,6 +13,9 @@
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_ENV": "prod",
+        "EXPO_PUBLIC_BACKEND_API_URL_PROD": "https://loodly-be-production.up.railway.app",
+        "EXPO_PUBLIC_BACKEND_REST_API_URL_PROD": "https://loodly-be-production.up.railway.app",
+        "EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_PROD": "https://loodly-be-production.up.railway.app/graphql",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "268509902642-tiajg536hrhbl6rk2i8e7c1u6r5fq6jd.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "268509902642-fs458nip621upn9ops28edfdjvqi5ml8.apps.googleusercontent.com"
       }
@@ -21,6 +24,9 @@
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_ENV": "prod",
+        "EXPO_PUBLIC_BACKEND_API_URL_PROD": "https://loodly-be-production.up.railway.app",
+        "EXPO_PUBLIC_BACKEND_REST_API_URL_PROD": "https://loodly-be-production.up.railway.app",
+        "EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_PROD": "https://loodly-be-production.up.railway.app/graphql",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "268509902642-tiajg536hrhbl6rk2i8e7c1u6r5fq6jd.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "268509902642-fs458nip621upn9ops28edfdjvqi5ml8.apps.googleusercontent.com"
       }

@@ -10,6 +10,7 @@
     "start-ios": "node ./scripts/show-api-info.js && expo start:ios",
     "prebuild": "expo prebuild --clean",
     "web": "expo start --web",
+    "build:web": "npx expo export --platform web",
     "lint": "expo lint",
     "ios": "expo run:ios"
   },

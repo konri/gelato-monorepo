@@ -812,6 +812,20 @@ const ua = {
     redeemFailed: 'Не вдалося активувати приз',
     showAtSpot: 'Покажіть цей код у закладі',
   },
+  News: {
+    empty: 'Наразі немає новин',
+    justNow: 'щойно',
+    minutesAgo: '{{count}} хв тому',
+    hoursAgo: '{{count}} год тому',
+    daysAgo: '{{count}} дн тому',
+  },
+  PointsHistory: {
+    title: 'Історія балів',
+    subtitle: 'Ваша історія нарахування балів за замовлення, скани в закладі та бонуси',
+    emptyTitle: 'Ще немає історії балів',
+    emptySubtitle: 'Замовте морозиво або відскануйте QR-код у закладі, щоб почати заробляти бали',
+    startOrdering: 'Замовити зараз',
+  },
 }
 
 export default ua
