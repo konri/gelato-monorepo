@@ -1,6 +1,8 @@
 import { FormInput } from "@/components/atoms/FormInput";
 import { Form } from "@/components/molecules/Form";
 import { useAuth } from "@/hooks/useAuth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 import React from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -29,7 +31,19 @@ export const LoginForm = ({}: LoginFormProps) => {
     error: unknown,
     formInstance: UseFormReturn<LoginFormData>
   ): boolean => {
-    const err = error as { message?: string; status?: number };
+    const err = error as {
+      message?: string;
+      status?: number;
+      requiresVerification?: boolean;
+      email?: string;
+    };
+
+    if (err?.requiresVerification) {
+      AsyncStorage.setItem("pendingVerificationEmail", err.email ?? formInstance.getValues("email")).then(
+        () => router.push("/verify-code")
+      );
+      return true;
+    }
 
     if (err?.message === "Wrong password" && err?.status === 401) {
       formInstance.setError("password", {

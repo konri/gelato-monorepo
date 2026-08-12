@@ -28,6 +28,7 @@ import { QuestResolver } from './resolvers/QuestResolver';
 import { PointTemplateResolver } from './resolvers/PointTemplateResolver';
 import { SpotCourierResolver } from './resolvers/SpotCourierResolver';
 import { SpotDashboardResolver } from './resolvers/SpotDashboardResolver';
+import { PayoutResolver } from './resolvers/PayoutResolver';
 import { ComplaintResolver } from './resolvers/ComplaintResolver';
 import { ReviewResolver } from './resolvers/ReviewResolver';
 import { AdminResolver } from './resolvers/AdminResolver';
@@ -129,6 +130,7 @@ async function startServer() {
       PointTemplateResolver,
       SpotCourierResolver,
       SpotDashboardResolver,
+      PayoutResolver,
       ComplaintResolver,
       ReviewResolver,
       AdminResolver,

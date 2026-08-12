@@ -58,6 +58,18 @@ export default function OnboardingScreen() {
     setSurname((v) => v || me.surname || '');
   }, [me]);
 
+  // If the profile already has a name (e.g. set during signup), skip straight
+  // to whichever step is still missing instead of re-asking for it. Only runs
+  // once, the first time `me` becomes available.
+  const [skippedInitialStep, setSkippedInitialStep] = useState(false);
+  useEffect(() => {
+    if (!me || skippedInitialStep) return;
+    setSkippedInitialStep(true);
+    if (me.firstName && me.surname) {
+      setStep(me.phoneVerified ? 'selfie' : 'phone');
+    }
+  }, [me, skippedInitialStep]);
+
   // Pulse the avatar while the photo uploads, so the screen doesn't look frozen.
   const pulse = useRef(new Animated.Value(1)).current;
   useEffect(() => {
@@ -91,7 +103,7 @@ export default function OnboardingScreen() {
       try {
         const res = await updateProfile({ data: { firstName: first, surname: last } });
         if (!res.success || !res.data) {
-          throw new Error(res.error?.message || t('Onboarding.profile.saveFailed'));
+          throw new Error(t('Onboarding.profile.saveFailed'));
         }
         const cached = await AsyncStorage.getItem('userData');
         if (cached) {
@@ -123,7 +135,7 @@ export default function OnboardingScreen() {
     setPhoneBusy(true);
     try {
       const res = await sendPhoneCode(num);
-      if (!res.data?.success && res.error) throw new Error(res.error);
+      if (!res.data?.success && res.error) throw new Error(t('Onboarding.phone.sendFailed'));
       setOtpSent(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : t('Onboarding.phone.sendFailed'));
@@ -145,7 +157,12 @@ export default function OnboardingScreen() {
     try {
       const res = await verifyMyPhone(num, code);
       if (res.error || !res.data?.success) {
-        throw new Error(res.error || res.data?.message || t('Onboarding.phone.verifyFailed'));
+        const raw = res.error || res.data?.message;
+        const message =
+          raw?.toLowerCase().includes('already in use')
+            ? t('Onboarding.phone.numberInUse')
+            : t('Onboarding.phone.verifyFailed');
+        throw new Error(message);
       }
       const cached = await AsyncStorage.getItem('userData');
       if (cached) {
@@ -209,7 +226,7 @@ export default function OnboardingScreen() {
     setError(null);
     try {
       const res = await uploadProfileImage(uri, 'selfie.jpg');
-      if (res.error) throw new Error(res.error);
+      if (res.error) throw new Error(t('Selfie.error'));
       router.replace('/(tabs)');
     } catch (e) {
       setError(e instanceof Error ? e.message : t('Selfie.error'));

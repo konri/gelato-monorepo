@@ -12,6 +12,7 @@ import { NewsPage } from './pages/NewsPage';
 import { OrdersPage } from './pages/OrdersPage';
 import { PrizesPage } from './pages/PrizesPage';
 import { QuestsPage } from './pages/QuestsPage';
+import { PayoutsPage } from './pages/PayoutsPage';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
             <Route element={<AppLayout />}>
               <Route path="/admins" element={<AdminsPage />} />
               <Route path="/quests" element={<QuestsPage />} />
+              <Route path="/payouts" element={<PayoutsPage />} />
             </Route>
           </Route>
 

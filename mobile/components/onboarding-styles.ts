@@ -1,6 +1,15 @@
 import { StyleSheet, Dimensions } from 'react-native';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+
+// The mocked-screen image is a 1212x2192 device frame (aspect ~0.553). Size
+// it to fit the space above the white content card (which is `contentOverlay`
+// tall) instead of a fixed multiple of screen width, so it never spills
+// past the card.
+const CONTENT_OVERLAY_HEIGHT = 400;
+const PHONE_IMAGE_ASPECT = 1212 / 2192;
+const phoneImageHeight = height - CONTENT_OVERLAY_HEIGHT - 90;
+const phoneImageWidth = Math.min(width * 0.72, phoneImageHeight * PHONE_IMAGE_ASPECT);
 
 export const styles = StyleSheet.create({
     container: { flex: 1 },
@@ -10,10 +19,10 @@ export const styles = StyleSheet.create({
         alignItems: 'center'
     },
     phoneImage: {
-        width: width * 1.3,
-        height: width * 1.7,
+        width: phoneImageWidth,
+        height: phoneImageWidth / PHONE_IMAGE_ASPECT,
         position: 'absolute',
-        top: 30,
+        top: 60,
         alignSelf: 'center'
     },
     contentOverlay: {
@@ -21,7 +30,7 @@ export const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        height: 400,
+        height: CONTENT_OVERLAY_HEIGHT,
         backgroundColor: '#FFFFFF',
         shadowColor: '#181A20',
         shadowOffset: { width: 12, height: 0 },

@@ -1,14 +1,22 @@
-import NotificationService from '@/services/notificationService';
 import { executeGraphQLQuery } from '@/shared/api-client/src/graphql/client';
 import { REGISTER_DEVICE } from '@/shared/api-client/src/graphql/mutations/notifications/registerDevice';
 import { logger } from '@/utils/logger';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 
 export const useNotificationRegistration = () => {
   const [isRegistered, setIsRegistered] = useState(false);
 
   useEffect(() => {
+    // @react-native-firebase/messaging is native-only — there's no Firebase
+    // app instance on web, so calling messaging() there throws uncaught and
+    // crashes the tree. Push registration isn't implemented for web yet.
+    if (Platform.OS === 'web') return;
+
+    // Lazy-required so the native module is never touched on web at all.
+    const NotificationService = require('@/services/notificationService').default;
+
     // Send an FCM token to the backend (skips silently if not logged in).
     const registerToken = async (fcmToken: string) => {
       const token = await AsyncStorage.getItem('access_token');
@@ -58,7 +66,7 @@ export const useNotificationRegistration = () => {
     registerDevice();
 
     // Re-register whenever Firebase rotates the token.
-    const unsubscribe = NotificationService.onTokenRefresh((newToken) => {
+    const unsubscribe = NotificationService.onTokenRefresh((newToken: string) => {
       logger.log('🔄 FCM token refreshed, re-registering');
       void registerToken(newToken).catch((e) => logger.error('Token refresh register failed:', e));
     });

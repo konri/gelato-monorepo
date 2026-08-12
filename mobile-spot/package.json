@@ -10,7 +10,7 @@
     "start-ios": "node ./scripts/show-api-info.js && expo start:ios",
     "prebuild": "expo prebuild --clean",
     "web": "expo start --web",
-    "build:web": "npx expo export --platform web",
+    "build:web": "bash ./scripts/build-web-prod.sh",
     "lint": "expo lint",
     "ios": "expo run:ios"
   },
@@ -28,7 +28,6 @@
     "@react-navigation/material-top-tabs": "^7.4.28",
     "@react-navigation/native": "^7.1.6",
     "@reduxjs/toolkit": "^2.9.0",
-    "@rnmapbox/maps": "^10.2.9",
     "expo": "~54.0.33",
     "expo-blur": "~15.0.8",
     "expo-build-properties": "~1.0.10",

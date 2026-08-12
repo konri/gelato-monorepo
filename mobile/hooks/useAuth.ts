@@ -21,6 +21,8 @@ export const useAuth = () => {
         const error = new Error(response.error) as any;
         error.status = response.status;
         error.message = response.error;
+        error.requiresVerification = response.requiresVerification;
+        error.email = response.email;
         throw error;
       }
 

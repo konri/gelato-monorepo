@@ -4,6 +4,11 @@ export type ApiResponse<T> = {
   data?: T;
   error?: string;
   status: number;
+  // Set by /login when the account exists but hasn't confirmed its emailed
+  // OTP yet — lets the caller redirect to the verify-code screen instead of
+  // just showing a generic error.
+  requiresVerification?: boolean;
+  email?: string;
 };
 
 export type LoginRequest = {

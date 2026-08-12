@@ -283,6 +283,7 @@ type Mutation {
   createReview(comment: String, courierRating: Int, orderId: ID!, overallRating: Int!, spotRating: Int!): ReviewType!
   createSpot(address: String!, cityId: String!, deliveryEnabled: Boolean = true, deliveryRadiusKm: Float = 5, description: String, freeDeliveryThreshold: Float, id: String!, latitude: Float!, longitude: Float!, name: String!, phone: String!): SpotType!
   createSpotNews(input: CreateSpotNewsInput!): NewsType!
+  createSpotPayout(note: String, spotId: ID!): SpotPayoutType!
   createSpotStaff(email: String!, name: String!, password: String!, role: String!, spotId: ID!): UserType!
   createTaste(allergens: [String!] = [], description: String, descriptionLocal: String, imageUrl: String, kcalPer100g: Float, kcalPerPortion: Float, loyaltyPoints: Int, spotId: ID!, subtitle: String, title: String!, titleLocal: String!, type: TasteType!): Taste!
   deleteAccount: Boolean!
@@ -700,6 +701,8 @@ type Query {
   spotEmployees(spotId: ID!): [UserType!]!
   spotNews(limit: Int = 30, spotId: ID!): [NewsType!]!
   spotOrders(spotId: ID!, status: OrderStatus): [OrderType!]!
+  spotPayoutHistory(spotId: ID!): [SpotPayoutType!]!
+  spotPayoutSummaries: [SpotPayoutSummaryType!]!
   spotPointTemplates(includeInactive: Boolean = false, spotId: ID!): [PointTemplate!]!
   spotProducts(includeUnavailable: Boolean = false, spotId: ID!): [Product!]!
   spotRatingSummary(spotId: ID!): SpotRatingSummaryType!
@@ -854,6 +857,24 @@ type SpotDashboardType {
   daily: [DashboardDailyStat!]!
   orders: Int!
   revenue: Float!
+}
+
+type SpotPayoutSummaryType {
+  amountOwed: Float!
+  oldestUnpaidOrderAt: DateTime
+  orderCount: Int!
+  spotId: ID!
+  spotName: String!
+}
+
+type SpotPayoutType {
+  amount: Float!
+  id: ID!
+  note: String
+  orderCount: Int!
+  paidAt: DateTime!
+  paidById: ID
+  spotId: ID!
 }
 
 type SpotRatingSummaryType {

@@ -70,38 +70,38 @@ export const Button = ({
       return (
         <>
           <View className={iconClass} style={{marginLeft: iconPadding}}>{leftIcon}</View>
-          <Typography variant={textVariant} className={finalTextColor}>
+          <Typography variant={textVariant} className={finalTextColor} numberOfLines={1} adjustsFontSizeToFit>
             {title}
           </Typography>
           <View className={iconClass} style={{marginRight: iconPadding}}>{rightIcon}</View>
         </>
       );
     }
-    
+
     if (leftIcon && !rightIcon) {
       return (
         <>
           <View className={iconClass} style={{marginLeft: iconPadding}}>{leftIcon}</View>
-          <Typography variant={textVariant} className={finalTextColor}>
+          <Typography variant={textVariant} className={finalTextColor} numberOfLines={1} adjustsFontSizeToFit>
             {title}
           </Typography>
         </>
       );
     }
-    
+
     if (!leftIcon && rightIcon) {
       return (
         <>
-          <Typography variant={textVariant} className={finalTextColor}>
+          <Typography variant={textVariant} className={finalTextColor} numberOfLines={1} adjustsFontSizeToFit>
             {title}
           </Typography>
           <View className={iconClass} style={{marginRight: iconPadding}}>{rightIcon}</View>
         </>
       );
     }
-    
+
     return (
-      <Typography variant={textVariant} className={finalTextColor}>
+      <Typography variant={textVariant} className={finalTextColor} numberOfLines={1} adjustsFontSizeToFit>
         {title}
       </Typography>
     );

@@ -1,4 +1,3 @@
-import { MapboxSectionRef } from '@/components/molecules/Mapbox/types';
 import { HOME_SHEET_SNAPS } from '@/constants/homeBottomSheet';
 import { useMerchantsFilters } from '@/hooks/useMerchantsFilters';
 import { router } from 'expo-router';
@@ -18,7 +17,7 @@ export const useMainScreen = (detailsTranslateY: SharedValue<number>) => {
   const sheetPanStartSnapIndex = useSharedValue(0);
   const [showFullMap, setShowFullMap] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number]>([19.9830577, 50.0926]);
-  const mapRef = useRef<MapboxSectionRef>(null);
+  const mapRef = useRef<{ getMap?: () => unknown } | null>(null);
   const userLocation = useUserLocation();
 
   useEffect(() => {

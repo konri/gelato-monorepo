@@ -9,8 +9,30 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 
 const { width } = Dimensions.get('window');
 
+// Metro needs static require() paths, so the per-language slide images are
+// enumerated rather than built from a template string.
+const SLIDE_IMAGES: Record<'en' | 'pl' | 'ua', any[]> = {
+    en: [
+        require('../../assets/images/onboard/slide1_en.png'),
+        require('../../assets/images/onboard/slide2_en.png'),
+        require('../../assets/images/onboard/slide3_en.png'),
+    ],
+    pl: [
+        require('../../assets/images/onboard/slide1_pl.png'),
+        require('../../assets/images/onboard/slide2_pl.png'),
+        require('../../assets/images/onboard/slide3_pl.png'),
+    ],
+    ua: [
+        require('../../assets/images/onboard/slide1_ua.png'),
+        require('../../assets/images/onboard/slide2_ua.png'),
+        require('../../assets/images/onboard/slide3_ua.png'),
+    ],
+};
+
 export default function OnboardingScreen() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const lang = i18n.language?.split('-')[0] as 'en' | 'pl' | 'ua';
+    const slideImages = SLIDE_IMAGES[lang] ?? SLIDE_IMAGES.en;
     const {
         pagerRef,
         currentPage,
@@ -27,8 +49,8 @@ export default function OnboardingScreen() {
                 locations={[0, 0.3, 1]}
                 style={styles.gradientBackground}
             >
-                <Image 
-                    source={require('../../assets/images/onboard/phone.png')}
+                <Image
+                    source={slideImages[currentPage]}
                     style={styles.phoneImage}
                     resizeMode="contain"
                 />

@@ -42,6 +42,8 @@ async function makeRequest<T>(
       return {
         error: data.error || data.message || `HTTP error! status: ${response.status}`,
         status: response.status,
+        requiresVerification: data.requiresVerification,
+        email: data.email,
       };
     }
 

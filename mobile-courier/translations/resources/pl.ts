@@ -46,7 +46,8 @@ export default {
       numberRequired: 'Podaj numer telefonu.',
       codeRequired: 'Wpisz kod z wiadomości SMS.',
       sendFailed: 'Nie udało się wysłać kodu. Sprawdź numer i spróbuj ponownie.',
-      verifyFailed: 'Kod jest nieprawidłowy lub wygasł. Spróbuj ponownie.'
+      verifyFailed: 'Kod jest nieprawidłowy lub wygasł. Spróbuj ponownie.',
+      numberInUse: 'Ten numer telefonu jest już używany na innym koncie.'
     }
   },
   Main: {

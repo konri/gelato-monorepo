@@ -50,13 +50,26 @@ export class TwilioService {
   private static getTwilioClient(): twilio.Twilio {
     if (!this.twilioClient) {
       const accountSid = process.env.TWILIO_ACCOUNT_SID;
-      const authToken = process.env.TWILIO_AUTH_TOKEN;
+      const apiKeySid = process.env.TWILIO_API_KEY_SID;
+      const apiKeySecret = process.env.TWILIO_API_KEY_SECRET;
 
-      if (!accountSid || !authToken) {
+      if (!accountSid) {
         throw new Error('Twilio credentials not configured');
       }
 
-      this.twilioClient = twilio(accountSid, authToken);
+      if (apiKeySid && apiKeySecret) {
+        // API Key auth (Twilio's recommended approach — scoped, revocable,
+        // doesn't expose full account access like the Auth Token does).
+        // username = API Key SID, password = API Key Secret; the account
+        // SID must be passed separately since it's no longer the username.
+        this.twilioClient = twilio(apiKeySid, apiKeySecret, { accountSid });
+      } else {
+        const authToken = process.env.TWILIO_AUTH_TOKEN;
+        if (!authToken) {
+          throw new Error('Twilio credentials not configured');
+        }
+        this.twilioClient = twilio(accountSid, authToken);
+      }
     }
 
     return this.twilioClient;

@@ -3,12 +3,31 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import { useTranslation } from 'react-i18next';
 import { CITIES, type City } from '../graphql/spots';
 import { CREATE_NEWS, BROADCAST_TO_CLIENTS, BROADCAST_TO_CITY } from '../graphql/admin';
+import { API_ORIGIN, ACCESS_TOKEN_KEY } from '../lib/config';
+import i18n from '../translations';
 
 const input =
   'w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-1 focus:ring-brand';
 const label = 'block text-sm font-medium text-gray-700 mb-1';
 
 type Tab = 'news' | 'notification';
+
+async function uploadNewsImage(newsId: string, file: File): Promise<string> {
+  const body = new FormData();
+  body.append('image', file);
+  const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+  const res = await fetch(`${API_ORIGIN}/upload/news/${newsId}`, {
+    method: 'POST',
+    headers: token ? { authorization: `Bearer ${token}` } : {},
+    body,
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || i18n.t('News.imageUploadFailed'));
+  }
+  const data = await res.json();
+  return data.imageUrl;
+}
 
 export function NewsPage() {
   const { t } = useTranslation();
@@ -44,14 +63,19 @@ export function NewsPage() {
 function NewsForm() {
   const { t } = useTranslation();
   const { data: citiesData } = useQuery<{ cities: City[] }>(CITIES);
-  const [createNews, { loading }] = useMutation(CREATE_NEWS);
+  const [createNews, { loading: creating }] = useMutation<{ createNews: { id: string } }>(
+    CREATE_NEWS,
+  );
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [allCities, setAllCities] = useState(true);
   const [cityIds, setCityIds] = useState<string[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const loading = creating || uploading;
 
   const toggleCity = (id: string) =>
     setCityIds((ids) => (ids.includes(id) ? ids.filter((c) => c !== id) : [...ids, id]));
@@ -62,7 +86,7 @@ function NewsForm() {
     setNotice(null);
     try {
       // Backend JSON.parse()s titleLocal/descriptionLocal, so send JSON strings.
-      await createNews({
+      const res = await createNews({
         variables: {
           input: {
             title,
@@ -74,12 +98,22 @@ function NewsForm() {
           },
         },
       });
+      const newsId = res.data?.createNews.id;
+      if (newsId && files.length > 0) {
+        setUploading(true);
+        for (const file of files) {
+          await uploadNewsImage(newsId, file);
+        }
+        setUploading(false);
+      }
       setNotice(t('News.newsPublished'));
       setTitle('');
       setDescription('');
       setCityIds([]);
       setAllCities(true);
+      setFiles([]);
     } catch (err) {
+      setUploading(false);
       setError(err instanceof Error ? err.message : t('News.failedPublish'));
     }
   };
@@ -104,6 +138,22 @@ function NewsForm() {
           onChange={(e) => setDescription(e.target.value)}
           required
         />
+      </div>
+
+      <div>
+        <label className={label}>{t('News.photos')}</label>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+          className="w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-light file:px-3 file:py-2 file:text-sm file:font-semibold file:text-brand"
+        />
+        {files.length > 0 && (
+          <p className="mt-1 text-xs text-gray-500">
+            {t('News.photosSelected', { count: files.length })}
+          </p>
+        )}
       </div>
 
       <div>

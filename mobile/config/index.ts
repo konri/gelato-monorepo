@@ -1,20 +1,29 @@
+import { Platform } from 'react-native';
+
 const ENV = process.env.EXPO_PUBLIC_ENV || 'dev'; // 'dev' or 'prod'
+
+// The Android emulator can't resolve the host machine's `localhost` — it
+// needs the special `10.0.2.2` alias instead. Only rewrite in dev, and only
+// on Android (iOS simulator and physical devices are unaffected: iOS sim
+// shares the host's loopback, and physical devices already use a LAN IP).
+const forDevice = (url: string) =>
+  Platform.OS === 'android' ? url.replace('localhost', '10.0.2.2') : url;
 
 export const config = {
   // API Configuration
   API_URL: ENV === 'prod'
     ? (process.env.EXPO_PUBLIC_BACKEND_API_URL_PROD || 'https://loodly-be-production.up.railway.app')
-    : (process.env.EXPO_PUBLIC_BACKEND_API_URL_DEV || 'http://localhost:4000'),
+    : forDevice(process.env.EXPO_PUBLIC_BACKEND_API_URL_DEV || 'http://localhost:4000'),
 
   // REST API URL (separate from GraphQL)
   REST_API_URL: ENV === 'prod'
     ? (process.env.EXPO_PUBLIC_BACKEND_REST_API_URL_PROD || 'https://loodly-be-production.up.railway.app')
-    : (process.env.EXPO_PUBLIC_BACKEND_REST_API_URL_DEV || 'http://localhost:4000'),
+    : forDevice(process.env.EXPO_PUBLIC_BACKEND_REST_API_URL_DEV || 'http://localhost:4000'),
 
   // GraphQL API URL
   GRAPHQL_API_URL: ENV === 'prod'
     ? (process.env.EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_PROD || 'https://loodly-be-production.up.railway.app/graphql')
-    : (process.env.EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_DEV || 'http://localhost:4000/graphql'),
+    : forDevice(process.env.EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_DEV || 'http://localhost:4000/graphql'),
 
   // Google Sign-In Configuration
   GOOGLE_WEB_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '',

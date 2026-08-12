@@ -1,0 +1,33 @@
+RewriteEngine On
+RewriteBase /
+
+# Disable Apache's directory listing (mod_autoindex) — a route like
+# /spots is BOTH a directory (holding /spots/[id] pages) and has a
+# sibling spots.html; without this, a bare directory request with no
+# index.html inside it renders a raw file listing instead of falling
+# through to our rewrite rules below.
+Options -Indexes
+
+# Apache's mod_dir auto-redirects a request for an existing directory
+# without a trailing slash (e.g. /spots) to the slashed form (/spots/)
+# BEFORE mod_rewrite runs. So both the slashed and unslashed forms need
+# to be handled explicitly.
+
+# /spots/ (trailing slash) -> strip the slash and retry against .html.
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^(.*)/$ $1.html [L]
+
+# Serve pretty URLs (e.g. /terms, /spots/some-id) from their matching
+# Next.js static export .html file when one exists, before falling back
+# to the SPA-style catch-all. Without this, Apache never tries appending
+# .html to an extensionless request and everything falls through to
+# index.html.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.*)$ $1.html [L]
+
+# True 404s (no matching file, directory, or .html) and any other
+# not-found request fall back to index.html.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]

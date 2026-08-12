@@ -195,6 +195,17 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    // Signup leaves the account unverified until the emailed OTP is confirmed
+    // (see /signup and /verify-code above) — mirror that gate here so a user
+    // who abandons the OTP step can't just log in normally instead.
+    if (!user.emailVerified) {
+      return res.status(403).json({
+        error: 'Please verify your email before logging in',
+        requiresVerification: true,
+        email: user.email,
+      });
+    }
+
     // Generate tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);

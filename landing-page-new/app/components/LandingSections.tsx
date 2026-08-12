@@ -207,9 +207,15 @@ export function HowItWorks() {
 /* ---------------------------- App CTA ---------------------------- */
 
 function StoreBadge({ store, label }: { store: "ios" | "android"; label: string }) {
+  const href =
+    store === "ios"
+      ? process.env.NEXT_PUBLIC_IOS_APP_URL ?? "#"
+      : process.env.NEXT_PUBLIC_ANDROID_APP_URL ?? "#";
   return (
     <a
-      href="#"
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
       className="flex items-center gap-3 rounded-2xl bg-espresso px-5 py-2.5 text-white transition-transform hover:scale-105"
     >
       <span className="text-2xl" aria-hidden>
@@ -369,9 +375,9 @@ export function Footer() {
             {t("footer.company")}
           </h3>
           <ul className="mt-4 space-y-2.5 text-sm">
-            <li><a href="#" className="transition-colors hover:text-white">{t("footer.about")}</a></li>
-            <li><a href="#" className="transition-colors hover:text-white">{t("footer.contact")}</a></li>
-            <li><a href="#" className="transition-colors hover:text-white">{t("footer.careers")}</a></li>
+            <li><a href="/" className="transition-colors hover:text-white">{t("footer.about")}</a></li>
+            <li><a href="/#contact" className="transition-colors hover:text-white">{t("footer.contact")}</a></li>
+            <li><a href="/" className="transition-colors hover:text-white">{t("footer.careers")}</a></li>
           </ul>
         </div>
 

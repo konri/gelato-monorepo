@@ -23,9 +23,6 @@ export const config = {
   // Google Maps API Key
   GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '',
 
-  // Mapbox Configuration
-  MAPBOX_ACCESS_TOKEN: process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '',
-
   // Legal pages (landing-page-new, static export)
   TERMS_URL: 'https://loodly.pl/terms',
   PRIVACY_POLICY_URL: 'https://loodly.pl/policy',

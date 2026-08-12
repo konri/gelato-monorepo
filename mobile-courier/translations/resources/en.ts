@@ -46,7 +46,8 @@ export default {
       numberRequired: 'Please enter your phone number.',
       codeRequired: 'Please enter the code from the text message.',
       sendFailed: 'Could not send the code. Check the number and try again.',
-      verifyFailed: 'That code is invalid or expired. Try again.'
+      verifyFailed: 'That code is invalid or expired. Try again.',
+      numberInUse: 'This phone number is already used by another account.'
     }
   },
   Main: {

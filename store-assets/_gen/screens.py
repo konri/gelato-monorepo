@@ -48,6 +48,7 @@ L = {
         "s_menu": "Menu editor", "s_avail": "Available today",
         "s_staff": "Staff", "s_shift": "On shift", "s_today": "Today",
         "s_orders": "orders", "s_revenue": "Revenue", "s_reports": "Reports",
+        "r_free_ice_cream": "Free Ice Cream", "r_free_delivery": "Free Delivery", "r_free_coffee": "Free Coffee", "r_free_portion": "Free Portion", "r_50_off": "50% Off",
     },
     "pl": {
         "tabs": ["Start", "Smaki", "Zamówienie", "Nagrody", "Punkty"],
@@ -78,16 +79,65 @@ L = {
         "s_menu": "Edytor menu", "s_avail": "Dostępne dzisiaj",
         "s_staff": "Zespół", "s_shift": "Na zmianie", "s_today": "Dzisiaj",
         "s_orders": "zamówień", "s_revenue": "Przychód", "s_reports": "Raporty",
+        "r_free_ice_cream": "Darmowa Lodówka", "r_free_delivery": "Darmowy Dowóz", "r_free_coffee": "Darmowa Kawa", "r_free_portion": "Darmowa Porcja", "r_50_off": "Rabat 50%",
+    },
+    "ua": {
+        "tabs": ["Старт", "Смаки", "Замовлення", "Нагороди", "Карта"],
+        "ctabs": ["Черга", "Доставка", "Заробіток", "Карта", "Більше"],
+        "stabs": ["Черга", "Меню", "Персонал", "Звіти", "Більше"],
+        "news": "Новини", "account": "Профіль", "quests": "Завдання",
+        "balance": "Ваш баланс", "points": "балів",
+        "redeem": "Обміняти бали", "qr": "Ваш QR-код",
+        "flavours": "Смаки", "flav_sub": "Морозивні у Варшаві",
+        "see": "Дивитись смаки", "order": "Замовлення", "order_now": "Замовити",
+        "my_orders": "Мої замовлення", "pick_spot": "Оберіть заклад для замовлення",
+        "free_del": "Безкоштовна доставка від 40 zł", "add": "Додати",
+        "sorbets": "Сорбети", "milk": "Молочні", "gelato": "Джелато",
+        "rewards": "Нагороди", "your_points": "Ваші бали",
+        "my_rewards": "Мої нагороди", "avail": "Доступні нагороди",
+        "active": "Активна", "valid": "Дійсна до 1.08.2026",
+        "spots": "Заклади", "open": "Відкрито", "radius": "Доставка в радіусі 5 км",
+        "kcal": "ккал", "pts": "балів",
+        "c_avail": "Доступні замовлення", "c_claim": "Прийняти",
+        "c_active": "Активна доставка", "c_pickup": "Забрати з",
+        "c_dropoff": "Доставити до", "c_pin": "PIN доставки",
+        "c_nav": "Навігація", "c_done": "Позначити доставленим", "c_earn": "Цього тижня",
+        "c_deliveries": "доставок", "c_payout": "Виплата", "c_rating": "Рейтинг",
+        "c_incident": "Повідомити про подію", "c_dist": "від вас",
+        "s_queue": "Черга замовлень", "s_new": "Нові",
+        "s_prep": "У приготуванні", "s_ready": "Готово",
+        "s_claim": "Прийняти", "s_ready_btn": "Позначити готовим",
+        "s_menu": "Редактор меню", "s_avail": "Доступно сьогодні",
+        "s_staff": "Персонал", "s_shift": "На зміні", "s_today": "Сьогодні",
+        "s_orders": "замовлень", "s_revenue": "Виручка", "s_reports": "Звіти",
+        "r_free_ice_cream": "Безкоштовне морозиво", "r_free_delivery": "Безкоштовна доставка", "r_free_coffee": "Безкоштовна кава", "r_free_portion": "Безкоштовна порція", "r_50_off": "Знижка 50%",
     },
 }
 
-FLAVOURS = [
-    ("Mango Sorbet", "Tropical vegan", "12 zł", 110, 1),
-    ("Strawberry Sorbet", "Vegan, dairy-free", "12 zł", 120, 0),
-    ("Dark Chocolate", "70% cocoa", "13 zł", 230, 4),
-    ("Vanilla Bean", "Milk-based classic", "13 zł", 220, 1),
-    ("Pistachio Gelato", "Sicilian style", "14 zł", 240, 2),
-]
+FLAVOURS_BY_LOCALE = {
+    "en": [
+        ("Mango Sorbet", "Tropical vegan", "12 zł", 110, 1),
+        ("Strawberry Sorbet", "Vegan, dairy-free", "12 zł", 120, 0),
+        ("Dark Chocolate", "70% cocoa", "13 zł", 230, 4),
+        ("Vanilla Bean", "Milk-based classic", "13 zł", 220, 1),
+        ("Pistachio Gelato", "Sicilian style", "14 zł", 240, 2),
+    ],
+    "pl": [
+        ("Sorbet Mango", "Tropikalny, wegański", "12 zł", 110, 1),
+        ("Sorbet Truskawkowy", "Wegański, bez laktozy", "12 zł", 120, 0),
+        ("Czekolada Gorzka", "70% kakao", "13 zł", 230, 4),
+        ("Wanilia", "Klasyk na bazie mleka", "13 zł", 220, 1),
+        ("Gelato Pistacjowe", "Styl sycylijski", "14 zł", 240, 2),
+    ],
+    "ua": [
+        ("Манго сорбет", "Тропічний, веганський", "12 zł", 110, 1),
+        ("Полуничний сорбет", "Веганський, без лактози", "12 zł", 120, 0),
+        ("Темний шоколад", "70% какао", "13 zł", 230, 4),
+        ("Ванільне", "Класичне молочне", "13 zł", 220, 1),
+        ("Фісташкове джелато", "Сицилійський стиль", "14 zł", 240, 2),
+    ],
+}
+FLAVOURS = FLAVOURS_BY_LOCALE["en"]
 
 SPOTS = [
     ("Loodly Amber Mokotów", "ul. Puławska 120, 02-620 Warszawa", 2),
@@ -198,8 +248,9 @@ def client_menu(loc, w=PHONE_W, h=PHONE_H):
     d.text((60, 500), SPOTS[1][0], font=f_bold(52), fill=INK, anchor="lm")
     d.text((60, 565), t["radius"], font=f_reg(34), fill=GREY, anchor="lm")
 
-    groups = [(t["sorbets"], FLAVOURS[0:2]), (t["milk"], FLAVOURS[2:4]),
-              (t["gelato"], FLAVOURS[4:5])]
+    flavours = FLAVOURS_BY_LOCALE[loc]
+    groups = [(t["sorbets"], flavours[0:2]), (t["milk"], flavours[2:4]),
+              (t["gelato"], flavours[4:5])]
     y = 650
     for title, items in groups:
         d.text((60, y + 30), title, font=f_bold(46), fill=INK, anchor="lm")
@@ -240,16 +291,16 @@ def client_rewards(loc, w=PHONE_W, h=PHONE_H):
     card(d, rb, radius=22, fill=WHITE, border=ROSE_LIGHT, bw=3)
     rounded_photo(img, [rb[0] + 4, rb[1] + 4, rb[0] + 170, rb[3] - 4], seed=1, radius=18)
     d = ImageDraw.Draw(img)
-    d.text((rb[0] + 206, rb[1] + 62), "Free Ice Cream", font=f_bold(42), fill=INK, anchor="lm")
+    d.text((rb[0] + 206, rb[1] + 62), t["r_free_ice_cream"], font=f_bold(42), fill=INK, anchor="lm")
     d.text((rb[0] + 206, rb[1] + 118), t["valid"], font=f_reg(32), fill=GREY, anchor="lm")
     pill(d, [rb[2] - 250, rb[1] + 50, rb[2] - 30, rb[1] + 120], t["active"],
          f_bold(32), fill=(226, 246, 230), fg=(38, 130, 60))
 
     d.text((60, 910), t["avail"], font=f_bold(46), fill=INK, anchor="lm")
-    grid = [("Free Delivery", "200 " + t["pts"], 5, True),
-            ("Free Coffee", "300 " + t["pts"], 4, True),
-            ("Free Portion", "500 " + t["pts"], 1, False),
-            ("50% Off", "800 " + t["pts"], 3, False)]
+    grid = [(t["r_free_delivery"], "200 " + t["pts"], 5, True),
+            (t["r_free_coffee"], "300 " + t["pts"], 4, True),
+            (t["r_free_portion"], "500 " + t["pts"], 1, False),
+            (t["r_50_off"], "800 " + t["pts"], 3, False)]
     gy = 970
     for i, (name, cost, seed, on) in enumerate(grid):
         col = i % 2

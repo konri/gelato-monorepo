@@ -8,6 +8,7 @@ const navItems = [
   { to: '/orders', labelKey: 'Nav.orderHistory', icon: '📦' },
   { to: '/prizes', labelKey: 'Nav.rewards', icon: '🎁' },
   { to: '/quests', labelKey: 'Nav.quests', icon: '🎯', superAdminOnly: true },
+  { to: '/payouts', labelKey: 'Nav.payouts', icon: '💰', superAdminOnly: true },
   { to: '/admins', labelKey: 'Nav.admins', icon: '👤', superAdminOnly: true },
   { to: '/news', labelKey: 'Nav.newsNotifications', icon: '📣' },
 ];
