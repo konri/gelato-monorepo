@@ -11,10 +11,11 @@ const prisma = new PrismaClient();
 
 /**
  * Stripe webhook endpoint
+ * Mounted at /stripe/webhook in index.ts — POST / here, not /webhook again.
  * IMPORTANT: This endpoint needs raw body, not JSON parsed
  */
 router.post(
-  '/webhook',
+  '/',
   async (req: Request, res: Response) => {
     const signature = req.headers['stripe-signature'] as string;
 
