@@ -265,11 +265,11 @@ export function SpotDetail({ spotId }: { spotId: string }) {
             </div>
           )}
 
-          {/* Delivery + features */}
+          {/* Delivery + pickup + features */}
           <div className="rounded-3xl border border-berry/10 bg-white p-6">
             <h2 className="flex items-center gap-2 text-lg font-bold text-espresso">
               <span aria-hidden>🚴</span>
-              {t("spot.delivery")}
+              {t("spot.ordering")}
             </h2>
             <dl className="mt-3 space-y-1.5 text-sm">
               {spot.deliveryEnabled ? (
@@ -288,9 +288,13 @@ export function SpotDetail({ spotId }: { spotId: string }) {
                     </p>
                   ) : null}
                 </>
-              ) : (
+              ) : null}
+              {spot.pickupEnabled ? (
+                <p className="pt-1 text-espresso/80">{t("spot.pickup_available")}</p>
+              ) : null}
+              {!spot.deliveryEnabled && !spot.pickupEnabled ? (
                 <p className="text-espresso/60">—</p>
-              )}
+              ) : null}
             </dl>
             {(spot.hasSeating || spot.accessibilityFeatures) && (
               <div className="mt-4 space-y-2 border-t border-berry/10 pt-4 text-sm">

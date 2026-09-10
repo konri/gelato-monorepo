@@ -4,8 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:prod": "NEXT_PUBLIC_API_URL=https://loodly-be-production.up.railway.app/graphql next dev",
     "build": "next build",
+    "build:prod": "NEXT_PUBLIC_API_URL=https://loodly-be-production.up.railway.app/graphql next build",
     "start": "next start",
+    "start:prod": "npx --yes serve out -p 3000",
     "lint": "next lint"
   },
   "dependencies": {

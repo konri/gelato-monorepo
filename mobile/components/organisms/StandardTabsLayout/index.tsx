@@ -1,9 +1,12 @@
 import { colors } from "@/constants/colors";
-import { TAB_BAR_STYLE } from "@/constants/tabBarStyles";
+import { getTabBarStyle } from "@/constants/tabBarStyles";
 import { useTabsConfig } from "@/hooks/useTabsConfig";
 import type { BottomTabNavigationOptions } from "@react-navigation/bottom-tabs";
 import { Tabs } from "expo-router";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HighlightedTabButton } from "./HighlightedTabButton";
 import { TabLabel } from "./TabLabel";
 import type { StandardTabsLayoutProps } from "./types";
@@ -11,22 +14,22 @@ import { getTabIcon } from "./utils";
 
 const STANDARD_TAB_ITEM_STYLE = { paddingTop: 4 } as const;
 
-const SCREEN_OPTIONS = {
-    headerShown: false,
-    tabBarStyle: TAB_BAR_STYLE,
-    tabBarActiveTintColor: colors.tabBar.primary,
-    tabBarInactiveTintColor: colors.tabBar.text,
-} as const;
-
-const TAB_NAMES = ["index", "qr", "profile"] as const;
+const TabBarBackground = () => (
+    <View style={{ flex: 1, backgroundColor: colors.tabBar.background }} />
+);
 
 export const StandardTabsLayout = ({
                                        config: externalConfig,
                                    }: StandardTabsLayoutProps = {}) => {
     const { t } = useTranslation();
+    const insets = useSafeAreaInsets();
     const { config: fetchedConfig } = useTabsConfig(!externalConfig);
 
     const config = externalConfig ?? fetchedConfig;
+    const tabBarStyle = useMemo(
+        () => getTabBarStyle(insets.bottom),
+        [insets.bottom],
+    );
 
     const getOptionsForTab = (
         tabName: string
@@ -76,14 +79,26 @@ export const StandardTabsLayout = ({
     };
 
     return (
-        <Tabs screenOptions={SCREEN_OPTIONS}>
-            {config.tabs.map((tab) => (
-                <Tabs.Screen
-                    key={tab.name}
-                    name={tab.name}
-                    options={getOptionsForTab(tab.name)}
-                />
-            ))}
-        </Tabs>
+        <View style={{ flex: 1, backgroundColor: colors.tabBar.background }}>
+            <Tabs
+                screenOptions={{
+                    headerShown: false,
+                    tabBarStyle,
+                    tabBarActiveTintColor: colors.tabBar.primary,
+                    tabBarInactiveTintColor: colors.tabBar.text,
+                    tabBarBackground: TabBarBackground,
+                    tabBarSafeAreaInsets: { bottom: 0 },
+                    sceneContainerStyle: { backgroundColor: colors.tabBar.background },
+                }}
+            >
+                {config.tabs.map((tab) => (
+                    <Tabs.Screen
+                        key={tab.name}
+                        name={tab.name}
+                        options={getOptionsForTab(tab.name)}
+                    />
+                ))}
+            </Tabs>
+        </View>
     );
 };

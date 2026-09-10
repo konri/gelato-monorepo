@@ -134,7 +134,8 @@ export function CheckoutClient() {
 
   const canPlace =
     cart.count > 0 &&
-    (isPickup || (!!selected && delivery?.canDeliver === true)) &&
+    !!spot &&
+    (isPickup ? pickupEnabled : deliveryEnabled && !!selected && delivery?.canDeliver === true) &&
     !placing;
 
   const place = async () => {
@@ -230,25 +231,35 @@ export function CheckoutClient() {
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         {/* Left: fulfillment + address + payment */}
         <div className="space-y-6">
-          {/* Fulfillment toggle */}
+          {/* Fulfillment: only show modes the spot actually offers. */}
           <Section title={t("checkout.fulfillment")}>
-            <div className="flex rounded-2xl bg-cream-soft p-1">
-              {(["DELIVERY", "PICKUP"] as FulfillmentType[]).map((type) => {
-                const active = cart.fulfillmentType === type;
-                return (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => cart.setFulfillmentType(type)}
-                    className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition-colors ${
-                      active ? "bg-white text-berry shadow-sm" : "text-espresso/60"
-                    }`}
-                  >
-                    {t(type === "DELIVERY" ? "checkout.delivery" : "checkout.pickup")}
-                  </button>
-                );
-              })}
-            </div>
+            {!spot ? (
+              <div className="h-12 rounded-2xl bg-cream-soft" />
+            ) : deliveryEnabled && pickupEnabled ? (
+              <div className="flex rounded-2xl bg-cream-soft p-1">
+                {(["DELIVERY", "PICKUP"] as FulfillmentType[]).map((type) => {
+                  const active = cart.fulfillmentType === type;
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => cart.setFulfillmentType(type)}
+                      className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition-colors ${
+                        active ? "bg-white text-berry shadow-sm" : "text-espresso/60"
+                      }`}
+                    >
+                      {t(type === "DELIVERY" ? "checkout.delivery" : "checkout.pickup")}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="rounded-2xl bg-cream-soft px-4 py-3 text-sm font-semibold text-berry">
+                {pickupEnabled && !deliveryEnabled
+                  ? t("checkout.pickup")
+                  : t("checkout.delivery")}
+              </div>
+            )}
           </Section>
 
           {/* Address (delivery) or pickup note */}
@@ -319,20 +330,29 @@ export function CheckoutClient() {
           {/* Payment method */}
           <Section title={t("checkout.payment_method")}>
             {isPickup ? (
-              <div className="space-y-3">
+              onlinePaymentEnabled ? (
+                <div className="space-y-3">
+                  <PayOption
+                    active={payChoice === "online"}
+                    onClick={() => setPayChoice("online")}
+                    title={t("checkout.pay_online")}
+                    subtitle={t("checkout.pay_online_hint")}
+                  />
+                  <PayOption
+                    active={payChoice === "cash"}
+                    onClick={() => setPayChoice("cash")}
+                    title={t("checkout.pay_at_spot")}
+                    subtitle={t("checkout.pay_at_spot_hint")}
+                  />
+                </div>
+              ) : (
                 <PayOption
-                  active={payChoice === "online"}
-                  onClick={() => setPayChoice("online")}
-                  title={t("checkout.pay_online")}
-                  subtitle={t("checkout.pay_online_hint")}
-                />
-                <PayOption
-                  active={payChoice === "cash"}
+                  active
                   onClick={() => setPayChoice("cash")}
                   title={t("checkout.pay_at_spot")}
-                  subtitle={t("checkout.pay_at_spot_hint")}
+                  subtitle={t("checkout.pay_at_spot_only_hint")}
                 />
-              </div>
+              )
             ) : (
               <div className="rounded-2xl border border-berry/10 bg-white px-4 py-3 text-sm text-espresso/70">
                 💳 {t("checkout.pay_online_hint")}

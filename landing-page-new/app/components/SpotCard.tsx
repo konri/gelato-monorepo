@@ -53,6 +53,15 @@ export function SpotCard({ spot, active, onHover }: Props) {
             🚴 {t("spots.delivery_available")}
           </span>
         )}
+        {spot.pickupEnabled && (
+          <span
+            className={`absolute ${
+              spot.deliveryEnabled ? "right-3 top-12" : "right-3 top-3"
+            } rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-orange-700 shadow-sm`}
+          >
+            🏪 {t("spots.pickup_available")}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col p-5">
