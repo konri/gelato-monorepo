@@ -9,7 +9,7 @@ import type { City, Spot } from '@repo/api-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -63,12 +63,15 @@ export const OrderNow = () => {
   }, [cities, selectedCityName]);
 
   const { data: spots, loading: spotsLoading, refetch: refetchSpots } = useSpotsByCity(cityId);
-  // Only spots that actually deliver can be ordered from.
-  const deliverySpots = useMemo(() => (spots ?? []).filter((s) => s.deliveryEnabled), [spots]);
+  // Spots that take orders: courier delivery and/or collect-at-spot pickup.
+  const orderableSpots = useMemo(
+    () => (spots ?? []).filter((s) => s.deliveryEnabled || !!s.pickupEnabled),
+    [spots],
+  );
 
   const activeSpot = useMemo(
-    () => deliverySpots.find((s) => s.id === chosenSpotId) ?? null,
-    [deliverySpots, chosenSpotId],
+    () => orderableSpots.find((s) => s.id === chosenSpotId) ?? null,
+    [orderableSpots, chosenSpotId],
   );
 
   if (spotsLoading) {
@@ -83,7 +86,7 @@ export const OrderNow = () => {
     return <SpotMenu spot={activeSpot} onBack={() => setChosenSpotId(null)} />;
   }
 
-  return <SpotPicker spots={deliverySpots} onSelect={setChosenSpotId} onRefresh={refetchSpots} />;
+  return <SpotPicker spots={orderableSpots} onSelect={setChosenSpotId} onRefresh={refetchSpots} />;
 };
 
 /* ---------- Spot picker ---------- */
@@ -157,7 +160,21 @@ const SpotPicker = ({
                   📍 {spot.address}
                 </Text>
                 <View className="flex-row items-center flex-wrap mt-2">
-                  {spot.freeDeliveryThreshold ? (
+                  {spot.deliveryEnabled ? (
+                    <View className="bg-red-50 rounded-full px-3 py-1 mr-2 mb-1">
+                      <Text className="text-xs font-urbanist-semibold text-accent">
+                        {t('Ordering.delivery')}
+                      </Text>
+                    </View>
+                  ) : null}
+                  {spot.pickupEnabled ? (
+                    <View className="bg-orange-50 rounded-full px-3 py-1 mr-2 mb-1">
+                      <Text className="text-xs font-urbanist-semibold text-orange-700">
+                        {t('Ordering.pickup')}
+                      </Text>
+                    </View>
+                  ) : null}
+                  {spot.deliveryEnabled && spot.freeDeliveryThreshold ? (
                     <View className="bg-green-50 rounded-full px-3 py-1 mr-2 mb-1">
                       <Text className="text-xs font-urbanist-semibold text-green-700">
                         {t('Ordering.freeOver', { amount: spot.freeDeliveryThreshold })}
@@ -181,6 +198,15 @@ const SpotMenu = ({ spot, onBack }: { spot: Spot; onBack: () => void }) => {
   const cart = useCart();
   const { data: tastes, loading: tastesLoading, refetch: refetchTastes } = useSpotTastes(spot.id);
   const { data: products, loading: productsLoading, refetch: refetchProducts } = useSpotProducts(spot.id);
+
+  // Match cart fulfillment to what this spot actually offers.
+  useEffect(() => {
+    if (!spot.deliveryEnabled && spot.pickupEnabled) {
+      cart.setFulfillmentType('pickup');
+    } else if (spot.deliveryEnabled && !spot.pickupEnabled) {
+      cart.setFulfillmentType('delivery');
+    }
+  }, [spot.id, spot.deliveryEnabled, spot.pickupEnabled]);
 
   const [refreshing, setRefreshing] = useState(false);
   const handleRefresh = useCallback(async () => {
@@ -209,7 +235,14 @@ const SpotMenu = ({ spot, onBack }: { spot: Spot; onBack: () => void }) => {
           {spot.name}
         </Text>
         <Text className="text-xs font-urbanist text-text-secondary mt-0.5">
-          {t('Ordering.deliversInKm', { km: (spot as any).deliveryRadiusKm ?? 5 })}
+          {[
+            spot.deliveryEnabled
+              ? t('Ordering.deliversInKm', { km: (spot as any).deliveryRadiusKm ?? 5 })
+              : null,
+            spot.pickupEnabled ? t('Ordering.pickupAtSpot') : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
         </Text>
       </View>
 

@@ -152,6 +152,8 @@ const SPOT_FIELDS = `
   photos
   openingHours
   deliveryEnabled
+  pickupEnabled
+  onlinePaymentEnabled
   deliveryRadiusKm
   deliveryFee
   freeDeliveryThreshold

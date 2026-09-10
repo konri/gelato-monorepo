@@ -18,6 +18,8 @@ export type SpotDetails = {
   deliveryFee?: number | null;
   freeDeliveryThreshold?: number | null;
   courierPayout?: number | null;
+  pickupEnabled?: boolean;
+  onlinePaymentEnabled?: boolean;
 };
 
 export type SpotDetailsResponse = { spot: SpotDetails | null };

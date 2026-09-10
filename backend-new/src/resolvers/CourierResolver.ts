@@ -11,7 +11,7 @@ import {
   FieldResolver,
   Root,
 } from 'type-graphql';
-import { Role, OrderStatus } from '@prisma/client';
+import { Role, OrderStatus, FulfillmentType } from '@prisma/client';
 import { Context } from '../types/Context';
 import {
   CourierProfileType,
@@ -978,6 +978,7 @@ export class CourierResolver {
       where: {
         status: OrderStatus.READY,
         courierId: null,
+        fulfillmentType: FulfillmentType.DELIVERY,
         spotId: { in: session.selectedSpotIds },
         // Never offer an order this courier reported an incident on — they
         // can't re-accept it (acceptDelivery rejects), so hide it entirely
@@ -1062,6 +1063,9 @@ export class CourierResolver {
 
     const order = await prisma.order.findUnique({ where: { id: orderId } });
     if (!order) throw new Error('Order not found');
+    if (order.fulfillmentType !== FulfillmentType.DELIVERY) {
+      throw new Error('This order is for pickup, not delivery');
+    }
 
     // A courier who reported an incident on this order can't re-accept it — it
     // must go to a different courier (avoids the same broken bike picking it up).

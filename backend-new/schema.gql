@@ -281,7 +281,7 @@ type Mutation {
   createProduct(allergens: [String!] = [], description: String, descriptionLocal: String, imageUrl: String, isBox: Boolean = false, kcalPer100g: Float, kcalPerPortion: Float, loyaltyPoints: Int, maxTastes: Int, name: String!, nameLocal: String!, price: Float!, spotId: ID!, type: ProductType!, weightGrams: Int): Product!
   createQuest(conditions: JSON, description: String, descriptionLocal: JSON, isActive: Boolean = true, isRepeatable: Boolean = false, pointsReward: Int!, targetCityIds: [String!] = [], targetSpotIds: [String!] = [], title: String!, titleLocal: JSON, type: String!): Quest!
   createReview(comment: String, courierRating: Int, orderId: ID!, overallRating: Int!, spotRating: Int!): ReviewType!
-  createSpot(address: String!, cityId: String!, deliveryEnabled: Boolean = true, deliveryRadiusKm: Float = 5, description: String, freeDeliveryThreshold: Float, id: String!, latitude: Float!, longitude: Float!, name: String!, phone: String!): SpotType!
+  createSpot(address: String!, cityId: String!, deliveryEnabled: Boolean = true, deliveryRadiusKm: Float = 5, description: String, freeDeliveryThreshold: Float, id: String!, latitude: Float!, longitude: Float!, name: String!, onlinePaymentEnabled: Boolean = true, phone: String!, pickupEnabled: Boolean = false): SpotType!
   createSpotNews(input: CreateSpotNewsInput!): NewsType!
   createSpotPayout(note: String, spotId: ID!): SpotPayoutType!
   createSpotStaff(email: String!, name: String!, password: String!, role: String!, spotId: ID!): UserType!
@@ -338,7 +338,7 @@ type Mutation {
   updateProductAvailability(id: ID!, isAvailable: Boolean!): Boolean!
   updateProfile(data: UserChangeInput!): UserType!
   updateQuest(conditions: JSON, description: String, descriptionLocal: JSON, id: ID!, isActive: Boolean, isRepeatable: Boolean, pointsReward: Int, targetCityIds: [String!], targetSpotIds: [String!], title: String, titleLocal: JSON): Quest!
-  updateSpot(accessibilityFeatures: String, address: String, courierPayout: Float, deliveryEnabled: Boolean, deliveryFee: Float, deliveryRadiusKm: Float, description: String, email: String, freeDeliveryThreshold: Float, hasSeating: Boolean, id: ID!, isActive: Boolean, latitude: Float, longitude: Float, name: String, openingHours: String, phone: String, seatingCapacity: Int): SpotType!
+  updateSpot(accessibilityFeatures: String, address: String, courierPayout: Float, deliveryEnabled: Boolean, deliveryFee: Float, deliveryRadiusKm: Float, description: String, email: String, freeDeliveryThreshold: Float, hasSeating: Boolean, id: ID!, isActive: Boolean, latitude: Float, longitude: Float, name: String, onlinePaymentEnabled: Boolean, openingHours: String, phone: String, pickupEnabled: Boolean, seatingCapacity: Int): SpotType!
   updateTaste(allergens: [String!], description: String, descriptionLocal: String, id: ID!, imageUrl: String, ingredients: String, kcalPer100g: Float, kcalPerPortion: Float, loyaltyPoints: Int, price: Float, subtitle: String, title: String, titleLocal: String, type: TasteType): Taste!
   updateTasteAvailability(id: ID!, isAvailable: Boolean!): Boolean!
   updateUserRoles(roles: [Role!]!, userId: ID!): UserType!
@@ -905,9 +905,11 @@ type SpotType {
   logoUrl: String
   longitude: Float!
   name: String!
+  onlinePaymentEnabled: Boolean!
   openingHours: JSON
   phone: String
   photos: [String!]!
+  pickupEnabled: Boolean!
   reviewCount: Int!
   seatingCapacity: Int
   tastes(includeUnavailable: Boolean = false): [Taste!]!

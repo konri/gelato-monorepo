@@ -7,14 +7,15 @@ import { useI18n } from "../../i18n/I18nProvider";
 import { useAuth } from "../../auth/AuthProvider";
 import { useAuthModal } from "../../auth/AuthModalProvider";
 import { useCart } from "../../lib/cart";
-import { createOrder, checkDeliveryAvailability } from "../../lib/payment-api";
+import { checkDeliveryAvailability, createOrder } from "../../lib/payment-api";
+import { fetchSpot } from "../../lib/api";
 import {
   fetchPlacePredictions,
   geocodePlaceId,
   newSessionToken,
   type PlacePrediction,
 } from "../../lib/places";
-import type { DeliveryAvailability, FulfillmentType, OrderSummary } from "../../lib/types";
+import type { DeliveryAvailability, FulfillmentType, OrderSummary, Spot } from "../../lib/types";
 import { StripePayment } from "./StripePayment";
 
 const zl = (n: number) => `${n.toFixed(2).replace(/\.00$/, "")} zł`;
@@ -29,6 +30,39 @@ export function CheckoutClient() {
   const authModal = useAuthModal();
 
   const isPickup = cart.fulfillmentType === "PICKUP";
+  const [spot, setSpot] = useState<Spot | null>(null);
+
+  useEffect(() => {
+    if (!cart.spotId) {
+      setSpot(null);
+      return;
+    }
+    let cancelled = false;
+    fetchSpot(cart.spotId)
+      .then((data) => {
+        if (!cancelled) setSpot(data);
+      })
+      .catch(() => {
+        if (!cancelled) setSpot(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [cart.spotId]);
+
+  const deliveryEnabled = !!spot?.deliveryEnabled;
+  const pickupEnabled = !!spot?.pickupEnabled;
+  const onlinePaymentEnabled = spot?.onlinePaymentEnabled !== false;
+
+  // Match cart fulfillment to what this spot actually offers.
+  useEffect(() => {
+    if (!spot) return;
+    if (!spot.deliveryEnabled && spot.pickupEnabled) {
+      cart.setFulfillmentType("PICKUP");
+    } else if (spot.deliveryEnabled && !spot.pickupEnabled) {
+      cart.setFulfillmentType("DELIVERY");
+    }
+  }, [spot?.id, spot?.deliveryEnabled, spot?.pickupEnabled]);
 
   // Delivery address state
   const [query, setQuery] = useState("");
@@ -42,7 +76,14 @@ export function CheckoutClient() {
   // Notes + payment choice
   const [note, setNote] = useState("");
   const [payChoice, setPayChoice] = useState<PayChoice>("online");
-  const cash = isPickup && payChoice === "cash";
+
+  useEffect(() => {
+    if (isPickup && spot && !spot.onlinePaymentEnabled) {
+      setPayChoice("cash");
+    }
+  }, [isPickup, spot?.onlinePaymentEnabled]);
+
+  const cash = isPickup && (payChoice === "cash" || !onlinePaymentEnabled);
 
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);

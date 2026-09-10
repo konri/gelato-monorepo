@@ -258,6 +258,8 @@ export type Spot = {
   photos: string[];
   openingHours?: Record<string, string> | null;
   deliveryEnabled: boolean;
+  pickupEnabled?: boolean;
+  onlinePaymentEnabled?: boolean;
   deliveryRadiusKm: number;
   deliveryFee: number;
   freeDeliveryThreshold?: number | null;

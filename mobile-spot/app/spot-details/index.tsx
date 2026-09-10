@@ -77,6 +77,8 @@ export default function SpotDetailsScreen() {
     deliveryFee: '',
     freeDeliveryThreshold: '',
     courierPayout: '',
+    pickupEnabled: false,
+    onlinePaymentEnabled: true,
   });
   const [hours, setHours] = useState<Record<string, string>>({});
 
@@ -106,6 +108,8 @@ export default function SpotDetailsScreen() {
         deliveryFee: s.deliveryFee != null ? String(s.deliveryFee) : '',
         freeDeliveryThreshold: s.freeDeliveryThreshold != null ? String(s.freeDeliveryThreshold) : '',
         courierPayout: s.courierPayout != null ? String(s.courierPayout) : '',
+        pickupEnabled: s.pickupEnabled ?? false,
+        onlinePaymentEnabled: s.onlinePaymentEnabled ?? true,
       });
       setHours(
         s.openingHours && typeof s.openingHours === 'object' ? { ...s.openingHours } : {},
@@ -151,6 +155,8 @@ export default function SpotDetailsScreen() {
             ? parseFloat(form.freeDeliveryThreshold)
             : undefined,
           courierPayout: form.courierPayout ? parseFloat(form.courierPayout) : 0,
+          pickupEnabled: form.pickupEnabled,
+          onlinePaymentEnabled: form.onlinePaymentEnabled,
         },
         { token },
       );
@@ -380,6 +386,43 @@ export default function SpotDetailsScreen() {
               />
               <Typography variant="body-very-small-regular" className="-mt-1 mb-1 ml-1 text-gray-400">
                 {t('SpotDetails.courierPayoutHint')}
+              </Typography>
+            </>
+          )}
+
+          {/* Pickup (collect at spot, no courier) */}
+          <Typography variant="body-base-bold" className="mb-2 mt-4 text-text-primary">
+            {t('SpotDetails.pickupSection')}
+          </Typography>
+          <View className="mb-2 flex-row items-center justify-between rounded-xl bg-white px-4 py-3">
+            <Typography variant="body-base-regular" className="flex-1 pr-3 text-text-primary">
+              {t('SpotDetails.pickupEnabled')}
+            </Typography>
+            <Switch
+              value={form.pickupEnabled}
+              onValueChange={(v) => setForm((f) => ({ ...f, pickupEnabled: v }))}
+              trackColor={{ true: '#EC2828', false: '#D1D5DB' }}
+              thumbColor="#fff"
+            />
+          </View>
+          <Typography variant="body-very-small-regular" className="-mt-1 mb-3 ml-1 text-gray-400">
+            {t('SpotDetails.pickupEnabledHint')}
+          </Typography>
+          {form.pickupEnabled && (
+            <>
+              <View className="mb-2 flex-row items-center justify-between rounded-xl bg-white px-4 py-3">
+                <Typography variant="body-base-regular" className="flex-1 pr-3 text-text-primary">
+                  {t('SpotDetails.onlinePaymentEnabled')}
+                </Typography>
+                <Switch
+                  value={form.onlinePaymentEnabled}
+                  onValueChange={(v) => setForm((f) => ({ ...f, onlinePaymentEnabled: v }))}
+                  trackColor={{ true: '#EC2828', false: '#D1D5DB' }}
+                  thumbColor="#fff"
+                />
+              </View>
+              <Typography variant="body-very-small-regular" className="-mt-1 mb-1 ml-1 text-gray-400">
+                {t('SpotDetails.onlinePaymentEnabledHint')}
               </Typography>
             </>
           )}

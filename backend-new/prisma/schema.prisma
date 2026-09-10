@@ -253,7 +253,7 @@ model Spot {
   coverUrl String?
   photos   String[] // Array of image URLs
 
-  // Delivery settings
+  // Delivery / pickup settings
   deliveryEnabled       Boolean @default(true)
   deliveryRadiusKm      Float   @default(5.0)
   freeDeliveryThreshold Float? // Minimum order value for free delivery
@@ -261,6 +261,10 @@ model Spot {
   // What the spot pays the courier per delivery. Independent of the customer
   // fee: a spot can offer free delivery to customers but still pay couriers.
   courierPayout         Float   @default(0)
+  // Customers order in the app and collect at the spot (no courier, no address).
+  pickupEnabled         Boolean @default(false)
+  // In-app / pay-by-phone (Stripe). When off, pickup is cash-only at the spot.
+  onlinePaymentEnabled  Boolean @default(true)
 
   // Cached review aggregates (recomputed on each new review).
   averageRating Float?

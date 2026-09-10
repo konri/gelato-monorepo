@@ -22,6 +22,8 @@ export const SPOT_DETAILS_QUERY = gql`
       deliveryFee
       freeDeliveryThreshold
       courierPayout
+      pickupEnabled
+      onlinePaymentEnabled
     }
   }
 `;
@@ -53,6 +55,8 @@ export const UPDATE_SPOT_DETAILS_MUTATION = gql`
     $deliveryFee: Float
     $freeDeliveryThreshold: Float
     $courierPayout: Float
+    $pickupEnabled: Boolean
+    $onlinePaymentEnabled: Boolean
   ) {
     updateSpot(
       id: $id
@@ -71,6 +75,8 @@ export const UPDATE_SPOT_DETAILS_MUTATION = gql`
       deliveryFee: $deliveryFee
       freeDeliveryThreshold: $freeDeliveryThreshold
       courierPayout: $courierPayout
+      pickupEnabled: $pickupEnabled
+      onlinePaymentEnabled: $onlinePaymentEnabled
     ) {
       id
     }

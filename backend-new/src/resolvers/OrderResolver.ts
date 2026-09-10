@@ -407,8 +407,21 @@ export class OrderResolver {
     const fulfillmentType = input.fulfillmentType ?? FulfillmentType.DELIVERY;
     const isPickup = fulfillmentType === FulfillmentType.PICKUP;
 
+    if (isPickup && !spot.pickupEnabled) {
+      throw new Error('This spot does not offer pickup');
+    }
+    if (!isPickup && !spot.deliveryEnabled) {
+      throw new Error('This spot does not offer delivery');
+    }
+    if (input.paymentMethod !== 'cash' && !spot.onlinePaymentEnabled) {
+      throw new Error('This spot does not accept in-app payments');
+    }
+    if (!isPickup && input.paymentMethod === 'cash') {
+      throw new Error('Delivery orders must be paid online');
+    }
+
     // 2. For delivery, require an address within the spot's delivery radius.
-    //    Pickup orders skip this entirely (collected at the spot).
+    //    Pickup orders skip this entirely (collected at the spot) — no GPS.
     if (!isPickup) {
       if (
         input.deliveryAddress == null ||
@@ -1200,12 +1213,13 @@ export class OrderResolver {
       ).catch((e) => console.error('notifyClientOrderStatus failed:', e));
     }
 
-    // When an order becomes READY and has no courier yet, broadcast it to the
-    // spot's online couriers (first-to-accept model) + push-notify them.
+    // When a delivery order becomes READY and has no courier yet, broadcast it
+    // to the spot's online couriers (first-to-accept). Pickup stays at the spot.
     if (
       status === OrderStatus.READY &&
       order.status !== OrderStatus.READY &&
-      !updatedOrder.courierId
+      !updatedOrder.courierId &&
+      updatedOrder.fulfillmentType === FulfillmentType.DELIVERY
     ) {
       await PubSubService.publishDeliveryBroadcast(updatedOrder.spotId, updatedOrder);
       await this.notifyOnlineCouriersOfDelivery(updatedOrder, prisma);

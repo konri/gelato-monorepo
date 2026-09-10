@@ -37,6 +37,13 @@ export class PaymentResolver {
       throw new Error('Unauthorized');
     }
 
+    if (order.paymentMethod === 'cash') {
+      throw new Error('This order is paid at the spot');
+    }
+    if (!order.spot.onlinePaymentEnabled) {
+      throw new Error('This spot does not accept in-app payments');
+    }
+
     // Check if order already has a payment intent
     if (order.paymentIntentId) {
       // Retrieve existing payment intent

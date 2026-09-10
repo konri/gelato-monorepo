@@ -27,6 +27,8 @@ export const ALL_SPOTS_QUERY = gql`
       coverUrl
       photos
       deliveryEnabled
+      pickupEnabled
+      onlinePaymentEnabled
       deliveryFee
       freeDeliveryThreshold
       isActive
@@ -49,6 +51,8 @@ export const SPOTS_BY_CITY_QUERY = gql`
       photos
       openingHours
       deliveryEnabled
+      pickupEnabled
+      onlinePaymentEnabled
       deliveryFee
       deliveryRadiusKm
       freeDeliveryThreshold
@@ -121,6 +125,8 @@ export const SPOT_DETAIL_QUERY = gql`
       photos
       openingHours
       deliveryEnabled
+      pickupEnabled
+      onlinePaymentEnabled
       deliveryFee
       freeDeliveryThreshold
       hasSeating

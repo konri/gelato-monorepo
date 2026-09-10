@@ -1,10 +1,11 @@
 import { useCart } from '@/hooks/useCart';
+import { useSpotDetail } from '@/hooks/useTastes';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
 import { createOrder, createPaymentIntent, confirmOrderPayment, CreateOrderInput } from '@repo/api-client';
 import { useStripe } from '@stripe/stripe-react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,13 +16,21 @@ export default function PaymentScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const cart = useCart();
+  const { data: spot } = useSpotDetail(cart.spotId);
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   const isPickup = cart.fulfillmentType === 'pickup';
+  const onlinePaymentEnabled = spot?.onlinePaymentEnabled !== false;
   const [processing, setProcessing] = useState(false);
   // Pay online (Stripe) now, or pay in cash at the spot. Cash is pickup-only.
   const [payChoice, setPayChoice] = useState<'online' | 'cash'>('online');
-  const cash = isPickup && payChoice === 'cash';
+
+  useEffect(() => {
+    if (isPickup && spot && !spot.onlinePaymentEnabled) {
+      setPayChoice('cash');
+    }
+  }, [isPickup, spot?.onlinePaymentEnabled]);
+  const cash = isPickup && (payChoice === 'cash' || !onlinePaymentEnabled);
 
   const discount = cart.form?.promo?.discountAmount ?? 0;
   const freeThreshold = cart.delivery?.freeDeliveryThreshold ?? null;
@@ -194,26 +203,39 @@ export default function PaymentScreen() {
           </View>
         </View>
 
-        {/* Payment method: pickup can choose pay-now or pay-at-spot; delivery pays now. */}
+        {/* Payment method: pickup can choose pay-now or pay-at-spot; delivery pays now.
+            If the spot turned off phone payments, pickup is cash-only. */}
         {isPickup ? (
           <View className="mt-6">
             <Text className="font-urbanist-bold text-text-primary mb-2">
               {t('Payment.howToPay')}
             </Text>
-            <PayOption
-              icon="card-outline"
-              title={t('Payment.payOnline')}
-              subtitle={t('Payment.payOnlineHint')}
-              active={payChoice === 'online'}
-              onPress={() => setPayChoice('online')}
-            />
-            <PayOption
-              icon="cash-outline"
-              title={t('Payment.payAtSpot')}
-              subtitle={t('Payment.payAtSpotHint')}
-              active={payChoice === 'cash'}
-              onPress={() => setPayChoice('cash')}
-            />
+            {onlinePaymentEnabled ? (
+              <>
+                <PayOption
+                  icon="card-outline"
+                  title={t('Payment.payOnline')}
+                  subtitle={t('Payment.payOnlineHint')}
+                  active={payChoice === 'online'}
+                  onPress={() => setPayChoice('online')}
+                />
+                <PayOption
+                  icon="cash-outline"
+                  title={t('Payment.payAtSpot')}
+                  subtitle={t('Payment.payAtSpotHint')}
+                  active={payChoice === 'cash'}
+                  onPress={() => setPayChoice('cash')}
+                />
+              </>
+            ) : (
+              <PayOption
+                icon="cash-outline"
+                title={t('Payment.payAtSpot')}
+                subtitle={t('Payment.payAtSpotOnlyHint')}
+                active
+                onPress={() => setPayChoice('cash')}
+              />
+            )}
           </View>
         ) : (
           <>

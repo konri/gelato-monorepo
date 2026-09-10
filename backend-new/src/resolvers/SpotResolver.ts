@@ -137,6 +137,14 @@ export class SpotType {
   @Field()
   courierPayout!: number;
 
+  // Collect-at-spot (no courier, no customer address).
+  @Field()
+  pickupEnabled!: boolean;
+
+  // In-app / pay-by-phone. When false, pickup is cash-only at the spot.
+  @Field()
+  onlinePaymentEnabled!: boolean;
+
   // Review aggregates.
   @Field(() => Float, { nullable: true })
   averageRating?: number;
@@ -389,6 +397,8 @@ export class SpotResolver {
     @Arg('deliveryEnabled', { defaultValue: true }) deliveryEnabled: boolean = true,
     @Arg('deliveryRadiusKm', { defaultValue: 5.0 }) deliveryRadiusKm: number = 5.0,
     @Arg('freeDeliveryThreshold', { nullable: true }) freeDeliveryThreshold?: number,
+    @Arg('pickupEnabled', { defaultValue: false }) pickupEnabled: boolean = false,
+    @Arg('onlinePaymentEnabled', { defaultValue: true }) onlinePaymentEnabled: boolean = true,
     @Ctx() { prisma }: Context
   ): Promise<SpotType> {
     // Validate city exists
@@ -411,6 +421,8 @@ export class SpotResolver {
         // Radius only meaningful when delivery is enabled.
         deliveryRadiusKm: deliveryEnabled ? deliveryRadiusKm : 0,
         freeDeliveryThreshold,
+        pickupEnabled,
+        onlinePaymentEnabled,
         openingHours: {},
         isActive: true,
       },
@@ -439,6 +451,8 @@ export class SpotResolver {
     @Arg('deliveryFee', { nullable: true }) deliveryFee?: number,
     @Arg('deliveryEnabled', () => Boolean, { nullable: true }) deliveryEnabled?: boolean,
     @Arg('courierPayout', { nullable: true }) courierPayout?: number,
+    @Arg('pickupEnabled', () => Boolean, { nullable: true }) pickupEnabled?: boolean,
+    @Arg('onlinePaymentEnabled', () => Boolean, { nullable: true }) onlinePaymentEnabled?: boolean,
     @Arg('isActive', { nullable: true }) isActive?: boolean,
     @Arg('email', () => String, { nullable: true }) email?: string,
     @Arg('openingHours', () => String, { nullable: true }) openingHours?: string,
@@ -470,6 +484,8 @@ export class SpotResolver {
     if (deliveryFee !== undefined) updateData.deliveryFee = deliveryFee;
     if (deliveryEnabled !== undefined) updateData.deliveryEnabled = deliveryEnabled;
     if (courierPayout !== undefined) updateData.courierPayout = courierPayout;
+    if (pickupEnabled !== undefined) updateData.pickupEnabled = pickupEnabled;
+    if (onlinePaymentEnabled !== undefined) updateData.onlinePaymentEnabled = onlinePaymentEnabled;
     if (isActive !== undefined) updateData.isActive = isActive;
     if (email !== undefined) updateData.email = email;
     // openingHours arrives as a JSON string ({ monday: "10:00-22:00", ... }).
