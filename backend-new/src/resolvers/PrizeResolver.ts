@@ -1,10 +1,11 @@
 import { Resolver, Query, Mutation, Arg, Ctx, Authorized, ID, Int } from 'type-graphql';
-import { Role, TransactionType } from '@prisma/client';
+import { PrismaClient, Role, TransactionType } from '@prisma/client';
 import { GraphQLJSON } from 'graphql-type-json';
 import { Context } from '../types/Context';
 import { PrizeType, UserPrizeType } from '../types/PrizeType';
 import { randomUUID } from 'crypto';
 import { PubSubService } from '../services/PubSubService';
+import { CodeGenerator } from '../shared/utils/CodeGenerator';
 
 /**
  * Prize System Resolver
@@ -188,8 +189,8 @@ export class PrizeResolver {
       },
     });
 
-    // Generate unique QR code
-    const qrCode = this.generateQRCode();
+    // Generate unique QR / typeable claim code
+    const qrCode = await this.generateQRCode(prisma);
 
     // Calculate validity (7 days from now)
     const validUntil = new Date();
@@ -258,9 +259,11 @@ export class PrizeResolver {
       }
     }
 
+    const normalized = qrCode.trim().toUpperCase();
+
     // Find user prize
     const userPrize = await prisma.userPrize.findUnique({
-      where: { qrCode },
+      where: { qrCode: normalized },
       include: {
         prize: true,
         user: {
@@ -289,7 +292,7 @@ export class PrizeResolver {
 
     // Mark as redeemed
     const updatedPrize = await prisma.userPrize.update({
-      where: { qrCode },
+      where: { id: userPrize.id },
       data: {
         isRedeemed: true,
         redeemedAt: now,
@@ -306,7 +309,7 @@ export class PrizeResolver {
       },
     });
 
-    console.log(`✅ Prize QR ${qrCode} validated by user ${user.id} at spot ${spotId || 'N/A'}`);
+    console.log(`✅ Prize QR ${normalized} validated by user ${user.id} at spot ${spotId || 'N/A'}`);
 
     return updatedPrize as UserPrizeType;
   }
@@ -394,9 +397,16 @@ export class PrizeResolver {
   }
 
   /**
-   * Helper: Generate unique QR code
+   * Short typeable claim code (PR-XXXXXXXX). Falls back to PRIZE-<uuid> if the
+   * short alphabet collides repeatedly. Legacy prizes already stored as
+   * PRIZE-<uuid> keep working — validatePrizeQR looks up the stored string.
    */
-  private generateQRCode(): string {
+  private async generateQRCode(prisma: PrismaClient): Promise<string> {
+    for (let i = 0; i < 8; i++) {
+      const code = CodeGenerator.generatePrizeCode();
+      const existing = await prisma.userPrize.findUnique({ where: { qrCode: code } });
+      if (!existing) return code;
+    }
     return `PRIZE-${randomUUID().toUpperCase()}`;
   }
 }

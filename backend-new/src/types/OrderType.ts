@@ -206,6 +206,9 @@ export class OrderType {
   @Field({ nullable: true })
   terminationReason?: string;
 
+  @Field(() => Int, { nullable: true })
+  apologyPoints?: number;
+
   @Field({ nullable: true })
   refundedAt?: Date;
 

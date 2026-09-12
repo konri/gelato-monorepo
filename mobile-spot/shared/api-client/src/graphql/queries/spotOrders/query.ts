@@ -12,6 +12,7 @@ const ORDER_FIELDS = `
   deliveryAddress
   noteForSpot
   noteForCourier
+  scheduledFor
   customerName
   preparedById
   preparedByName
@@ -48,8 +49,8 @@ export const UPDATE_ORDER_STATUS_MUTATION = gql`
 // Terminate an order (out of stock / closing): refunds the customer, keeps
 // their loyalty points, sets status TERMINATED.
 export const TERMINATE_ORDER_MUTATION = gql`
-  mutation TerminateOrder($id: ID!, $reason: String) {
-    terminateOrder(id: $id, reason: $reason)
+  mutation TerminateOrder($id: ID!, $reason: String, $apologyPoints: Int) {
+    terminateOrder(id: $id, reason: $reason, apologyPoints: $apologyPoints)
   }
 `;
 
@@ -67,6 +68,7 @@ const ATTENTION_FIELDS = `
   cancelledAt
   terminatedAt
   terminationReason
+  apologyPoints
   refundedAt
 `;
 

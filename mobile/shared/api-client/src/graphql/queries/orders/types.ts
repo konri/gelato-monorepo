@@ -64,6 +64,8 @@ export type OrderDetail = OrderListEntry & {
   courierName?: string | null;
   courierPhoto?: string | null;
   deliveryPin?: string | null;
+  terminationReason?: string | null;
+  apologyPoints?: number | null;
 };
 
 export type MyOrdersResponse = { myOrders: OrderListEntry[] };

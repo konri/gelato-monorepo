@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { Spot, SpotReview } from "../lib/types";
 import { fetchSpot, fetchSpotReviews } from "../lib/api";
+import { publicConfig } from "../lib/public-config";
 import { isSpotOpenNow, WEEKDAYS, localizedCityName } from "../lib/spot-utils";
 import { useI18n } from "../i18n/I18nProvider";
 import { SpotMenu } from "./SpotMenu";
@@ -13,7 +14,7 @@ const SpotsMap = dynamic(() => import("./SpotsMap").then((m) => m.SpotsMap), {
   ssr: false,
 });
 
-const hasMapsKey = Boolean(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY);
+const hasMapsKey = Boolean(publicConfig.googleMapsApiKey);
 
 export function SpotDetail({ spotId }: { spotId: string }) {
   const { t, locale } = useI18n();

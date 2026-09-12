@@ -191,15 +191,26 @@ const ua = {
     empty: 'Це сповіщення більше недоступне',
     viewOrder: 'Переглянути замовлення',
     viewNews: 'Читати новину',
+    viewPoints: 'Переглянути бали',
     order: {
       preparing: { title: 'Замовлення прийнято', body: 'Замовлення #{{number}} готується.' },
       ready: { title: 'Замовлення готове', body: 'Замовлення #{{number}} готове.' },
       delivered: { title: 'Замовлення доставлено', body: 'Замовлення #{{number}} доставлено. Смачного!' },
       collected: { title: 'Замовлення отримано', body: 'Замовлення #{{number}} отримано. Смачного!' },
       cancelled: { title: 'Замовлення скасовано', body: 'Замовлення #{{number}} скасовано.' },
+      terminated: {
+        title: 'Замовлення скасовано',
+        body: 'Нам шкода — замовлення #{{number}} скасовано.{{reason}}{{apology}}',
+        reason: ' Причина: {{reason}}.',
+        apology: ' Як вибачення ви отримуєте {{points}} балів.',
+      },
       generic: { title: 'Оновлення замовлення', body: 'Замовлення #{{number}} оновлено.' }
     },
-    news: { title: 'Новини', body: '{{title}}' }
+    news: { title: 'Новини', body: '{{title}}' },
+    pointsEarned: {
+      title: 'Отримано бали!',
+      body: '+{{points}} балів. Тепер у вас {{totalPoints}} балів.',
+    },
   },
   OrderChat: {
     title: 'Повідомлення',
@@ -267,9 +278,6 @@ const ua = {
     facebookNotImplemented: 'Вхід через Facebook ще не реалізовано',
     appleNotImplemented: 'Вхід через Apple ще не реалізовано',
     off: 'ВИМК'
-  },
-  Mapbox: {
-    requiresNativeBuild: "Карта потребує нативної збірки додатка.\nЗапустіть: npm run ios або npm run android",
   },
   NotFound: {
     title: 'Ой!',
@@ -552,6 +560,7 @@ const ua = {
     tasks: 'Завдання',
     yourBalance: 'Ваш баланс',
     points: 'балів',
+    pointsGained: '+{{points}}',
     redeemPoints: 'Обміняти бали',
     yourQrCode: 'Ваш QR-код',
     qrInstructions: 'Покажіть цей QR-код у будь-якому закладі Loodly, щоб отримати бали',
@@ -677,6 +686,8 @@ const ua = {
     terminated: {
       title: 'Замовлення скасовано',
       body: 'Нам дуже шкода — заклад був змушений скасувати це замовлення. Повернення коштів уже в дорозі й надійде якомога швидше. Ваші бали лояльності за це замовлення збережено.',
+      reason: 'Причина: {{reason}}',
+      points: 'Як вибачення ви отримуєте {{points}} балів. Вибачте за незручності.',
     },
     tracking: {
       title: 'Відстеження замовлення',
@@ -810,9 +821,13 @@ const ua = {
     used: 'Використаний',
     redeemedOn: 'Використано {{date}}',
     successTitle: 'Приз активовано! 🎉',
-    successBody: 'Знайдіть його в «Мої призи» та покажіть QR-код у закладі.',
+    successBody: 'Знайдіть його в «Мої призи» та покажіть QR-код або код для введення в закладі.',
     redeemFailed: 'Не вдалося активувати приз',
-    showAtSpot: 'Покажіть цей код у закладі',
+    showAtSpot: 'Покажіть цей QR-код у закладі',
+    claimCode: 'Код отримання',
+    tapToCopy: 'Натисніть, щоб скопіювати',
+    codeCopied: 'Скопійовано',
+    orTypeAtSpot: 'Якщо в закладі немає сканера, можуть ввести цей код.',
   },
   News: {
     empty: 'Наразі немає новин',

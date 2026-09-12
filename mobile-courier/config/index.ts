@@ -21,8 +21,10 @@ export const config = {
   GOOGLE_WEB_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '',
   GOOGLE_IOS_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '',
 
-  // Google Maps API Key
-  GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+  // Google Maps API Key (Static Maps on the active-delivery screen)
+  GOOGLE_MAPS_API_KEY:
+    process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ||
+    'AIzaSyD-RP8vcHqSgv_xgC5mhVxF_A_hNu8Joeo',
 
   // Mapbox Configuration
   MAPBOX_ACCESS_TOKEN: process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '',

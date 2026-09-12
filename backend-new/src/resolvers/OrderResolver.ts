@@ -11,10 +11,12 @@ import {
   ObjectType,
   Field,
   Float,
+  Int,
 } from 'type-graphql';
 import { Role, OrderStatus, FulfillmentType } from '@prisma/client';
 import { Context } from '../types/Context';
 import { OrderType, OrderItemType, CreateOrderInput, CollectOrderResult, OrderMessageType } from '../types/OrderType';
+import { ReviewType } from '../types/ReviewType';
 import { PubSubService } from '../services/PubSubService';
 import { computeDiscount } from './PromoCodeResolver';
 import { OrderPointsService } from '../services/OrderPointsService';
@@ -23,9 +25,9 @@ import { NotificationType } from '../services/FCMService';
 import { CodeGenerator } from '../shared/utils/CodeGenerator';
 
 /**
- * Persist an in-app notification for every staff member of a spot when a new
- * order lands, so the spot's notification bell populates (the pubsub event only
- * drives the live queue modal — it doesn't survive a reload). Best-effort.
+ * Notify every staff member of a spot when a new order lands: in-app bell
+ * row + FCM push. The pubsub event still drives the live queue modal; this
+ * is what survives a reload and reaches devices whose websocket is down.
  */
 export async function persistNewOrderNotification(
   spotId: string,
@@ -41,15 +43,19 @@ export async function persistNewOrderNotification(
   );
   if (userIds.length === 0) return;
 
-  await prisma.notification.createMany({
-    data: userIds.map((uid) => ({
-      userId: uid,
+  await NotifyService.notifyUsers(
+    userIds,
+    {
+      persistType: 'order',
+      fcmType: NotificationType.SPOT_NEW_ORDER,
       title: 'New order',
       body: `Order #${order.orderNumber} is waiting to be claimed.`,
-      type: 'order',
       data: { orderId: order.id, orderNumber: order.orderNumber },
-    })),
-  });
+      fcmVariables: { orderNumber: order.orderNumber },
+      fcmData: { kind: 'SPOT_NEW_ORDER', orderId: order.id, orderNumber: order.orderNumber },
+    },
+    prisma,
+  );
 }
 
 /**
@@ -382,6 +388,19 @@ export class OrderResolver {
     });
     if (!loc) return null;
     return { latitude: loc.latitude, longitude: loc.longitude, timestamp: loc.timestamp };
+  }
+
+  /**
+   * Customer review of this order (spot + optional courier + comment). Null
+   * until the client submits one; used on the spot order-details screen.
+   */
+  @FieldResolver(() => ReviewType, { nullable: true })
+  async review(
+    @Root() order: OrderType,
+    @Ctx() { prisma }: Context
+  ): Promise<ReviewType | null> {
+    const review = await prisma.review.findUnique({ where: { orderId: order.id } });
+    return (review as ReviewType | null) ?? null;
   }
 
   /**
@@ -1233,18 +1252,26 @@ export class OrderResolver {
   /**
    * Terminate an order from the spot side (e.g. run out of a flavor, closing).
    * Unlike a plain cancel: the customer is refunded (if they paid online) but
-   * KEEPS any loyalty points for the order, sees an apologetic message, and the
-   * order shows the distinct TERMINATED status. Spot staff of the order's spot
-   * (or global admins) only.
+   * KEEPS any loyalty points for the order, optionally receives extra apology
+   * points, sees an apologetic message with the reason, and the order shows
+   * the distinct TERMINATED status. Spot staff of the order's spot (or global
+   * admins) only.
    */
   @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN, Role.EMPLOYEE])
   @Mutation(() => Boolean)
   async terminateOrder(
     @Arg('id', () => ID) id: string,
     @Arg('reason', () => String, { nullable: true }) reason: string | undefined,
+    @Arg('apologyPoints', () => Int, { nullable: true }) apologyPoints: number | undefined,
     @Ctx() { req, prisma }: Context
   ): Promise<boolean> {
     const user = req.user!;
+    const allowedApology = [100, 200, 500];
+    const points = apologyPoints ?? 0;
+    if (points !== 0 && !allowedApology.includes(points)) {
+      throw new Error('Apology points must be 100, 200 or 500');
+    }
+
     const order = await prisma.order.findUnique({
       where: { id },
       select: {
@@ -1292,12 +1319,14 @@ export class OrderResolver {
       }
     }
 
+    const reasonText = reason?.trim() || null;
     const updated = await prisma.order.update({
       where: { id },
       data: {
         status: OrderStatus.TERMINATED,
         terminatedAt: new Date(),
-        terminationReason: reason ?? null,
+        terminationReason: reasonText,
+        apologyPoints: points > 0 ? points : null,
         cancelledAt: new Date(),
         ...(refundedAt ? { refundedAt, paymentStatus: 'refunded' } : {}),
       },
@@ -1309,31 +1338,54 @@ export class OrderResolver {
       console.error('Point award on termination failed:', e),
     );
 
-    // Tell the client (live status + persisted notification + push + email).
-    await PubSubService.publishOrderStatusChanged(updated);
-    await prisma.notification.create({
-      data: {
-        userId: order.userId,
-        title: 'Order cancelled',
-        body: `We're sorry — order #${order.orderNumber} was cancelled by the spot. Your refund is on its way, and your loyalty points have been kept.`,
-        type: 'order',
-        data: { orderId: id, orderNumber: order.orderNumber, terminated: true },
-      },
-    });
-    try {
-      const { FCMService, NotificationType } = await import('../services/FCMService');
-      await FCMService.sendToUser(
-        order.userId,
-        NotificationType.ORDER_CANCELLED,
-        { orderId: order.orderNumber },
-        { kind: 'TERMINATED', orderId: id },
-        prisma,
+    if (points > 0) {
+      await OrderPointsService.awardApologyPoints(order.userId, id, points, prisma).catch((e) =>
+        console.error('Apology point award on termination failed:', e),
       );
-    } catch (e) {
-      console.error('Termination push failed:', e);
     }
 
-    console.log(`🛑 Order ${order.orderNumber} terminated by ${user.email} (refunded=${!!refundedAt})`);
+    const lang = (updated.user.language || 'en').toLowerCase();
+    const reasonBit =
+      reasonText
+        ? lang === 'pl'
+          ? ` Powód: ${reasonText}.`
+          : lang === 'ua'
+            ? ` Причина: ${reasonText}.`
+            : ` Reason: ${reasonText}.`
+        : '';
+    const apologyBit =
+      points > 0
+        ? lang === 'pl'
+          ? ` W ramach przeprosin otrzymujesz ${points} punktów.`
+          : lang === 'ua'
+            ? ` Як вибачення ви отримуєте ${points} балів.`
+            : ` As an apology, you've received ${points} points.`
+        : '';
+
+    // Tell the client (live status + persisted notification + push).
+    await PubSubService.publishOrderStatusChanged(updated);
+    await NotifyService.notifyUser(
+      order.userId,
+      {
+        persistType: 'order',
+        fcmType: NotificationType.ORDER_TERMINATED,
+        title: 'Order cancelled',
+        body: `We're sorry — order #${order.orderNumber} was cancelled by the spot.${reasonText ? ` Reason: ${reasonText}.` : ''} Your refund is on its way.${points > 0 ? ` You've received ${points} points as an apology.` : ' Your loyalty points have been kept.'}`,
+        data: {
+          orderId: id,
+          orderNumber: order.orderNumber,
+          status: 'TERMINATED',
+          terminated: true,
+          reason: reasonText,
+          apologyPoints: points > 0 ? points : null,
+        },
+        fcmVariables: { orderId: order.orderNumber, reason: reasonBit, apology: apologyBit },
+        fcmData: { kind: 'TERMINATED', orderId: id },
+      },
+      prisma,
+    );
+
+    console.log(`🛑 Order ${order.orderNumber} terminated by ${user.email} (refunded=${!!refundedAt}, apology=${points})`);
     return true;
   }
 

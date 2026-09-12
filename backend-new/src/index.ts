@@ -44,6 +44,22 @@ dotenv.config();
 
 const prisma = new PrismaClient();
 
+function bearerFromConnectionParams(params: unknown): string | undefined {
+  if (!params || typeof params !== 'object') return undefined;
+  const p = params as Record<string, unknown>;
+  const headers =
+    p.headers && typeof p.headers === 'object'
+      ? (p.headers as Record<string, unknown>)
+      : undefined;
+  const raw =
+    (typeof p.authorization === 'string' && p.authorization) ||
+    (typeof p.Authorization === 'string' && p.Authorization) ||
+    (typeof headers?.authorization === 'string' && headers.authorization) ||
+    (typeof headers?.Authorization === 'string' && headers.Authorization);
+  if (!raw) return undefined;
+  return raw.replace(/^Bearer\s+/i, '').trim() || undefined;
+}
+
 async function startServer() {
   const app = express();
   const httpServer = createServer(app);
@@ -152,8 +168,7 @@ async function startServer() {
     {
       schema,
       context: async (ctx) => {
-        // Extract auth token from connection params
-        const token = ctx.connectionParams?.authorization?.replace('Bearer ', '');
+        const token = bearerFromConnectionParams(ctx.connectionParams);
         let user = null;
 
         if (token) {
@@ -163,7 +178,6 @@ async function startServer() {
               where: { id: payload.userId },
             });
 
-            // Check token version
             if (user && user.tokenVersion !== payload.tokenVersion) {
               user = null;
             }
@@ -177,6 +191,7 @@ async function startServer() {
           prisma,
         };
       },
+      keepAlive: 12_000,
       onConnect: async (ctx) => {
         console.log('🔌 WebSocket client connected');
       },

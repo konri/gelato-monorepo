@@ -32,8 +32,13 @@ export function NotificationBridge() {
     const cleanup = NotificationService.setupNotificationListeners(
       (notification) => {
         const content = notification.request.content;
-        const message = content.title || content.body || '';
-        if (message) toast.show(message, 'info');
+        const data = (content.data ?? {}) as Record<string, string | undefined>;
+        const kind = data.kind || data.type || '';
+        // Incoming-order pushes drive the claim modal — skip the toast overlay.
+        if (kind !== 'SPOT_NEW_ORDER') {
+          const message = content.title || content.body || '';
+          if (message) toast.show(message, 'info');
+        }
         refreshEmitter.emit();
         emitForegroundNotification(
           (content.data ?? {}) as Record<string, string | undefined>,

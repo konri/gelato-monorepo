@@ -1,20 +1,43 @@
-import { Header } from "../../components/Header";
-import { Footer } from "../../components/LandingSections";
-import { SpotDetail } from "../../components/SpotDetail";
-import { fetchAllSpots } from "../../lib/api";
+import { SpotDetailPageClient } from "./SpotDetailPageClient";
 
-// Static export needs to know every spot id at build time. New spots won't
-// get a page until the next build/deploy — rebuild the site when spots change.
-// A placeholder id keeps the build valid even if production has zero spots
-// (a dynamic route with no pre-rendered paths fails `output: "export"`).
+const PROD_GRAPHQL =
+  "https://loodly-be-production.up.railway.app/graphql";
+
+async function fetchSpotIds(apiUrl: string): Promise<string[]> {
+  const res = await fetch(apiUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query: "{ spots { id } }" }),
+  });
+  if (!res.ok) throw new Error(`spots ${res.status}`);
+  const json = (await res.json()) as {
+    data?: { spots?: { id: string }[] };
+  };
+  return (json.data?.spots ?? []).map((s) => s.id);
+}
+
+// Static export needs at least one [id] path. `__fallback` is the HTML shell
+// Apache serves for spot URLs that were not known at build time; the client
+// then reads the real id from the browser URL.
 export async function generateStaticParams() {
-  try {
-    const spots = await fetchAllSpots();
-    if (spots.length === 0) return [{ id: '_placeholder' }];
-    return spots.map((spot) => ({ id: spot.id }));
-  } catch {
-    return [{ id: '_placeholder' }];
+  const ids = new Set<string>(["__fallback"]);
+  const endpoints = [
+    process.env.NEXT_PUBLIC_API_URL,
+    PROD_GRAPHQL,
+    "http://localhost:4000/graphql",
+  ].filter((url, i, arr): url is string => !!url && arr.indexOf(url) === i);
+
+  for (const url of endpoints) {
+    try {
+      const spots = await fetchSpotIds(url);
+      for (const id of spots) ids.add(id);
+      if (spots.length > 0) break;
+    } catch {
+      // Try the next endpoint — a missing local API should not empty the export.
+    }
   }
+
+  return Array.from(ids).map((id) => ({ id }));
 }
 
 export default function SpotDetailPage({
@@ -22,13 +45,5 @@ export default function SpotDetailPage({
 }: {
   params: { id: string };
 }) {
-  return (
-    <>
-      <Header />
-      <main className="pt-16">
-        <SpotDetail spotId={params.id} />
-      </main>
-      <Footer />
-    </>
-  );
+  return <SpotDetailPageClient id={params.id} />;
 }

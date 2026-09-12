@@ -2,7 +2,7 @@
   "expo": {
     "name": "Loodly",
     "slug": "gelato-client",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo_new.png",
@@ -17,7 +17,10 @@
       "usesAppleSignIn": true,
       "googleServicesFile": "./GoogleService-Info.plist",
       "entitlements": {
-        "aps-environment": "development"
+        "aps-environment": "development",
+        "com.apple.developer.in-app-payments": [
+          "merchant.com.konradhopek.gelato.client"
+        ]
       },
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Ta aplikacja potrzebuje dostępu do lokalizacji, aby pokazywać odpowiednie oferty w Twojej okolicy.",
@@ -84,12 +87,6 @@
           }
         }
       ],
-      [
-        "@rnmapbox/maps",
-        {
-          "RNMapboxMapsImpl": "mapbox"
-        }
-      ],
       "expo-localization",
       "expo-web-browser",
       "@react-native-community/datetimepicker",
@@ -101,6 +98,7 @@
         }
       ],
       "@react-native-firebase/app",
+      "./plugins/withStripeXcode26Fix",
       [
         "expo-build-properties",
         {

@@ -16,6 +16,18 @@ export function localizeNotification(
   if (n.type === 'order') {
     const number = (data.orderNumber as string | undefined) ?? '';
     const status = (data.status as string | undefined) ?? '';
+    if (data.terminated || status === 'TERMINATED') {
+      const reason = typeof data.reason === 'string' ? data.reason.trim() : '';
+      const points = Number(data.apologyPoints ?? 0);
+      return {
+        title: t('Notifications.order.terminated.title'),
+        body: t('Notifications.order.terminated.body', {
+          number,
+          reason: reason ? t('Notifications.order.terminated.reason', { reason }) : '',
+          apology: points > 0 ? t('Notifications.order.terminated.apology', { points }) : '',
+        }),
+      };
+    }
     const key =
       status === 'PREPARING'
         ? 'preparing'
@@ -39,6 +51,15 @@ export function localizeNotification(
     return {
       title: t('Notifications.news.title'),
       body: n.body,
+    };
+  }
+
+  if (n.type === 'POINTS_EARNED') {
+    const points = String(data.points ?? '');
+    const totalPoints = String(data.totalPoints ?? '');
+    return {
+      title: t('Notifications.pointsEarned.title'),
+      body: t('Notifications.pointsEarned.body', { points, totalPoints }),
     };
   }
 

@@ -17,6 +17,8 @@ function iconFor(type: string): { name: keyof typeof Ionicons.glyphMap; color: s
       return { name: 'receipt', color: '#EC2828', bg: '#FEECEC' };
     case 'NEWS':
       return { name: 'newspaper', color: '#2563EB', bg: '#DBEAFE' };
+    case 'POINTS_EARNED':
+      return { name: 'star', color: '#D97706', bg: '#FEF3C7' };
     default:
       return { name: 'notifications', color: '#6B7280', bg: '#F3F4F6' };
   }
@@ -125,6 +127,19 @@ export default function NotificationDetailScreen() {
                 <Ionicons name="newspaper-outline" size={18} color="#fff" />
                 <Typography variant="body-base-semibold" className="ml-2 text-white">
                   {t('Notifications.viewNews')}
+                </Typography>
+              </Pressable>
+            )}
+
+            {item.type === 'POINTS_EARNED' && (
+              <Pressable
+                onPress={() => router.push('/(tabs)' as never)}
+                className="mt-5 flex-row items-center justify-center rounded-xl py-3.5"
+                style={{ backgroundColor: '#D97706' }}
+              >
+                <Ionicons name="star-outline" size={18} color="#fff" />
+                <Typography variant="body-base-semibold" className="ml-2 text-white">
+                  {t('Notifications.viewPoints')}
                 </Typography>
               </Pressable>
             )}

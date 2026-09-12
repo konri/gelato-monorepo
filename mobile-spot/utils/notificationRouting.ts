@@ -21,7 +21,7 @@ export function routeFromPushData(data: StringMap | undefined): string | null {
     return data.messageId ? `/order/${data.orderId}?messageId=${data.messageId}` : `/order/${data.orderId}`;
   }
   // Delivery incident + any order push → the order detail.
-  if (kind === 'DELIVERY_INCIDENT' || kind.startsWith('ORDER')) {
+  if (kind === 'DELIVERY_INCIDENT' || kind === 'SPOT_NEW_ORDER' || kind.startsWith('ORDER')) {
     return data.orderId ? `/order/${data.orderId}` : null;
   }
   return null;

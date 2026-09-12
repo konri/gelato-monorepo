@@ -1,5 +1,6 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { ReadyByRow } from '@/components/molecules/ReadyByRow';
 import { AttentionOrderCard } from '@/components/organisms/AttentionOrderCard';
 import { TAB_BAR_TOTAL_HEIGHT } from '@/constants/tabBarStyles';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
@@ -134,6 +135,7 @@ export default function PreparedScreen() {
                     </Typography>
                   </View>
                 )}
+                <ReadyByRow scheduledFor={o.scheduledFor} className="mt-1" />
                 {o.items?.length > 0 && (
                   <View className="mt-2 rounded-lg bg-gray-50 p-2.5">
                     {o.items.map((it) => (

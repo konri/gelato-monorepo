@@ -24,7 +24,8 @@ export const PrizeHistoryModal = ({
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View className="flex-1 bg-black/40 justify-end">
+      {!visible ? null : (
+      <View className="flex-1 justify-end" style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}>
         <View className="bg-white rounded-t-3xl" style={{ maxHeight: '80%', paddingBottom: insets.bottom + 12 }}>
           <View className="flex-row items-center px-5 pt-4 pb-3 border-b border-gray-100">
             <Text className="text-lg font-urbanist-bold text-text-primary flex-1">
@@ -74,6 +75,7 @@ export const PrizeHistoryModal = ({
           )}
         </View>
       </View>
+      )}
     </Modal>
   );
 };

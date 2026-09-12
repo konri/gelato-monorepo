@@ -10,6 +10,8 @@ import {
   LoyaltyCustomerType,
 } from '../types/PointsType';
 import { PubSubService } from '../services/PubSubService';
+import { NotifyService } from '../services/NotifyService';
+import { NotificationType } from '../services/FCMService';
 
 /**
  * Points and Referral System Resolver
@@ -251,6 +253,33 @@ export class PointsResolver {
       newBalance.totalPoints,
       newBalance.availablePoints,
       points
+    );
+
+    await NotifyService.notifyUser(
+      userId,
+      {
+        persistType: 'POINTS_EARNED',
+        fcmType: NotificationType.POINTS_EARNED,
+        title: 'Points Earned!',
+        body: `+${points} pts. You now have ${newBalance.availablePoints} points.`,
+        data: {
+          points,
+          totalPoints: newBalance.availablePoints,
+          spotId: spotId ?? null,
+          description,
+        },
+        fcmVariables: {
+          points: String(points),
+          totalPoints: String(newBalance.availablePoints),
+        },
+        fcmData: {
+          kind: 'POINTS_EARNED',
+          points: String(points),
+          totalPoints: String(newBalance.availablePoints),
+          ...(spotId ? { spotId } : {}),
+        },
+      },
+      prisma,
     );
 
     console.log(`✅ Awarded ${points} points to user ${userId}: ${description}`);

@@ -33,6 +33,8 @@ export type SpotOrder = {
   deliveryAddress?: string | null;
   noteForSpot?: string | null;
   noteForCourier?: string | null;
+  // Customer-requested ready time (null = ASAP).
+  scheduledFor?: string | null;
   customerName?: string | null;
   customerPhone?: string | null;
   preparedById?: string | null;
@@ -49,6 +51,7 @@ export type SpotOrder = {
   cancelledAt?: string | null;
   terminatedAt?: string | null;
   terminationReason?: string | null;
+  apologyPoints?: number | null;
   refundedAt?: string | null;
   items: SpotOrderItem[];
 };

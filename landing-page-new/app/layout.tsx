@@ -5,6 +5,7 @@ import { I18nProvider } from "./i18n/I18nProvider";
 import { AuthProvider } from "./auth/AuthProvider";
 import { AuthModalProvider } from "./auth/AuthModalProvider";
 import { CartProvider } from "./lib/cart";
+import { StaticExportSpotGate } from "./components/StaticExportSpotGate";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -35,7 +36,9 @@ export default function RootLayout({
         <I18nProvider>
           <AuthProvider>
             <AuthModalProvider>
-              <CartProvider>{children}</CartProvider>
+              <CartProvider>
+                <StaticExportSpotGate>{children}</StaticExportSpotGate>
+              </CartProvider>
             </AuthModalProvider>
           </AuthProvider>
         </I18nProvider>

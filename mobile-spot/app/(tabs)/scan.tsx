@@ -60,9 +60,10 @@ export default function ScanScreen() {
         }
         setScanError(t('Scan.invalidUser'));
       } else {
-        // Prize QR is "PRIZE-<uuid>".
-        if (value.trim().toUpperCase().startsWith('PRIZE-')) {
-          setScanned(value.trim());
+        // Prize QR is "PR-XXXXXXXX" (typeable) or legacy "PRIZE-<uuid>".
+        const v = value.trim().toUpperCase();
+        if (v.startsWith('PRIZE-') || /^PR-[A-Z0-9]{6,}$/.test(v)) {
+          setScanned(v);
         } else {
           setScanError(t('Scan.invalidPrize'));
         }

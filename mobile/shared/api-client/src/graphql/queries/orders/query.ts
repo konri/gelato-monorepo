@@ -45,6 +45,8 @@ export const ORDER_DETAIL_QUERY = gql`
       courierName
       courierPhoto
       deliveryPin
+      terminationReason
+      apologyPoints
       spot {
         id
         name

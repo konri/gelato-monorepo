@@ -1,7 +1,7 @@
 import { Typography } from '@/components/atoms/Typography';
 import { onRequestError } from '@/shared/api-client/src/errorEvents';
 import { Ionicons } from '@expo/vector-icons';
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Animated, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,19 +34,34 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const translateY = useRef(new Animated.Value(-16)).current;
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idRef = useRef(0);
+  const visibleRef = useRef<ToastState | null>(null);
 
   const dismiss = useCallback(() => {
     Animated.parallel([
       Animated.timing(opacity, { toValue: 0, duration: 180, useNativeDriver: true }),
       Animated.timing(translateY, { toValue: -16, duration: 180, useNativeDriver: true }),
-    ]).start(() => setToast(null));
+    ]).start(() => {
+      visibleRef.current = null;
+      setToast(null);
+    });
   }, [opacity, translateY]);
 
   const show = useCallback(
     (message: string, type: ToastType = 'info') => {
       if (!message) return;
+      // Same toast already on screen (duplicate FCM / listener re-fire): keep it
+      // visible and only bump the hide timer. Resetting opacity to 0 is what
+      // made the in-app banner look like it was blinking.
+      const current = visibleRef.current;
+      if (current && current.message === message && current.type === type) {
+        if (hideTimer.current) clearTimeout(hideTimer.current);
+        hideTimer.current = setTimeout(dismiss, DURATION_MS);
+        return;
+      }
       idRef.current += 1;
-      setToast({ id: idRef.current, type, message });
+      const next = { id: idRef.current, type, message };
+      visibleRef.current = next;
+      setToast(next);
       opacity.setValue(0);
       translateY.setValue(-16);
       Animated.parallel([
@@ -74,11 +89,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     if (hideTimer.current) clearTimeout(hideTimer.current);
   }, []);
 
-  const value: ToastContextValue = {
-    show,
-    success: (m) => show(m, 'success'),
-    error: (m) => show(m, 'error'),
-  };
+  const success = useCallback((m: string) => show(m, 'success'), [show]);
+  const error = useCallback((m: string) => show(m, 'error'), [show]);
+  const value = useMemo<ToastContextValue>(
+    () => ({ show, success, error }),
+    [show, success, error],
+  );
 
   return (
     <ToastContext.Provider value={value}>

@@ -29,14 +29,16 @@ export const config = {
   GOOGLE_WEB_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '',
   GOOGLE_IOS_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '',
 
-  // Google Maps API Key
-  GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-
-  // Mapbox Configuration
-  MAPBOX_ACCESS_TOKEN: process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '',
+  // Google Maps API Key (same key as app.json android.config.googleMaps)
+  GOOGLE_MAPS_API_KEY:
+    process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ||
+    'AIzaSyD-RP8vcHqSgv_xgC5mhVxF_A_hNu8Joeo',
 
   // Stripe Configuration
-  STRIPE_PUBLISHABLE_KEY: process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
+  STRIPE_PUBLISHABLE_KEY: process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'pk_test_51TcVfe8uoyf2v2KaHScAmH7Q2IONBUvuc9rTldpjDfuFkdNOcdV4dEuy13kuHMBiKhWGJInI8S7USh3pPHTZyw8g00YSQ66dtf',
+  // Apple Pay merchant ID — must match app.json Stripe plugin + Apple Developer
+  STRIPE_MERCHANT_IDENTIFIER: 'merchant.com.konradhopek.gelato.client',
+  STRIPE_URL_SCHEME: 'gelato',
 
   // Legal pages (landing-page-new, static export)
   TERMS_URL: 'https://loodly.pl/terms',

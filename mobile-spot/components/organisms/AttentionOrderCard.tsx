@@ -1,4 +1,5 @@
 import { Typography } from '@/components/atoms/Typography';
+import { ReadyByRow } from '@/components/molecules/ReadyByRow';
 import { useToast } from '@/components/organisms/ToastProvider';
 import { redispatchOrder, terminateOrder } from '@/hooks/useSpotOrders';
 import { incidentLabel } from '@/utils/notificationDisplay';
@@ -154,6 +155,8 @@ export function AttentionOrderCard({
           </View>
         )}
 
+        <ReadyByRow scheduledFor={order.scheduledFor} className="mt-1.5" />
+
         {!!reason && (
           <View className="mt-2 rounded-lg bg-gray-50 p-2.5">
             <Typography variant="body-very-small-medium" className="text-gray-400">
@@ -170,6 +173,15 @@ export function AttentionOrderCard({
             <Ionicons name="cash-outline" size={14} color="#16A34A" />
             <Typography variant="body-very-small-medium" className="ml-1.5" style={{ color: '#16A34A' }}>
               {t('SpotAttention.refunded')}
+            </Typography>
+          </View>
+        )}
+
+        {!!order.apologyPoints && (
+          <View className="mt-1.5 flex-row items-center">
+            <Ionicons name="star-outline" size={14} color="#B45309" />
+            <Typography variant="body-very-small-medium" className="ml-1.5" style={{ color: '#B45309' }}>
+              {t('CancelOrder.pointsShown', { points: order.apologyPoints })}
             </Typography>
           </View>
         )}

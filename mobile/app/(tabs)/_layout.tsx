@@ -1,6 +1,7 @@
 import { StandardTabsLayout } from "@/components/organisms/StandardTabsLayout";
 import { useAuthState } from "@/hooks/useAuthState";
 import { useNotificationRegistration } from "@/hooks/useNotificationRegistration";
+import { usePointsSubscription } from "@/hooks/usePointsSubscription";
 import { Redirect } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 
@@ -10,6 +11,7 @@ export default function TabsLayout() {
   // Register device for push notifications after login
   // Hook is always called, but registration only happens when logged in
   useNotificationRegistration();
+  usePointsSubscription(isLoggedIn);
 
   if (isLoading) {
     return (

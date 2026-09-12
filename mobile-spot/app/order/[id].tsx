@@ -1,18 +1,21 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { StarRating } from '@/components/atoms/StarRating';
+import { CancelOrderModal } from '@/components/molecules/CancelOrderModal';
 import { ScreenHeader } from '@/components/molecules/ScreenHeader';
+import { ReadyByRow } from '@/components/molecules/ReadyByRow';
 import { OrderChat } from '@/components/organisms/OrderChat';
+import { useToast } from '@/components/organisms/ToastProvider';
 import { staticMapUrl } from '@/services/googlePlaces';
-import { getOrderById, terminateOrder, type OrderDetail } from '@repo/api-client';
+import { terminateOrder } from '@/hooks/useSpotOrders';
+import { getOrderById, type OrderDetail } from '@repo/api-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
-import { goBackOr } from '@/utils/navigation';
+import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Linking,
   Pressable,
@@ -20,19 +23,19 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Statuses where a courier is en route → keep polling for its position.
 const LIVE_STATUSES = ['COURIER_ASSIGNED', 'PICKED_UP', 'IN_TRANSIT'];
+const WAITING_FOR_REVIEW = ['DELIVERED', 'COLLECTED'];
 
 export default function OrderTrackScreen() {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
   const { id, messageId } = useLocalSearchParams<{ id: string; messageId?: string }>();
   const { width } = useWindowDimensions();
+  const toast = useToast();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [terminating, setTerminating] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const load = useCallback(async () => {
@@ -48,35 +51,26 @@ export default function OrderTrackScreen() {
     !!order &&
     !['DELIVERED', 'COLLECTED', 'CANCELLED', 'FAILED', 'TERMINATED'].includes(String(order.status));
 
-  const doTerminate = useCallback(async () => {
+  const doCancel = useCallback(async (reason: string, points: number) => {
     if (!id) return;
-    setTerminating(true);
-    try {
-      const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
-      const res = await terminateOrder(id, undefined, { token });
-      if (res.error) throw new Error(res.error.message);
-      await load();
-    } catch (e) {
-      Alert.alert(t('OrderTrack.terminateFailed'), e instanceof Error ? e.message : '');
-    } finally {
-      setTerminating(false);
+    const res = await terminateOrder(id, reason, points);
+    if (res.error || !res.data) {
+      throw new Error(res.error?.message || t('OrderTrack.terminateFailed'));
     }
-  }, [id, load, t]);
-
-  const confirmTerminate = useCallback(() => {
-    Alert.alert(t('OrderTrack.terminateTitle'), t('OrderTrack.terminateConfirm'), [
-      { text: t('OrderTrack.terminateCancel'), style: 'cancel' },
-      { text: t('OrderTrack.terminateConfirmCta'), style: 'destructive', onPress: () => void doTerminate() },
-    ]);
-  }, [t, doTerminate]);
+    toast.success(t('CancelOrder.done'));
+    await load();
+  }, [id, load, t, toast]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  // Poll every 8s while a courier is en route.
+  // Poll every 8s while a courier is en route, or until a delivered order is reviewed.
   useEffect(() => {
-    const live = order && LIVE_STATUSES.includes(order.status as string);
+    const live =
+      !!order &&
+      (LIVE_STATUSES.includes(order.status as string) ||
+        (WAITING_FOR_REVIEW.includes(order.status as string) && !order.review));
     if (live && !pollRef.current) {
       pollRef.current = setInterval(() => void load(), 8000);
     }
@@ -90,7 +84,7 @@ export default function OrderTrackScreen() {
         pollRef.current = null;
       }
     };
-  }, [order?.status, load]);
+  }, [order?.status, order?.review?.id, load]);
 
   const mapWidth = Math.min(width - 32, 640);
   const spotLat = order?.spot?.latitude;
@@ -132,6 +126,28 @@ export default function OrderTrackScreen() {
               <Typography variant="body-small-bold" style={{ color: '#EC2828' }}>
                 {t(`OrderStatus.${order.status}`, { defaultValue: String(order.status) })}
               </Typography>
+            </View>
+
+            {(order.status === 'TERMINATED' || order.status === 'CANCELLED') && (
+              <View className="mb-4 rounded-2xl bg-red-50 p-4">
+                <Typography variant="body-base-bold" style={{ color: '#B91C1C' }}>
+                  {t('CancelOrder.cancelledBanner')}
+                </Typography>
+                {!!order.terminationReason && (
+                  <Typography variant="body-small-regular" className="mt-1" style={{ color: '#B91C1C' }}>
+                    {t('CancelOrder.reasonShown', { reason: order.terminationReason })}
+                  </Typography>
+                )}
+                {!!order.apologyPoints && (
+                  <Typography variant="body-small-regular" className="mt-1" style={{ color: '#B91C1C' }}>
+                    {t('CancelOrder.pointsShown', { points: order.apologyPoints })}
+                  </Typography>
+                )}
+              </View>
+            )}
+
+            <View className="mb-4 rounded-2xl bg-white px-4 py-3 shadow-sm">
+              <ReadyByRow scheduledFor={order.scheduledFor} />
             </View>
 
             {/* Map */}
@@ -184,6 +200,38 @@ export default function OrderTrackScreen() {
               </View>
             )}
 
+            {order.review && (
+              <View className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
+                <Typography variant="body-base-bold" className="text-text-primary">
+                  {t('OrderTrack.reviewTitle')}
+                </Typography>
+                <View className="mt-3 flex-row items-center justify-between">
+                  <Typography variant="body-small-regular" className="text-gray-600">
+                    {t('OrderTrack.reviewSpot')}
+                  </Typography>
+                  <StarRating rating={order.review.spotRating} size={18} />
+                </View>
+                {order.review.courierRating != null && order.review.courierRating > 0 && (
+                  <View className="mt-2 flex-row items-center justify-between">
+                    <Typography variant="body-small-regular" className="text-gray-600">
+                      {t('OrderTrack.reviewCourier')}
+                    </Typography>
+                    <StarRating rating={order.review.courierRating} size={18} />
+                  </View>
+                )}
+                {!!order.review.comment && (
+                  <View className="mt-3 rounded-xl bg-gray-50 px-3 py-2.5">
+                    <Typography variant="body-very-small-medium" className="text-gray-500">
+                      {t('OrderTrack.reviewComment')}
+                    </Typography>
+                    <Typography variant="body-small-regular" className="mt-0.5 text-text-primary">
+                      {order.review.comment}
+                    </Typography>
+                  </View>
+                )}
+              </View>
+            )}
+
             {/* Pickup code — read this out to the courier to confirm handover. */}
             {order.pickupCode &&
             ['READY', 'COURIER_ASSIGNED'].includes(String(order.status)) ? (
@@ -215,27 +263,28 @@ export default function OrderTrackScreen() {
             {/* Chat with the customer (spot staff can message anytime). */}
             {!!order && <OrderChat orderId={order.id} highlightId={messageId ?? null} />}
 
-            {/* Terminate — refunds the customer, keeps their points. Only while
-                the order is still in progress. */}
+            {/* Cancel — refunds the customer, awards apology points, keeps
+                their loyalty points. Only while the order is still in progress.
+                Uses a modal (not Alert) so it works on web too. */}
             {canTerminate && (
               <Pressable
-                onPress={confirmTerminate}
-                disabled={terminating}
+                onPress={() => setCancelOpen(true)}
                 className="mt-4 flex-row items-center justify-center rounded-xl border py-3.5"
                 style={{ borderColor: '#DC2626' }}
               >
-                {terminating ? (
-                  <ActivityIndicator color="#DC2626" />
-                ) : (
-                  <>
-                    <Ionicons name="close-circle-outline" size={18} color="#DC2626" />
-                    <Typography variant="body-base-semibold" className="ml-2" style={{ color: '#DC2626' }}>
-                      {t('OrderTrack.terminate')}
-                    </Typography>
-                  </>
-                )}
+                <Ionicons name="close-circle-outline" size={18} color="#DC2626" />
+                <Typography variant="body-base-semibold" className="ml-2" style={{ color: '#DC2626' }}>
+                  {t('Spot.cancelOrder')}
+                </Typography>
               </Pressable>
             )}
+
+            <CancelOrderModal
+              visible={cancelOpen}
+              orderNumber={order.orderNumber}
+              onClose={() => setCancelOpen(false)}
+              onConfirm={doCancel}
+            />
           </ResponsiveContainer>
         </ScrollView>
       )}

@@ -20,8 +20,10 @@ export const config = {
   GOOGLE_WEB_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '',
   GOOGLE_IOS_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '',
 
-  // Google Maps API Key
-  GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+  // Google Maps API Key (Static Maps on order details — same key as the client app)
+  GOOGLE_MAPS_API_KEY:
+    process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ||
+    'AIzaSyD-RP8vcHqSgv_xgC5mhVxF_A_hNu8Joeo',
 
   // Legal pages (landing-page-new, static export)
   TERMS_URL: 'https://loodly.pl/terms',

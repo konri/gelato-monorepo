@@ -4,14 +4,28 @@ import * as Notifications from 'expo-notifications';
 import messaging from '@react-native-firebase/messaging';
 import { Platform } from 'react-native';
 
-// Configure notification behavior
+// Foreground: we render our own toast in NotificationBridge. Showing the OS
+// banner as well stacked two alerts on top of each other and looked like a blink.
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowAlert: false,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: false,
+    shouldShowList: true,
   }),
 });
+
+function flattenFcmData(data: unknown): Record<string, string | undefined> {
+  if (!data || typeof data !== 'object') return {};
+  const out: Record<string, string | undefined> = {};
+  for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+    if (value == null) out[key] = undefined;
+    else if (typeof value === 'string') out[key] = value;
+    else out[key] = String(value);
+  }
+  return out;
+}
 
 export class NotificationService {
   private static instance: NotificationService;
@@ -124,6 +138,54 @@ export class NotificationService {
       receivedSubscription.remove();
       responseSubscription.remove();
     };
+  }
+
+  /**
+   * Firebase delivers foreground pushes to `onMessage`, not to expo-notifications.
+   * Without this, a POINTS_EARNED (or any) FCM while the app is open never
+   * shows a toast and never triggers a balance refetch.
+   */
+  setupFcmListeners(
+    onForeground: (payload: {
+      title?: string;
+      body?: string;
+      data: Record<string, string | undefined>;
+    }) => void,
+    onOpened: (data: Record<string, string | undefined>) => void,
+  ) {
+    if (Platform.OS === 'web') {
+      return () => {};
+    }
+
+    const unsubMessage = messaging().onMessage(async (remoteMessage) => {
+      logger.log('📬 FCM received (foreground):', remoteMessage);
+      onForeground({
+        title: remoteMessage.notification?.title,
+        body: remoteMessage.notification?.body,
+        data: flattenFcmData(remoteMessage.data),
+      });
+    });
+
+    const unsubOpened = messaging().onNotificationOpenedApp((remoteMessage) => {
+      logger.log('👆 FCM tapped (background):', remoteMessage);
+      onOpened(flattenFcmData(remoteMessage.data));
+    });
+
+    return () => {
+      unsubMessage();
+      unsubOpened();
+    };
+  }
+
+  async getInitialFcmData(): Promise<Record<string, string | undefined> | null> {
+    if (Platform.OS === 'web') return null;
+    try {
+      const initial = await messaging().getInitialNotification();
+      return initial ? flattenFcmData(initial.data) : null;
+    } catch (e) {
+      logger.warn('getInitialNotification failed', e);
+      return null;
+    }
   }
 
   async setBadgeCount(count: number) {

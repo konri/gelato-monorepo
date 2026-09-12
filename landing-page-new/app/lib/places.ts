@@ -2,7 +2,9 @@
 // checkout address field doesn't need the Maps JS SDK (which is loaded with a
 // specific loader id elsewhere and would conflict on `libraries`).
 
-const KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+import { publicConfig } from "./public-config";
+
+const KEY = publicConfig.googleMapsApiKey;
 
 export const placesConfigured = Boolean(KEY);
 

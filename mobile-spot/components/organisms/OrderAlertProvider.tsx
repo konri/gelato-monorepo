@@ -1,8 +1,11 @@
 import { Typography } from '@/components/atoms/Typography';
 import { useOrderAlertSound } from '@/hooks/useOrderAlertSound';
 import { useSpotOrderSubscription } from '@/hooks/useSpotOrderSubscription';
-import { claimOrder } from '@/hooks/useSpotOrders';
+import { claimOrder, getStoredSpotContext } from '@/hooks/useSpotOrders';
+import { onForegroundNotification } from '@/shared/api-client/src/notificationEvents';
+import { getSpotOrders, getSpotStaffAdmins, getSpotStaffEmployees } from '@repo/api-client';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePathname } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -16,12 +19,17 @@ type AlertOrder = {
   itemCount?: number;
 };
 
+const PENDING_POLL_MS = 15_000;
+
 /**
- * App-wide incoming-order alert. When a new order arrives it shows a
- * non-dismissable modal (no backdrop tap, no close button) with an audible
- * alert — someone must Accept it. Accepting claims the order (making them
- * responsible); if another staff member claims it first, it's removed from
- * the queue. Mounted once at the root for logged-in staff.
+ * App-wide incoming-order alert. When a new order arrives it shows a modal
+ * with an audible alert. Accepting claims the order (making them responsible);
+ * if another staff member claims it first, it's removed from the queue.
+ *
+ * When more than one person works the spot, a close (X) lets someone dismiss
+ * the popup without claiming — the order stays in the queue for colleagues.
+ * A lone worker still has to Accept (no X), so the order can't be silenced.
+ * Mounted once at the root for logged-in staff.
  */
 export function OrderAlertProvider({ enabled }: { enabled: boolean }) {
   const { t } = useTranslation();
@@ -29,12 +37,23 @@ export function OrderAlertProvider({ enabled }: { enabled: boolean }) {
   const [queue, setQueue] = useState<AlertOrder[]>([]);
   const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [canDismiss, setCanDismiss] = useState(false);
+  const dismissedRef = useRef(new Set<string>());
 
   // Don't alert on the login screen even if a stale socket fires.
   const active = enabled && queue.length > 0 && pathname !== '/login';
   useOrderAlertSound(active);
 
   const current = queue[0] ?? null;
+
+  const enqueue = useCallback((order: AlertOrder) => {
+    if (dismissedRef.current.has(order.id)) return;
+    setQueue((q) => (q.some((x) => x.id === order.id) ? q : [...q, order]));
+  }, []);
+
+  const drop = useCallback((orderId: string) => {
+    setQueue((q) => q.filter((x) => x.id !== orderId));
+  }, []);
 
   const normalize = useCallback((payload: any): AlertOrder | null => {
     // newOrderNotification payload = { spotId, order }.
@@ -51,22 +70,90 @@ export function OrderAlertProvider({ enabled }: { enabled: boolean }) {
     };
   }, []);
 
+  const loadPending = useCallback(async () => {
+    const ctx = await getStoredSpotContext();
+    if (!ctx.spotId) return;
+    const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
+    const res = await getSpotOrders(ctx.spotId, 'PENDING', { token });
+    const pending = (res.data ?? []).filter((o) => !o.preparedById);
+    for (const o of pending) {
+      enqueue({
+        id: o.id,
+        orderNumber: o.orderNumber,
+        total: o.total,
+        deliveryAddress: o.deliveryAddress ?? undefined,
+        itemCount: Array.isArray(o.items)
+          ? o.items.reduce((n, it) => n + (it.quantity ?? 1), 0)
+          : undefined,
+      });
+    }
+  }, [enqueue]);
+
+  const loadStaffCount = useCallback(async () => {
+    const ctx = await getStoredSpotContext();
+    if (!ctx.spotId) return;
+    const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
+    const [admins, employees] = await Promise.all([
+      getSpotStaffAdmins(ctx.spotId, { token }),
+      getSpotStaffEmployees(ctx.spotId, { token }),
+    ]);
+    const adminIds = (admins.data ?? []).map((a) => a.id);
+    const employeeIds = (employees.data ?? []).map((e) => e.id);
+    const unique = new Set([...adminIds, ...employeeIds]);
+    // Employees can't list staff — if the queries fail, still offer dismiss
+    // so a colleague isn't stuck behind someone else's modal.
+    if (unique.size === 0 && (admins.error || employees.error)) {
+      setCanDismiss(true);
+      return;
+    }
+    setCanDismiss(unique.size > 1);
+  }, []);
+
   useSpotOrderSubscription(enabled, {
     onNewOrder: (payload) => {
       const order = normalize(payload);
       if (!order) return;
-      setQueue((q) => (q.some((x) => x.id === order.id) ? q : [...q, order]));
+      enqueue(order);
     },
     onOrderClaimed: (payload) => {
-      // Someone claimed an order — drop it from our alert queue.
       const claimedId = payload?.order?.id ?? payload?.orderId ?? payload?.id;
-      if (claimedId) setQueue((q) => q.filter((x) => x.id !== claimedId));
+      if (claimedId) {
+        dismissedRef.current.delete(claimedId);
+        drop(claimedId);
+      }
     },
   });
 
+  // Foreground FCM (websocket down / backgrounded tab) → same modal.
+  useEffect(() => {
+    if (!enabled) return;
+    return onForegroundNotification((data) => {
+      const kind = data.kind || data.type || '';
+      if (kind !== 'SPOT_NEW_ORDER') return;
+      if (!data.orderId) return;
+      enqueue({
+        id: data.orderId,
+        orderNumber: data.orderNumber,
+      });
+    });
+  }, [enabled, enqueue]);
+
+  // Seed + poll unclaimed PENDING orders so a missed websocket still pops up.
+  useEffect(() => {
+    if (!enabled) return;
+    void loadPending();
+    void loadStaffCount();
+    const id = setInterval(() => void loadPending(), PENDING_POLL_MS);
+    return () => clearInterval(id);
+  }, [enabled, loadPending, loadStaffCount]);
+
   // Clear the queue when logging out / disabling.
   useEffect(() => {
-    if (!enabled) setQueue([]);
+    if (!enabled) {
+      dismissedRef.current.clear();
+      setQueue([]);
+      setCanDismiss(false);
+    }
   }, [enabled]);
 
   const accept = async () => {
@@ -78,21 +165,40 @@ export function OrderAlertProvider({ enabled }: { enabled: boolean }) {
     if (res.error) {
       // Already claimed elsewhere → just drop it; otherwise surface the error.
       if (res.error.message?.toLowerCase().includes('already')) {
-        setQueue((q) => q.filter((x) => x.id !== current.id));
+        drop(current.id);
       } else {
         setError(res.error.message ?? t('OrderAlert.error'));
       }
       return;
     }
-    setQueue((q) => q.filter((x) => x.id !== current.id));
+    drop(current.id);
+  };
+
+  const dismiss = () => {
+    if (!current || !canDismiss) return;
+    dismissedRef.current.add(current.id);
+    setError(null);
+    drop(current.id);
   };
 
   if (!active || !current) return null;
 
   return (
-    <Modal visible transparent animationType="fade" onRequestClose={() => {}}>
+    <Modal visible transparent animationType="fade" onRequestClose={canDismiss ? dismiss : () => {}}>
       <View className="flex-1 items-center justify-center bg-black/70 p-6">
         <View className="w-full max-w-md rounded-3xl bg-white p-6">
+          {canDismiss && (
+            <Pressable
+              onPress={dismiss}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel={t('OrderAlert.dismiss')}
+              className="absolute z-10 h-10 w-10 items-center justify-center rounded-full"
+              style={{ top: 12, right: 12, backgroundColor: '#F3F4F6' }}
+            >
+              <Ionicons name="close" size={22} color="#6B7280" />
+            </Pressable>
+          )}
           <View className="items-center">
             <View className="h-16 w-16 items-center justify-center rounded-full" style={{ backgroundColor: '#FEECEC' }}>
               <Ionicons name="notifications" size={32} color="#EC2828" />
@@ -151,7 +257,7 @@ export function OrderAlertProvider({ enabled }: { enabled: boolean }) {
             )}
           </Pressable>
           <Typography variant="body-very-small-medium" className="mt-3 text-center text-gray-400">
-            {t('OrderAlert.hint')}
+            {t(canDismiss ? 'OrderAlert.hintDismissable' : 'OrderAlert.hint')}
           </Typography>
         </View>
       </View>

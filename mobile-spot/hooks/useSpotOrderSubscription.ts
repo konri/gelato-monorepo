@@ -1,4 +1,5 @@
 import { config } from '@/config';
+import { logger } from '@/utils/logger';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
 import { createClient, type Client } from 'graphql-ws';
 import { useEffect, useRef } from 'react';
@@ -34,14 +35,23 @@ export function useSpotOrderSubscription(enabled: boolean, handlers: Handlers) {
     const disposers: Array<() => void> = [];
 
     (async () => {
-      const token = await safeGetItem('access_token');
-      if (disposed) return;
-
       client = createClient({
         url: WS_URL,
-        connectionParams: { authorization: token ? `Bearer ${token}` : '' },
+        // Re-read the token on every (re)connect so a refresh mid-session
+        // doesn't leave us subscribed as anonymous after the socket drops.
+        connectionParams: async () => {
+          const token = await safeGetItem('access_token');
+          return { authorization: token ? `Bearer ${token}` : '' };
+        },
         retryAttempts: Infinity,
+        shouldRetry: () => true,
+        keepAlive: 12_000,
+        lazy: false,
       });
+      if (disposed) {
+        client.dispose();
+        return;
+      }
 
       const parse = (data: unknown) => {
         // Subscriptions return JSON-encoded strings from the backend.
@@ -63,7 +73,9 @@ export function useSpotOrderSubscription(enabled: boolean, handlers: Handlers) {
               const raw = msg?.data?.newOrderNotification;
               if (raw != null) handlersRef.current.onNewOrder?.(parse(raw));
             },
-            error: () => {},
+            error: (err) => {
+              logger.warn('newOrderNotification subscription error', err);
+            },
             complete: () => {},
           },
         ),
@@ -77,7 +89,9 @@ export function useSpotOrderSubscription(enabled: boolean, handlers: Handlers) {
               const raw = msg?.data?.orderClaimed;
               if (raw != null) handlersRef.current.onOrderClaimed?.(parse(raw));
             },
-            error: () => {},
+            error: (err) => {
+              logger.warn('orderClaimed subscription error', err);
+            },
             complete: () => {},
           },
         ),

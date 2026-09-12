@@ -5,9 +5,9 @@ import {
   setTokens,
   clearTokens,
 } from "./auth-storage";
+import { publicConfig } from "./public-config";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/graphql";
+const API_URL = publicConfig.apiUrl;
 
 type GraphQLResponse<T> = {
   data?: T;

@@ -72,7 +72,12 @@ export class OrderPointsService {
     userId: string,
     points: number,
     orderId: string,
-    prisma: PrismaClient
+    prisma: PrismaClient,
+    meta: { type: TransactionType; description: string; referenceType: string } = {
+      type: TransactionType.EARNED,
+      description: 'Points earned from order',
+      referenceType: 'order',
+    },
   ): Promise<void> {
     let balance = await prisma.pointBalance.findUnique({ where: { userId } });
     if (!balance) {
@@ -92,11 +97,11 @@ export class OrderPointsService {
     await prisma.pointTransaction.create({
       data: {
         userId,
-        type: TransactionType.EARNED,
+        type: meta.type,
         amount: points,
-        description: 'Points earned from order',
+        description: meta.description,
         referenceId: orderId,
-        referenceType: 'order',
+        referenceType: meta.referenceType,
         balanceBefore: balance.availablePoints,
         balanceAfter: newBalance.availablePoints,
       },
@@ -108,6 +113,25 @@ export class OrderPointsService {
       newBalance.availablePoints,
       points
     );
+  }
+
+  /**
+   * Extra bonus points when a spot cancels an order (apology). Does not flip
+   * `pointsAwarded` — that's for the purchase itself. No push here: the
+   * terminate mutation sends one combined apology notification.
+   */
+  static async awardApologyPoints(
+    userId: string,
+    orderId: string,
+    points: number,
+    prisma: PrismaClient,
+  ): Promise<void> {
+    if (points <= 0) return;
+    await this.creditBalance(userId, points, orderId, prisma, {
+      type: TransactionType.BONUS,
+      description: 'Apology points for cancelled order',
+      referenceType: 'order_apology',
+    });
   }
 
   /**

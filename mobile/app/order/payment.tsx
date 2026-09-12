@@ -2,7 +2,8 @@ import { useCart } from '@/hooks/useCart';
 import { useSpotDetail } from '@/hooks/useTastes';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
 import { createOrder, createPaymentIntent, confirmOrderPayment, CreateOrderInput } from '@repo/api-client';
-import { useStripe } from '@stripe/stripe-react-native';
+import { config } from '@/config';
+import { initStripe, useStripe } from '@stripe/stripe-react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -123,14 +124,23 @@ export default function PaymentScreen() {
       }
       const clientSecret = piRes.data;
 
-      // 3. Present the PaymentSheet (card / Apple Pay / Google Pay / BLIK).
+      // 3. Native Stripe must already have merchantIdentifier before Apple Pay
+      // is enabled — StripeProvider's useEffect can race / skip if the key
+      // was empty on first mount.
+      await initStripe({
+        publishableKey: config.STRIPE_PUBLISHABLE_KEY,
+        merchantIdentifier: config.STRIPE_MERCHANT_IDENTIFIER,
+        urlScheme: config.STRIPE_URL_SCHEME,
+      });
+
+      // 4. Present the PaymentSheet (card / Apple Pay / Google Pay / BLIK).
       const initRes = await initPaymentSheet({
         merchantDisplayName: 'Loodly',
         paymentIntentClientSecret: clientSecret,
         applePay: { merchantCountryCode: 'PL' },
         googlePay: { merchantCountryCode: 'PL', currencyCode: 'PLN', testEnv: true },
         allowsDelayedPaymentMethods: true,
-        returnURL: 'gelato://order/success',
+        returnURL: `${config.STRIPE_URL_SCHEME}://order/success`,
       });
       if (initRes.error) throw new Error(initRes.error.message);
 
@@ -143,12 +153,12 @@ export default function PaymentScreen() {
         return;
       }
 
-      // 4. Confirm server-side so the order is committed + sent to the spot
+      // 5. Confirm server-side so the order is committed + sent to the spot
       // immediately (don't wait on the Stripe webhook, which may not reach us
       // in dev). Best-effort: if this fails the webhook is still the backstop.
       await confirmOrderPayment(order.id, auth).catch(() => {});
 
-      // 5. Success — clear cart, go to confetti screen.
+      // 6. Success — clear cart, go to confetti screen.
       goToSuccess(order);
     } catch (e) {
       Alert.alert(t('Payment.paymentFailed'), (e as Error).message);

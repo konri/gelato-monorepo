@@ -26,6 +26,15 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME}.html -f
 RewriteRule ^(.*)$ $1.html [L]
 
+# /spots/:id that has no pre-rendered .html (new spots, or a build that
+# could not fetch the spot list). Do NOT send these to index.html — that
+# hydrates the homepage and the pretty URL is lost. Serve the shared
+# spot-detail shell; the client reads the real id from the browser URL.
+RewriteCond %{REQUEST_URI} ^/spots/[^/]+/?$
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME}.html !-f
+RewriteRule ^spots/([^/]+)/?$ spots/__fallback.html [L]
+
 # True 404s (no matching file, directory, or .html) and any other
 # not-found request fall back to index.html.
 RewriteCond %{REQUEST_FILENAME} !-f

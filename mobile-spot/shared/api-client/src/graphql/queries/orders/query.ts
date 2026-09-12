@@ -43,6 +43,15 @@ export const ORDER_DETAIL_QUERY = gql`
       courierPhoto
       courierPhone
       pickupCode
+      terminationReason
+      apologyPoints
+      review {
+        id
+        spotRating
+        courierRating
+        overallRating
+        comment
+      }
       spot {
         id
         name

@@ -1,6 +1,7 @@
 import Lockup from '@/assets/images/loodly_lockup.svg';
 import { Typography } from '@/components/atoms/Typography';
 import { SpotOrderCard } from '@/components/molecules/SpotOrderCard';
+import { useToast } from '@/components/organisms/ToastProvider';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
 import { TAB_BAR_TOTAL_HEIGHT } from '@/constants/tabBarStyles';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
@@ -9,8 +10,10 @@ import {
   advanceOrderStatus,
   claimOrder,
   getStoredSpotContext,
+  terminateOrder,
   useSpotOrders,
 } from '@/hooks/useSpotOrders';
+import { scheduledForSortKey } from '@/utils/scheduledFor';
 import { getSpotUnreadCount } from '@repo/api-client';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
@@ -33,6 +36,7 @@ export default function SpotOrdersScreen() {
   const { isWide } = useBreakpoint();
   // Active orders = anything not yet ready/delivered. We fetch all and filter.
   const { orders, loading, refetch, setOrders } = useSpotOrders(null);
+  const toast = useToast();
   const [refreshing, setRefreshing] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [unread, setUnread] = useState(0);
@@ -92,9 +96,22 @@ export default function SpotOrdersScreen() {
     await refetch();
   };
 
+  const handleCancel = async (id: string, reason: string, points: number) => {
+    const res = await terminateOrder(id, reason, points);
+    if (res.error || !res.data) {
+      throw new Error(res.error?.message || t('OrderTrack.terminateFailed'));
+    }
+    setOrders((prev) => prev.filter((o) => o.id !== id));
+    toast.success(t('CancelOrder.done'));
+    await refetch();
+  };
+
   // Active queue: pending (need claiming) + preparing (in progress).
-  const pending = orders.filter((o) => o.status === 'PENDING');
-  const preparing = orders.filter((o) => o.status === 'PREPARING');
+  // ASAP / earlier ready times first so tomorrow's orders sit below today's.
+  const byReady = (a: (typeof orders)[number], b: (typeof orders)[number]) =>
+    scheduledForSortKey(a.scheduledFor) - scheduledForSortKey(b.scheduledFor);
+  const pending = orders.filter((o) => o.status === 'PENDING').sort(byReady);
+  const preparing = orders.filter((o) => o.status === 'PREPARING').sort(byReady);
   // Empty state is about the ACTIVE queue, not the raw fetch — otherwise a spot
   // whose orders are all READY/on-the-way rendered a blank page (looked broken).
   const noActive = pending.length === 0 && preparing.length === 0;
@@ -196,6 +213,7 @@ export default function SpotOrdersScreen() {
                       currentUserId={userId}
                       onClaim={handleClaim}
                       onMarkReady={handleMarkReady}
+                      onCancel={handleCancel}
                     />
                   ))}
                 </View>
@@ -215,6 +233,7 @@ export default function SpotOrdersScreen() {
                       currentUserId={userId}
                       onClaim={handleClaim}
                       onMarkReady={handleMarkReady}
+                      onCancel={handleCancel}
                     />
                   ))}
                 </View>

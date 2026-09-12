@@ -191,15 +191,26 @@ export default {
     empty: 'To powiadomienie nie jest już dostępne',
     viewOrder: 'Zobacz zamówienie',
     viewNews: 'Czytaj aktualność',
+    viewPoints: 'Zobacz punkty',
     order: {
       preparing: { title: 'Zamówienie przyjęte', body: 'Zamówienie #{{number}} jest przygotowywane.' },
       ready: { title: 'Zamówienie gotowe', body: 'Zamówienie #{{number}} jest gotowe.' },
       delivered: { title: 'Zamówienie dostarczone', body: 'Zamówienie #{{number}} zostało dostarczone. Smacznego!' },
       collected: { title: 'Zamówienie odebrane', body: 'Zamówienie #{{number}} zostało odebrane. Smacznego!' },
       cancelled: { title: 'Zamówienie anulowane', body: 'Zamówienie #{{number}} zostało anulowane.' },
+      terminated: {
+        title: 'Zamówienie anulowane',
+        body: 'Przykro nam — zamówienie #{{number}} zostało anulowane.{{reason}}{{apology}}',
+        reason: ' Powód: {{reason}}.',
+        apology: ' W ramach przeprosin otrzymujesz {{points}} punktów.',
+      },
       generic: { title: 'Aktualizacja zamówienia', body: 'Zamówienie #{{number}} zostało zaktualizowane.' }
     },
-    news: { title: 'Aktualności', body: '{{title}}' }
+    news: { title: 'Aktualności', body: '{{title}}' },
+    pointsEarned: {
+      title: 'Zdobyłeś punkty!',
+      body: '+{{points}} pkt. Masz teraz {{totalPoints}} punktów.',
+    },
   },
   OrderChat: {
     title: 'Wiadomości',
@@ -267,9 +278,6 @@ export default {
     facebookNotImplemented: 'Logowanie przez Facebook nie jest jeszcze zaimplementowane',
     appleNotImplemented: 'Logowanie przez Apple nie jest jeszcze zaimplementowane',
     off: 'ZNIŻKI'
-  },
-  Mapbox: {
-    requiresNativeBuild: "Mapa wymaga natywnego builda aplikacji.\nUruchom: npm run ios lub npm run android",
   },
   NotFound: {
     title: 'Ups!',
@@ -553,6 +561,7 @@ export default {
     tasks: 'Zadania',
     yourBalance: 'Twoje saldo',
     points: 'punktów',
+    pointsGained: '+{{points}}',
     redeemPoints: 'Wymień punkty',
     yourQrCode: 'Twój kod QR',
     qrInstructions: 'Pokaż ten kod QR w dowolnym lokalu Loodly, aby zdobyć punkty',
@@ -678,6 +687,8 @@ export default {
     terminated: {
       title: 'Zamówienie anulowane',
       body: 'Bardzo nam przykro — lokal musiał anulować to zamówienie. Zwrot pieniędzy jest w drodze i dotrze najszybciej jak to możliwe. Punkty lojalnościowe za to zamówienie zostały zachowane.',
+      reason: 'Powód: {{reason}}',
+      points: 'W ramach przeprosin otrzymujesz {{points}} punktów. Przepraszamy za niedogodność.',
     },
     tracking: {
       title: 'Śledzenie zamówienia',
@@ -811,9 +822,13 @@ export default {
     used: 'Wykorzystana',
     redeemedOn: 'Wykorzystano {{date}}',
     successTitle: 'Nagroda aktywowana! 🎉',
-    successBody: 'Znajdziesz ją w „Moje nagrody” i pokaż kod QR w lokalu.',
+    successBody: 'Znajdziesz ją w „Moje nagrody”. Pokaż kod QR albo kod do wpisania w lokalu.',
     redeemFailed: 'Nie udało się aktywować nagrody',
-    showAtSpot: 'Pokaż ten kod w lokalu',
+    showAtSpot: 'Pokaż ten kod QR w lokalu',
+    claimCode: 'Kod odbioru',
+    tapToCopy: 'Dotknij, aby skopiować',
+    codeCopied: 'Skopiowano',
+    orTypeAtSpot: 'Jeśli lokal nie ma skanera, mogą wpisać ten kod.',
   },
   News: {
     empty: 'Brak aktualności',

@@ -1,6 +1,9 @@
 import { Typography } from '@/components/atoms/Typography';
+import { CancelOrderModal, type ApologyPoints } from '@/components/molecules/CancelOrderModal';
+import { ReadyByRow } from '@/components/molecules/ReadyByRow';
 import { SpotOrder } from '@repo/api-client';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, View } from 'react-native';
@@ -10,13 +13,16 @@ type Props = {
   currentUserId: string | null;
   onClaim: (id: string) => Promise<void>;
   onMarkReady: (id: string) => Promise<void>;
+  onCancel: (id: string, reason: string, points: ApologyPoints) => Promise<void>;
 };
 
 // One spot order. PENDING → big Accept button (claim to prepare). PREPARING →
-// shows who's preparing + a Mark ready action for the claimer.
-export function SpotOrderCard({ order, currentUserId, onClaim, onMarkReady }: Props) {
+// shows who's preparing + a Mark ready action for the claimer. Tap the card to
+// open details / chat. Cancel is always available while the order is active.
+export function SpotOrderCard({ order, currentUserId, onClaim, onMarkReady, onCancel }: Props) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   const itemCount = order.items?.reduce((s, i) => s + (i.quantity ?? 1), 0) ?? 0;
   const isPending = order.status === 'PENDING';
@@ -33,85 +39,99 @@ export function SpotOrderCard({ order, currentUserId, onClaim, onMarkReady }: Pr
     }
   };
 
+  const goToDetails = () => router.push(`/order/${order.id}` as never);
+
   return (
     <View
       className="rounded-2xl bg-white p-4 shadow-sm"
       style={isPending ? { borderWidth: 2, borderColor: '#EC2828' } : undefined}
     >
-      <View className="flex-row items-center justify-between">
-        <Typography variant="body-base-bold" className="text-text-primary">
-          {t('Spot.orderNumber', { number: order.orderNumber })}
-        </Typography>
-        <Typography variant="body-base-bold" className="text-primary">
-          {order.total.toFixed(2)} zł
-        </Typography>
-      </View>
-
-      <View className="mt-1 flex-row items-center">
-        <Ionicons name="cube-outline" size={15} color="#6B7280" />
-        <Typography variant="body-small-regular" className="ml-2 text-gray-600">
-          {t('Spot.itemsCount', { count: itemCount })}
-        </Typography>
-        {/* Fulfillment badge so staff know pickup orders have no courier. */}
-        <View
-          className="ml-2 flex-row items-center rounded-full px-2 py-0.5"
-          style={{ backgroundColor: isPickup ? '#FEECEC' : '#EEF2FF' }}
-        >
-          <Ionicons
-            name={isPickup ? 'storefront-outline' : 'bicycle-outline'}
-            size={12}
-            color={isPickup ? '#EC2828' : '#4F46E5'}
-          />
-          <Typography
-            variant="body-very-small-medium"
-            className="ml-1"
-            style={{ color: isPickup ? '#EC2828' : '#4F46E5' }}
-          >
-            {t(isPickup ? 'Spot.pickup' : 'Spot.delivery')}
+      <Pressable onPress={goToDetails}>
+        <View className="flex-row items-center justify-between">
+          <Typography variant="body-base-bold" className="text-text-primary">
+            {t('Spot.orderNumber', { number: order.orderNumber })}
+          </Typography>
+          <Typography variant="body-base-bold" className="text-primary">
+            {order.total.toFixed(2)} zł
           </Typography>
         </View>
-      </View>
 
-      {/* Customer — who ordered. */}
-      {!!order.customerName && (
         <View className="mt-1 flex-row items-center">
-          <Ionicons name="person-outline" size={15} color="#6B7280" />
+          <Ionicons name="cube-outline" size={15} color="#6B7280" />
           <Typography variant="body-small-regular" className="ml-2 text-gray-600">
-            {order.customerName}
+            {t('Spot.itemsCount', { count: itemCount })}
           </Typography>
+          {/* Fulfillment badge so staff know pickup orders have no courier. */}
+          <View
+            className="ml-2 flex-row items-center rounded-full px-2 py-0.5"
+            style={{ backgroundColor: isPickup ? '#FEECEC' : '#EEF2FF' }}
+          >
+            <Ionicons
+              name={isPickup ? 'storefront-outline' : 'bicycle-outline'}
+              size={12}
+              color={isPickup ? '#EC2828' : '#4F46E5'}
+            />
+            <Typography
+              variant="body-very-small-medium"
+              className="ml-1"
+              style={{ color: isPickup ? '#EC2828' : '#4F46E5' }}
+            >
+              {t(isPickup ? 'Spot.pickup' : 'Spot.delivery')}
+            </Typography>
+          </View>
         </View>
-      )}
 
-      {/* What to prepare: line items with names + quantities. */}
-      {order.items?.length > 0 && (
-        <View className="mt-2 rounded-lg bg-gray-50 p-2.5">
-          {order.items.map((it) => (
-            <View key={it.id} className="mb-1">
-              <View className="flex-row">
-                <Typography variant="body-small-semibold" className="text-text-primary">
-                  {it.quantity}×
-                </Typography>
-                <Typography variant="body-small-regular" className="ml-2 flex-1 text-text-primary">
-                  {it.displayName ?? t('Spot.item')}
-                </Typography>
+        <ReadyByRow scheduledFor={order.scheduledFor} className="mt-1" />
+
+        {/* Customer — who ordered. */}
+        {!!order.customerName && (
+          <View className="mt-1 flex-row items-center">
+            <Ionicons name="person-outline" size={15} color="#6B7280" />
+            <Typography variant="body-small-regular" className="ml-2 text-gray-600">
+              {order.customerName}
+            </Typography>
+          </View>
+        )}
+
+        {/* What to prepare: line items with names + quantities. */}
+        {order.items?.length > 0 && (
+          <View className="mt-2 rounded-lg bg-gray-50 p-2.5">
+            {order.items.map((it) => (
+              <View key={it.id} className="mb-1">
+                <View className="flex-row">
+                  <Typography variant="body-small-semibold" className="text-text-primary">
+                    {it.quantity}×
+                  </Typography>
+                  <Typography variant="body-small-regular" className="ml-2 flex-1 text-text-primary">
+                    {it.displayName ?? t('Spot.item')}
+                  </Typography>
+                </View>
+                {!!it.boxTasteNames?.length && (
+                  <Typography variant="body-very-small-medium" className="ml-5 text-gray-500">
+                    {it.boxTasteNames.join(', ')}
+                  </Typography>
+                )}
               </View>
-              {!!it.boxTasteNames?.length && (
-                <Typography variant="body-very-small-medium" className="ml-5 text-gray-500">
-                  {it.boxTasteNames.join(', ')}
-                </Typography>
-              )}
-            </View>
-          ))}
-        </View>
-      )}
+            ))}
+          </View>
+        )}
 
-      {!!order.noteForSpot && (
-        <View className="mt-2 rounded-lg bg-amber-50 p-2">
-          <Typography variant="body-small-regular" style={{ color: '#92400E' }}>
-            {t('Spot.note')}: {order.noteForSpot}
+        {!!order.noteForSpot && (
+          <View className="mt-2 rounded-lg bg-amber-50 p-2">
+            <Typography variant="body-small-regular" style={{ color: '#92400E' }}>
+              {t('Spot.note')}: {order.noteForSpot}
+            </Typography>
+          </View>
+        )}
+
+        <View className="mt-2 flex-row items-center">
+          <Ionicons name="chatbubbles-outline" size={15} color="#EC2828" />
+          <Typography variant="body-small-semibold" className="ml-1.5" style={{ color: '#EC2828' }}>
+            {t('Spot.chatWithClient')}
           </Typography>
+          <Ionicons name="chevron-forward" size={14} color="#EC2828" style={{ marginLeft: 2 }} />
         </View>
-      )}
+      </Pressable>
 
       {isPending ? (
         <Pressable
@@ -153,6 +173,25 @@ export function SpotOrderCard({ order, currentUserId, onClaim, onMarkReady }: Pr
           )}
         </View>
       )}
+
+      <Pressable
+        onPress={() => setCancelOpen(true)}
+        disabled={busy}
+        className="mt-2 flex-row items-center justify-center rounded-xl border py-3"
+        style={{ borderColor: '#FCA5A5', opacity: busy ? 0.6 : 1 }}
+      >
+        <Ionicons name="close-circle-outline" size={18} color="#DC2626" />
+        <Typography variant="body-base-semibold" className="ml-2" style={{ color: '#DC2626' }}>
+          {t('Spot.cancelOrder')}
+        </Typography>
+      </Pressable>
+
+      <CancelOrderModal
+        visible={cancelOpen}
+        orderNumber={order.orderNumber}
+        onClose={() => setCancelOpen(false)}
+        onConfirm={(reason, pts) => onCancel(order.id, reason, pts)}
+      />
     </View>
   );
 }

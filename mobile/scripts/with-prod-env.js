@@ -20,6 +20,12 @@ Object.assign(process.env, {
   EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID:
     process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ||
     '268509902642-fs458nip621upn9ops28edfdjvqi5ml8.apps.googleusercontent.com',
+  EXPO_PUBLIC_GOOGLE_MAPS_API_KEY:
+    process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ||
+    'AIzaSyD-RP8vcHqSgv_xgC5mhVxF_A_hNu8Joeo',
+  EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY:
+    process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
+    'pk_test_51TcVfe8uoyf2v2KaHScAmH7Q2IONBUvuc9rTldpjDfuFkdNOcdV4dEuy13kuHMBiKhWGJInI8S7USh3pPHTZyw8g00YSQ66dtf',
 });
 
 require(path.join(__dirname, 'show-api-info.js'));

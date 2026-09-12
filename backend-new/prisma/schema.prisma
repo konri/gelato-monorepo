@@ -503,6 +503,8 @@ model Order {
   // Spot termination (out of stock / closing) — refund issued, points kept.
   terminatedAt      DateTime?
   terminationReason String?   @db.Text
+  // Extra loyalty points credited as an apology when the spot cancels.
+  apologyPoints     Int?
   refundedAt        DateTime?
 
   // Tracking

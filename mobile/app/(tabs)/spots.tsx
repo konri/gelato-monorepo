@@ -138,7 +138,16 @@ export default function SpotsScreen() {
 
       {/* Header overlay */}
       <View className="absolute left-0 right-0 px-6" style={{ top: insets.top + 8 }} pointerEvents="none">
-        <View className="self-start bg-white rounded-full px-4 py-2 shadow">
+        <View
+          className="self-start bg-white rounded-full px-4 py-2"
+          style={{
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.12,
+            shadowRadius: 3,
+            elevation: 3,
+          }}
+        >
           <Text className="text-lg font-urbanist-bold text-text-primary">{t('Spots.title')}</Text>
         </View>
       </View>
@@ -149,7 +158,16 @@ export default function SpotsScreen() {
           <ActivityIndicator size="large" color="#EC2828" />
         </View>
       ) : spotList.length === 0 ? (
-        <View className="absolute bottom-10 left-6 right-6 bg-white rounded-2xl p-6 items-center shadow">
+        <View
+          className="absolute bottom-10 left-6 right-6 bg-white rounded-2xl p-6 items-center"
+          style={{
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.12,
+            shadowRadius: 3,
+            elevation: 3,
+          }}
+        >
           <Text className="text-4xl mb-2">🍨</Text>
           <Text className="font-urbanist text-text-secondary text-center">{t('Spots.noSpots')}</Text>
         </View>
@@ -198,7 +216,8 @@ const SpotCarouselCard = ({
         <Image url={spot.coverUrl ?? undefined} className="w-full h-32" resizeMode="cover" fallbackLogoSize={40} />
         {/* Favorite heart */}
         <Pressable
-          className="absolute top-2 right-2 bg-white/90 rounded-full p-2"
+          className="absolute top-2 right-2 rounded-full p-2"
+          style={{ backgroundColor: 'rgba(255,255,255,0.9)' }}
           hitSlop={8}
           onPress={() => fav.toggle(spot.id, favorited)}
         >

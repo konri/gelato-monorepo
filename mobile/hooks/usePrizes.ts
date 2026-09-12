@@ -9,6 +9,7 @@ import {
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
 import { useCallback, useState } from 'react';
 import { useGraphQLQuery } from './useGraphQLQuery';
+import { refreshEmitter } from './useRefreshEmitter';
 
 export const usePrizes = () => useGraphQLQuery<Prize[]>(getPrizes, {}, []);
 
@@ -26,6 +27,7 @@ export const useRedeemPrize = () => {
     try {
       const token = await safeGetItem('access_token');
       const res = await redeemPrize(prizeId, { token: token ?? undefined });
+      if (res.success) refreshEmitter.emit();
       return res;
     } finally {
       setRedeeming(false);

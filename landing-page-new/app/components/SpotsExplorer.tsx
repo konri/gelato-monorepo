@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import type { City, Spot } from "../lib/types";
 import { fetchCities, fetchAllSpots, fetchSpotsByCity } from "../lib/api";
+import { publicConfig } from "../lib/public-config";
 import { useI18n } from "../i18n/I18nProvider";
 import { CitySelector } from "./CitySelector";
 import { SpotCard } from "./SpotCard";
@@ -14,7 +15,7 @@ const SpotsMap = dynamic(
   { ssr: false },
 );
 
-const hasMapsKey = Boolean(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY);
+const hasMapsKey = Boolean(publicConfig.googleMapsApiKey);
 
 type View = "map" | "list";
 

@@ -28,6 +28,7 @@ const typeIcon: Record<string, keyof typeof Ionicons.glyphMap> = {
   ORDER_OUT_FOR_DELIVERY: 'bicycle-outline',
   ORDER_DELIVERED: 'checkmark-done-outline',
   ORDER_CANCELLED: 'close-circle-outline',
+  ORDER_TERMINATED: 'close-circle-outline',
   COURIER_ASSIGNED: 'person-outline',
   COURIER_NEARBY: 'navigate-outline',
   POINTS_EARNED: 'star-outline',

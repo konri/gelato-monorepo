@@ -1,25 +1,33 @@
 import { useMyPrizes } from '@/hooks/usePrizes';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, Clipboard, Pressable, Text, View } from 'react-native';
 import QRCodeSVG from 'react-native-qrcode-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const fmt = (d: string) => new Date(d).toLocaleDateString();
 
-// Shows the QR code for a claimed prize to present at the spot.
+// Shows the QR code and a typeable claim code for a claimed prize.
 export default function MyPrizeScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: myPrizes, loading } = useMyPrizes();
+  const [copied, setCopied] = useState(false);
 
   const userPrize = useMemo(
     () => (myPrizes ?? []).find((p) => p.id === id) ?? null,
     [myPrizes, id],
   );
+
+  const copyCode = () => {
+    if (!userPrize) return;
+    Clipboard.setString(userPrize.qrCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (loading) {
     return (
@@ -56,6 +64,30 @@ export default function MyPrizeScreen() {
         <Text className="font-urbanist text-text-secondary mt-2 text-center">
           {t('Prizes.showAtSpot')}
         </Text>
+
+        <Pressable
+          onPress={copyCode}
+          className="mt-5 w-full bg-gray-50 rounded-2xl py-4 px-4"
+        >
+          <Text className="text-xs text-gray-500 text-center font-urbanist mb-1">
+            {t('Prizes.claimCode')}
+          </Text>
+          <Text
+            selectable
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            className="text-2xl font-mono font-urbanist-bold text-gray-900 text-center tracking-widest"
+          >
+            {userPrize.qrCode}
+          </Text>
+          <Text className="text-xs text-gray-400 text-center font-urbanist mt-2">
+            {copied ? t('Prizes.codeCopied') : t('Prizes.tapToCopy')}
+          </Text>
+        </Pressable>
+        <Text className="font-urbanist text-text-tertiary text-xs mt-3 text-center">
+          {t('Prizes.orTypeAtSpot')}
+        </Text>
+
         <Text className="font-urbanist text-text-tertiary text-xs mt-4">
           {t('Prizes.validUntil', { date: fmt(userPrize.validUntil) })}
         </Text>

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Loodly Spot",
     "slug": "gelato-spot",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo_new_spot.png",
@@ -47,7 +47,12 @@
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
-      ]
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyD-RP8vcHqSgv_xgC5mhVxF_A_hNu8Joeo"
+        }
+      }
     },
     "web": {
       "bundler": "metro",

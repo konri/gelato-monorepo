@@ -191,15 +191,26 @@ export default {
     empty: 'This notification is no longer available',
     viewOrder: 'View order',
     viewNews: 'Read news',
+    viewPoints: 'View points',
     order: {
       preparing: { title: 'Order accepted', body: 'Order #{{number}} is being prepared.' },
       ready: { title: 'Order ready', body: 'Order #{{number}} is ready.' },
       delivered: { title: 'Order delivered', body: 'Order #{{number}} has been delivered. Enjoy!' },
       collected: { title: 'Order collected', body: 'Order #{{number}} has been collected. Enjoy!' },
       cancelled: { title: 'Order cancelled', body: 'Order #{{number}} was cancelled.' },
+      terminated: {
+        title: 'Order cancelled',
+        body: "We're sorry — order #{{number}} was cancelled.{{reason}}{{apology}}",
+        reason: ' Reason: {{reason}}.',
+        apology: " You've received {{points}} points as an apology.",
+      },
       generic: { title: 'Order update', body: 'Order #{{number}} was updated.' }
     },
-    news: { title: 'News', body: '{{title}}' }
+    news: { title: 'News', body: '{{title}}' },
+    pointsEarned: {
+      title: 'Points earned!',
+      body: '+{{points}} pts. You now have {{totalPoints}} points.',
+    },
   },
   OrderChat: {
     title: 'Messages',
@@ -267,9 +278,6 @@ export default {
     facebookNotImplemented: 'Facebook login is not implemented yet',
     appleNotImplemented: 'Apple login is not implemented yet',
     off: 'OFF'
-  },
-  Mapbox: {
-    requiresNativeBuild: "Map requires native app build.\nRun: npm run ios or npm run android",
   },
   NotFound: {
     title: 'Oops!',
@@ -552,6 +560,7 @@ export default {
     tasks: 'Tasks',
     yourBalance: 'Your balance',
     points: 'points',
+    pointsGained: '+{{points}}',
     redeemPoints: 'Redeem Points',
     yourQrCode: 'Your QR Code',
     qrInstructions: 'Show this QR code at any Loodly spot to earn points',
@@ -675,6 +684,8 @@ export default {
     terminated: {
       title: 'Order cancelled',
       body: "We're deeply sorry — the spot had to cancel this order. Your refund is on its way and will arrive as soon as possible. Your loyalty points for this order have been kept.",
+      reason: 'Reason: {{reason}}',
+      points: "You've received {{points}} points as an apology. We're sorry for the inconvenience.",
     },
     tracking: {
       title: 'Order tracking',
@@ -808,9 +819,13 @@ export default {
     used: 'Used',
     redeemedOn: 'Redeemed {{date}}',
     successTitle: 'Prize activated! 🎉',
-    successBody: 'Find it in “My prizes” and show the QR code at the spot.',
+    successBody: 'Find it in “My prizes” and show the QR or the claim code at the spot.',
     redeemFailed: 'Could not activate prize',
-    showAtSpot: 'Show this code at the spot',
+    showAtSpot: 'Show this QR at the spot',
+    claimCode: 'Claim code',
+    tapToCopy: 'Tap to copy',
+    codeCopied: 'Copied',
+    orTypeAtSpot: 'If the spot has no scanner, they can type this code.',
   },
   News: {
     empty: 'No news available at the moment',

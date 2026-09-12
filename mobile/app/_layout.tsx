@@ -44,7 +44,8 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <StripeProvider
           publishableKey={config.STRIPE_PUBLISHABLE_KEY}
-          merchantIdentifier="merchant.com.konradhopek.gelato.client"
+          merchantIdentifier={config.STRIPE_MERCHANT_IDENTIFIER}
+          urlScheme={config.STRIPE_URL_SCHEME}
         >
           <CartProvider>
           <ToastProvider>

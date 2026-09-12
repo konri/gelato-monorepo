@@ -108,7 +108,7 @@ export default function OrderTrackingScreen() {
           </Text>
         </View>
 
-        {/* Apology + refund note when the spot terminated the order. */}
+        {/* Apology + refund note when the spot cancelled the order. */}
         {terminated && (
           <View className="mt-4 rounded-2xl bg-red-50 px-4 py-4">
             <Text className="font-urbanist-bold text-red-700 mb-1">
@@ -117,6 +117,16 @@ export default function OrderTrackingScreen() {
             <Text className="font-urbanist text-red-700 leading-5">
               {t('Ordering.terminated.body')}
             </Text>
+            {!!order.terminationReason && (
+              <Text className="font-urbanist text-red-700 leading-5 mt-2">
+                {t('Ordering.terminated.reason', { reason: order.terminationReason })}
+              </Text>
+            )}
+            {!!order.apologyPoints && (
+              <Text className="font-urbanist-semibold text-red-700 leading-5 mt-2">
+                {t('Ordering.terminated.points', { points: order.apologyPoints })}
+              </Text>
+            )}
           </View>
         )}
 

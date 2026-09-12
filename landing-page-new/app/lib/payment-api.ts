@@ -65,6 +65,21 @@ export async function createPaymentIntent(orderId: string): Promise<string> {
 }
 
 /**
+ * Mark an order paid after Stripe.js reports success. Same mutation the
+ * mobile app calls so the spot is notified immediately even if the Stripe
+ * webhook is delayed or can't reach us.
+ */
+export async function confirmOrderPayment(orderId: string): Promise<boolean> {
+  const data = await authGql<{ confirmOrderPayment: boolean }>(
+    `mutation ConfirmOrderPayment($orderId: ID!) {
+      confirmOrderPayment(orderId: $orderId)
+    }`,
+    { orderId },
+  );
+  return data.confirmOrderPayment;
+}
+
+/**
  * Poll an order's payment status (paid | pending | failed | canceled | refunded).
  * Useful after redirect-based payment methods (BLIK, some wallets).
  */

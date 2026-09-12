@@ -6,8 +6,10 @@ export type OrderStatus =
   | 'PICKED_UP'
   | 'IN_TRANSIT'
   | 'DELIVERED'
+  | 'COLLECTED'
   | 'CANCELLED'
-  | 'FAILED';
+  | 'FAILED'
+  | 'TERMINATED';
 
 export type OrderSpot = {
   id: string;
@@ -45,6 +47,14 @@ export type OrderListEntry = {
   items: OrderItem[];
 };
 
+export type OrderReview = {
+  id: string;
+  spotRating: number;
+  courierRating?: number | null;
+  overallRating: number;
+  comment?: string | null;
+};
+
 export type OrderDetail = OrderListEntry & {
   subtotal: number;
   discount: number;
@@ -59,6 +69,9 @@ export type OrderDetail = OrderListEntry & {
   courierPhoto?: string | null;
   courierPhone?: string | null;
   pickupCode?: string | null;
+  terminationReason?: string | null;
+  apologyPoints?: number | null;
+  review?: OrderReview | null;
 };
 
 export type MyOrdersResponse = { myOrders: OrderListEntry[] };

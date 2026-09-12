@@ -44,11 +44,23 @@ export class CodeGenerator {
    * can read it off a screen and type it without confusion.
    */
   static generateLoyaltyCode(): string {
+    return `GL-${this.generateUnambiguous(8)}`;
+  }
+
+  /**
+   * Generate a short prize claim code cashiers can type when they have no
+   * scanner. Format: PR-XXXXXXXX, same unambiguous alphabet as loyalty codes.
+   */
+  static generatePrizeCode(): string {
+    return `PR-${this.generateUnambiguous(8)}`;
+  }
+
+  private static generateUnambiguous(length: number): string {
     const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let body = '';
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < length; i++) {
       body += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
     }
-    return `GL-${body}`;
+    return body;
   }
 }

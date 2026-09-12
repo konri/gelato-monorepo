@@ -2,9 +2,20 @@ import { StarRating } from '@/components/atoms/StarRating';
 import { createReview, getMyReview } from '@repo/api-client';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Modal, Pressable, Text, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Keyboard,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = {
   orderId: string;
@@ -92,11 +103,37 @@ const ReviewModal = ({
   onDone: () => void;
 }) => {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const scrollRef = useRef<ScrollView>(null);
   const [spotRating, setSpotRating] = useState(0);
   const [courierRating, setCourierRating] = useState(0);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const show = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const hide = Keyboard.addListener(hideEvent, () => setKeyboardHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (keyboardHeight <= 0) return;
+    const id = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
+    return () => clearTimeout(id);
+  }, [keyboardHeight]);
+
+  const scrollCommentIntoView = () => {
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
+  };
 
   const submit = async () => {
     if (spotRating < 1) {
@@ -133,8 +170,14 @@ const ReviewModal = ({
 
   return (
     <Modal transparent animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 justify-end bg-black/40">
-        <View className="rounded-t-3xl bg-white p-6">
+      <View className="flex-1 justify-end bg-black/40" style={{ paddingBottom: keyboardHeight }}>
+        <View
+          className="rounded-t-3xl bg-white px-6 pt-6"
+          style={{
+            maxHeight: '100%',
+            paddingBottom: keyboardHeight > 0 ? 16 : Math.max(insets.bottom, 24),
+          }}
+        >
           <View className="mb-3 flex-row items-center justify-between">
             <Text className="text-lg font-urbanist-bold text-text-primary">{t('Review.modalTitle')}</Text>
             <Pressable onPress={onClose} hitSlop={8}>
@@ -142,47 +185,57 @@ const ReviewModal = ({
             </Pressable>
           </View>
 
-          <Text className="mb-1 font-urbanist-semibold text-text-primary">{t('Review.spotRating')}</Text>
-          <StarRating rating={spotRating} onChange={setSpotRating} size={32} />
-
-          {hasCourier && (
-            <>
-              <Text className="mb-1 mt-4 font-urbanist-semibold text-text-primary">
-                {t('Review.courierRating')}
-              </Text>
-              <StarRating rating={courierRating} onChange={setCourierRating} size={32} />
-            </>
-          )}
-
-          <Text className="mb-1 mt-4 font-urbanist-semibold text-text-primary">{t('Review.comment')}</Text>
-          <TextInput
-            value={comment}
-            onChangeText={setComment}
-            placeholder={t('Review.commentPlaceholder')}
-            placeholderTextColor="#9CA3AF"
-            multiline
-            className="rounded-xl border border-gray-300 px-4 py-3"
-            style={{ minHeight: 80, textAlignVertical: 'top', fontFamily: 'Urbanist' }}
-          />
-
-          {error && (
-            <View className="mt-3 rounded-xl bg-red-50 px-4 py-3">
-              <Text className="font-urbanist text-red-700">{error}</Text>
-            </View>
-          )}
-
-          <Pressable
-            onPress={submit}
-            disabled={submitting}
-            className="mt-4 items-center rounded-2xl py-4"
-            style={{ backgroundColor: submitting ? '#F4A3A3' : '#EC2828' }}
+          <ScrollView
+            ref={scrollRef}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+            style={{ flexGrow: 0 }}
           >
-            {submitting ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text className="font-urbanist-bold text-white">{t('Review.submit')}</Text>
+            <Text className="mb-1 font-urbanist-semibold text-text-primary">{t('Review.spotRating')}</Text>
+            <StarRating rating={spotRating} onChange={setSpotRating} size={32} />
+
+            {hasCourier && (
+              <>
+                <Text className="mb-1 mt-4 font-urbanist-semibold text-text-primary">
+                  {t('Review.courierRating')}
+                </Text>
+                <StarRating rating={courierRating} onChange={setCourierRating} size={32} />
+              </>
             )}
-          </Pressable>
+
+            <Text className="mb-1 mt-4 font-urbanist-semibold text-text-primary">{t('Review.comment')}</Text>
+            <TextInput
+              value={comment}
+              onChangeText={setComment}
+              placeholder={t('Review.commentPlaceholder')}
+              placeholderTextColor="#9CA3AF"
+              multiline
+              onFocus={scrollCommentIntoView}
+              className="rounded-xl border border-gray-300 px-4 py-3"
+              style={{ minHeight: 80, textAlignVertical: 'top', fontFamily: 'Urbanist' }}
+            />
+
+            {error && (
+              <View className="mt-3 rounded-xl bg-red-50 px-4 py-3">
+                <Text className="font-urbanist text-red-700">{error}</Text>
+              </View>
+            )}
+
+            <Pressable
+              onPress={submit}
+              disabled={submitting}
+              className="mt-4 items-center rounded-2xl py-4"
+              style={{ backgroundColor: submitting ? '#F4A3A3' : '#EC2828' }}
+            >
+              {submitting ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text className="font-urbanist-bold text-white">{t('Review.submit')}</Text>
+              )}
+            </Pressable>
+          </ScrollView>
         </View>
       </View>
     </Modal>

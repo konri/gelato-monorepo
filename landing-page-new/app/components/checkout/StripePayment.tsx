@@ -8,7 +8,7 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { getStripe, stripeConfigured } from "../../lib/stripe";
-import { createPaymentIntent } from "../../lib/payment-api";
+import { confirmOrderPayment, createPaymentIntent } from "../../lib/payment-api";
 import { useI18n } from "../../i18n/I18nProvider";
 
 /**
@@ -16,8 +16,9 @@ import { useI18n } from "../../i18n/I18nProvider";
  * secret (same backend mutation the mobile app uses) and renders the Payment
  * Element — card, Apple/Google Pay, and BLIK per the Stripe dashboard.
  *
- * On success the backend webhook marks the order paid; here we just surface
- * the result and hand control back via onSuccess.
+ * On success we confirm with the backend (same path as mobile) so the spot
+ * is notified even if the Stripe webhook is delayed or missing; the webhook
+ * remains an idempotent backstop.
  */
 export function StripePayment({
   orderId,
@@ -80,12 +81,18 @@ export function StripePayment({
         },
       }}
     >
-      <PaymentForm onSuccess={onSuccess} />
+      <PaymentForm orderId={orderId} onSuccess={onSuccess} />
     </Elements>
   );
 }
 
-function PaymentForm({ onSuccess }: { onSuccess: () => void }) {
+function PaymentForm({
+  orderId,
+  onSuccess,
+}: {
+  orderId: string;
+  onSuccess: () => void;
+}) {
   const { t } = useI18n();
   const stripe = useStripe();
   const elements = useElements();
@@ -114,6 +121,8 @@ function PaymentForm({ onSuccess }: { onSuccess: () => void }) {
     }
 
     if (paymentIntent && paymentIntent.status === "succeeded") {
+      // Don't wait on the Stripe webhook — commit + notify the spot now.
+      await confirmOrderPayment(orderId).catch(() => {});
       onSuccess();
     } else {
       // Redirect-based method in progress, or needs another step.

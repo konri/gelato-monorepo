@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "../../i18n/I18nProvider";
 import { loginWithGoogle } from "../../lib/account-api";
+import { publicConfig } from "../../lib/public-config";
 import type { User } from "../../lib/types";
 
 const GIS_SRC = "https://accounts.google.com/gsi/client";
-const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+const CLIENT_ID = publicConfig.googleClientId;
 
 // Minimal shape of the Google Identity Services global we use.
 type GoogleIdApi = {

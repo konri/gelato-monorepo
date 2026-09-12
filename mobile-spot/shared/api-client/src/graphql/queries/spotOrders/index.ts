@@ -66,10 +66,11 @@ export const terminateOrder = async (
   id: string,
   reason: string | undefined,
   options: ApolloServerConfig = {},
+  apologyPoints?: number,
 ): Promise<GraphQLResult<boolean>> => {
   const res = await executeGraphQLQuery<{ terminateOrder: boolean }>(
     TERMINATE_ORDER_MUTATION,
-    { ...options, variables: { id, reason } },
+    { ...options, variables: { id, reason, apologyPoints } },
   );
   return { ...res, data: res.data ? res.data.terminateOrder : null };
 };

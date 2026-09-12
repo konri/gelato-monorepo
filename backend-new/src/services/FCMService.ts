@@ -15,6 +15,7 @@ export enum NotificationType {
   ORDER_OUT_FOR_DELIVERY = 'ORDER_OUT_FOR_DELIVERY',
   ORDER_DELIVERED = 'ORDER_DELIVERED',
   ORDER_CANCELLED = 'ORDER_CANCELLED',
+  ORDER_TERMINATED = 'ORDER_TERMINATED',
   COURIER_ASSIGNED = 'COURIER_ASSIGNED',
   COURIER_NEARBY = 'COURIER_NEARBY',
   COURIER_APPROVED = 'COURIER_APPROVED',
@@ -27,6 +28,7 @@ export enum NotificationType {
   SPOT_ANNOUNCEMENT = 'SPOT_ANNOUNCEMENT',
   REFERRAL_REWARD = 'REFERRAL_REWARD',
   ORDER_MESSAGE = 'ORDER_MESSAGE',
+  SPOT_NEW_ORDER = 'SPOT_NEW_ORDER',
 }
 
 /**
@@ -171,6 +173,20 @@ const notificationTemplates: Record<
     ua: {
       title: 'Замовлення скасовано',
       body: 'Ваше замовлення #{orderId} скасовано.',
+    },
+  },
+  [NotificationType.ORDER_TERMINATED]: {
+    pl: {
+      title: 'Zamówienie anulowane',
+      body: 'Przykro nam — lodziarnia musiała anulować zamówienie #{orderId}.{reason} Zwrot pieniędzy jest w drodze.{apology}',
+    },
+    en: {
+      title: 'Order cancelled',
+      body: "We're sorry — the spot had to cancel order #{orderId}.{reason} Your refund is on its way.{apology}",
+    },
+    ua: {
+      title: 'Замовлення скасовано',
+      body: 'Нам шкода — заклад був змушений скасувати замовлення #{orderId}.{reason} Повернення коштів уже в дорозі.{apology}',
     },
   },
   [NotificationType.COURIER_ASSIGNED]: {
@@ -325,6 +341,20 @@ const notificationTemplates: Record<
     ua: {
       title: 'Нове повідомлення · #{orderNumber}',
       body: '{sender}: {preview}',
+    },
+  },
+  [NotificationType.SPOT_NEW_ORDER]: {
+    pl: {
+      title: 'Nowe zamówienie!',
+      body: 'Zamówienie #{orderNumber} czeka na przyjęcie.',
+    },
+    en: {
+      title: 'New order!',
+      body: 'Order #{orderNumber} is waiting to be claimed.',
+    },
+    ua: {
+      title: 'Нове замовлення!',
+      body: 'Замовлення #{orderNumber} чекає на прийняття.',
     },
   },
 };
@@ -504,7 +534,8 @@ export class FCMService {
       return 0;
     }
 
-    const language = user.language.toLowerCase() as 'pl' | 'en' | 'ua';
+    const rawLang = (user.language ?? 'PL').toString().toLowerCase();
+    const language = (rawLang === 'en' || rawLang === 'ua' ? rawLang : 'pl') as 'pl' | 'en' | 'ua';
     let successCount = 0;
 
     for (const deviceToken of user.deviceTokens) {

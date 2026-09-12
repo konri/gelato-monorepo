@@ -33,6 +33,9 @@ export function routeFromPushData(data: StringMap | undefined): string | null {
   if (kind === 'ORDER_STATUS' || kind === 'TERMINATED' || kind.startsWith('ORDER')) {
     return data.orderId ? `/order/track/${data.orderId}` : null;
   }
+  if (kind === 'POINTS_EARNED') {
+    return '/(tabs)';
+  }
   return null;
 }
 
@@ -52,6 +55,9 @@ export function routeFromNotification(
   }
   if (type === 'order') {
     return data?.orderId ? `/order/track/${data.orderId}` : null;
+  }
+  if (type === 'POINTS_EARNED') {
+    return '/(tabs)';
   }
   return null;
 }

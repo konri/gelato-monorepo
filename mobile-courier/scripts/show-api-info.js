@@ -17,29 +17,29 @@ const envLocalContent = readEnvFile('.env.local');
 const envContent = readEnvFile('.env');
 const combined = envLocalContent + '\n' + envContent;
 
-// Extract environment
+// Extract environment (process.env wins over .env files)
 let env = process.env.EXPO_PUBLIC_ENV || 'dev';
-const envMatch = combined.match(/EXPO_PUBLIC_ENV=(\w+)/);
-if (envMatch) {
-  env = envMatch[1];
+if (!process.env.EXPO_PUBLIC_ENV) {
+  const envMatch = combined.match(/EXPO_PUBLIC_ENV=(\w+)/);
+  if (envMatch) env = envMatch[1];
 }
 
-// Extract API URLs
-function extractUrl(pattern, defaultValue) {
-  const match = combined.match(new RegExp(pattern + '=(.+)'));
+function extractUrl(key, defaultValue) {
+  if (process.env[key]) return process.env[key];
+  const match = combined.match(new RegExp(key + '=(.+)'));
   return match ? match[1].trim() : defaultValue;
 }
 
 const restApiUrl = env === 'dev'
-  ? extractUrl('EXPO_PUBLIC_BACKEND_REST_API_URL_DEV', 'http://localhost:4000')
-  : extractUrl('EXPO_PUBLIC_BACKEND_REST_API_URL_PROD', 'https://api.bonapka.pl');
+  ? extractUrl('EXPO_PUBLIC_BACKEND_REST_API_URL_DEV', 'http://localhost:4002')
+  : extractUrl('EXPO_PUBLIC_BACKEND_REST_API_URL_PROD', 'https://loodly-be-production.up.railway.app');
 
 const graphqlApiUrl = env === 'dev'
-  ? extractUrl('EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_DEV', 'http://localhost:4000/graphql')
-  : extractUrl('EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_PROD', 'https://api.bonapka.pl/graphql');
+  ? extractUrl('EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_DEV', 'http://localhost:4002/graphql')
+  : extractUrl('EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_PROD', 'https://loodly-be-production.up.railway.app/graphql');
 
 console.log('\n' + '='.repeat(60));
-console.log('🚀 Starting Loodly Mobile App');
+console.log('🚀 Starting Loodly Courier App');
 console.log('='.repeat(60));
 console.log(`📡 Environment: ${env.toUpperCase()}`);
 console.log(`🔗 REST API: ${restApiUrl}`);

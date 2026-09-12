@@ -9,6 +9,7 @@ import {
   useJsApiLoader,
 } from "@react-google-maps/api";
 import type { Spot } from "../lib/types";
+import { publicConfig } from "../lib/public-config";
 import { boundsFor, densestCitySpots, isSpotOpenNow } from "../lib/spot-utils";
 import { useI18n } from "../i18n/I18nProvider";
 
@@ -44,7 +45,7 @@ export function SpotsMap({
   showPreview = false,
 }: Props) {
   const { t } = useI18n();
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const apiKey = publicConfig.googleMapsApiKey;
   const { isLoaded } = useJsApiLoader({
     id: "gelato-google-maps",
     googleMapsApiKey: apiKey || "",

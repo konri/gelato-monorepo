@@ -122,9 +122,9 @@ export async function redispatchOrder(orderId: string) {
   return redispatchOrderApi(orderId, { token: token || undefined });
 }
 
-export async function terminateOrder(orderId: string, reason?: string) {
+export async function terminateOrder(orderId: string, reason?: string, apologyPoints?: number) {
   const token = await AsyncStorage.getItem('access_token');
-  return terminateOrderApi(orderId, reason, { token: token || undefined });
+  return terminateOrderApi(orderId, reason, { token: token || undefined }, apologyPoints);
 }
 
 export async function advanceOrderStatus(orderId: string, status: string) {

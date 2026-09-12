@@ -1,6 +1,8 @@
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
 
-const KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+import { publicConfig } from "./public-config";
+
+const KEY = publicConfig.stripePublishableKey;
 
 export const stripeConfigured = Boolean(KEY);
 

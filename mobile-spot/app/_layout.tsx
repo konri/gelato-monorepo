@@ -60,7 +60,7 @@ export default function RootLayout() {
             <Stack.Screen name="order/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" options={{ headerShown: true }} />
           </Stack>
-          {/* App-wide incoming-order alert (non-dismissable, audible). */}
+          {/* App-wide incoming-order alert (audible; dismissable when several staff). */}
           <OrderAlertProvider enabled={isLoggedIn} />
           {/* Bridges push notifications → toast / deep-link. */}
           <NotificationBridge />
