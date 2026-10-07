@@ -7,6 +7,7 @@ import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import { ReadyByRow } from '@/components/molecules/ReadyByRow';
 import { OrderChat } from '@/components/organisms/OrderChat';
 import { useToast } from '@/components/organisms/ToastProvider';
+import { useActiveSpot } from '@/hooks/useActiveSpot';
 import { staticMapUrl } from '@/services/googlePlaces';
 import { terminateOrder } from '@/hooks/useSpotOrders';
 import { collectPickupOrder, getOrderById, type OrderDetail } from '@repo/api-client';
@@ -37,6 +38,8 @@ export default function OrderTrackScreen() {
   const { id, messageId } = useLocalSearchParams<{ id: string; messageId?: string }>();
   const { width } = useWindowDimensions();
   const toast = useToast();
+  // Not spot-scoped: a push for another spot opens here without switching.
+  const { activeSpotId, spots, setActiveSpot } = useActiveSpot();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -63,9 +66,17 @@ export default function OrderTrackScreen() {
       throw new Error(res.error?.message || t('Scan.collectError'));
     }
     const pts = res.data.pointsAwarded;
-    toast.success(pts > 0 ? t('Scan.collectedWithPoints', { points: pts }) : t('Scan.collectedDone'));
+    // Points are earned at the order's brand (the brand comes from the spot list).
+    const brand = spots.find((sp) => sp.spotId === order?.spotId)?.brandName;
+    toast.success(
+      pts > 0
+        ? brand
+          ? t('Scan.collectedWithPointsAtBrand', { count: pts, brand })
+          : t('Scan.collectedWithPoints', { points: pts })
+        : t('Scan.collectedDone'),
+    );
     await load();
-  }, [id, load, t, toast]);
+  }, [id, load, t, toast, spots, order?.spotId]);
 
   const doCancel = useCallback(async (reason: string, points: number) => {
     if (!id) return;
@@ -143,6 +154,38 @@ export default function OrderTrackScreen() {
                 {t(`OrderStatus.${order.status}`, { defaultValue: String(order.status) })}
               </Typography>
             </View>
+
+            {/* The order belongs to another of the user's spots (opened from a
+                push or a link): say so and offer the switch. */}
+            {!!order.spotId &&
+              !!activeSpotId &&
+              order.spotId !== activeSpotId &&
+              spots.some((sp) => sp.spotId === order.spotId) && (
+                <View
+                  className="mb-4 rounded-2xl p-4"
+                  style={{ backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#FCD34D' }}
+                  accessibilityRole="alert"
+                >
+                  <View className="flex-row items-center">
+                    <Ionicons name="storefront-outline" size={20} color="#92400E" />
+                    <Typography variant="body-base-semibold" className="ml-2 flex-1" style={{ color: '#78350F' }}>
+                      {t('OrderTrack.otherSpotBanner', {
+                        spot: order.spot?.name ?? spots.find((sp) => sp.spotId === order.spotId)?.name ?? '',
+                      })}
+                    </Typography>
+                  </View>
+                  <Pressable
+                    onPress={() => void setActiveSpot(order.spotId as string, 'user')}
+                    accessibilityRole="button"
+                    className="mt-3 items-center justify-center rounded-xl"
+                    style={{ backgroundColor: '#92400E', minHeight: 48 }}
+                  >
+                    <Typography variant="body-base-bold" className="text-white">
+                      {t('OrderTrack.switchToSpot')}
+                    </Typography>
+                  </Pressable>
+                </View>
+              )}
 
             {(order.status === 'TERMINATED' || order.status === 'CANCELLED') && (
               <View className="mb-4 rounded-2xl bg-red-50 p-4">

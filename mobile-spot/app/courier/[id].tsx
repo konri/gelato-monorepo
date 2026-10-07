@@ -1,7 +1,9 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { withSpotScope } from '@/components/hoc/withSpotScope';
 import { ScreenHeader } from '@/components/molecules/ScreenHeader';
-import { getStoredSpotContext } from '@/hooks/useSpotOrders';
+import { useActiveSpotId } from '@/hooks/useActiveSpot';
+import { spotStore } from '@/stores/spotStore';
 import {
   getSpotCouriers,
   getSpotCourierDeliveries,
@@ -15,28 +17,31 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Image, Linking, Pressable, ScrollView, View } from 'react-native';
 
-export default function CourierDetailScreen() {
+function CourierDetailScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [courier, setCourier] = useState<SpotCourier | null>(null);
   const [deliveries, setDeliveries] = useState<SpotCourierDelivery[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const spotId = useActiveSpotId();
+
   const load = useCallback(async () => {
-    const ctx = await getStoredSpotContext();
-    if (!ctx.spotId) {
+    if (!spotId) {
       setLoading(false);
       return;
     }
     const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
     const [couriersRes, deliveriesRes] = await Promise.all([
-      getSpotCouriers(ctx.spotId, { token }),
-      getSpotCourierDeliveries(ctx.spotId, id, 50, { token }),
+      getSpotCouriers(spotId, { token }),
+      getSpotCourierDeliveries(spotId, id, 50, { token }),
     ]);
+    // Stale guard: the spot changed while loading.
+    if (spotStore.getActiveSpotId() !== spotId) return;
     setCourier((couriersRes.data ?? []).find((c) => c.courierId === id) ?? null);
     setDeliveries(deliveriesRes.data ?? []);
     setLoading(false);
-  }, [id]);
+  }, [id, spotId]);
 
   useEffect(() => {
     void load();
@@ -55,7 +60,7 @@ export default function CourierDetailScreen() {
 
   return (
     <View className="flex-1 bg-gray-50">
-      <ScreenHeader title={t('Couriers.detailTitle')} backFallback="/(tabs)/couriers" />
+      <ScreenHeader title={t('Couriers.detailTitle')} backFallback="/(tabs)/couriers" spotScoped />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         <ResponsiveContainer maxWidth={640}>
@@ -178,3 +183,5 @@ export default function CourierDetailScreen() {
     </View>
   );
 }
+
+export default withSpotScope(CourierDetailScreen);

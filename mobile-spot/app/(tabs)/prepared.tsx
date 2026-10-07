@@ -1,5 +1,7 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { withSpotScope } from '@/components/hoc/withSpotScope';
+import { TabHeader } from '@/components/organisms/TabHeader';
 import { ReadyByRow } from '@/components/molecules/ReadyByRow';
 import { AttentionOrderCard } from '@/components/organisms/AttentionOrderCard';
 import { TAB_BAR_TOTAL_HEIGHT } from '@/constants/tabBarStyles';
@@ -16,13 +18,11 @@ import {
   ScrollView,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TODAY = new Date().toDateString();
 
-export default function PreparedScreen() {
+function PreparedScreen() {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
   const { isWide } = useBreakpoint();
   // All orders; we show today's that this spot has moved past preparation.
   const { orders, loading, refetch } = useSpotOrders(null);
@@ -60,16 +60,7 @@ export default function PreparedScreen() {
 
   return (
     <View className="flex-1 bg-gray-50">
-      <View
-        className="border-b border-gray-200 bg-white px-6 pb-4"
-        style={{ paddingTop: (isWide ? 0 : insets.top) + 16 }}
-      >
-        <ResponsiveContainer>
-          <Typography variant={isWide ? 'heading-32-bold' : 'body-lg-bold'} className="text-text-primary">
-            {t('Spot.preparedTitle')}
-          </Typography>
-        </ResponsiveContainer>
-      </View>
+      <TabHeader title={t('Spot.preparedTitle')} />
 
       <ScrollView
         className="flex-1"
@@ -164,3 +155,5 @@ export default function PreparedScreen() {
     </View>
   );
 }
+
+export default withSpotScope(PreparedScreen);

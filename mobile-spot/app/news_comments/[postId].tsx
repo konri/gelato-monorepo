@@ -1,4 +1,5 @@
 import { Typography } from '@/components/atoms/Typography';
+import { withSpotScope } from '@/components/hoc/withSpotScope';
 import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import { useNewsComments } from '@/hooks/useNews';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,7 +18,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export default function SpotNewsCommentsScreen() {
+function SpotNewsCommentsScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { postId } = useLocalSearchParams<{ postId: string }>();
@@ -55,7 +56,7 @@ export default function SpotNewsCommentsScreen() {
       className="flex-1 bg-gray-50"
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScreenHeader title={t('News.replies')} />
+      <ScreenHeader title={t('News.replies')} spotScoped />
 
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 20 }}>
         {loading ? (
@@ -193,3 +194,5 @@ function CommentRow({
     </View>
   );
 }
+
+export default withSpotScope(SpotNewsCommentsScreen);

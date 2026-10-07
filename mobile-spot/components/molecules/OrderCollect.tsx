@@ -1,12 +1,16 @@
 import { Typography } from '@/components/atoms/Typography';
+import { PickupElsewhereBanner } from '@/components/molecules/Scan/PickupElsewhereBanner';
+import { useActiveSpot } from '@/hooks/useActiveSpot';
+import { spotStore } from '@/stores/spotStore';
+import { messageForError } from '@/utils/errorCodes';
 import {
-  getLoyaltyCustomer,
-  getCollectablePickupOrders,
   collectPickupOrder,
+  getCollectablePickupOrders,
+  getPickupOrdersElsewhere,
   type CollectablePickupOrder,
-  type LoyaltyCustomer,
+  type LoyaltyCard,
+  type PickupElsewhere,
 } from '@repo/api-client';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -15,47 +19,53 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 const zl = (n: number) => `${n.toFixed(2).replace(/\.00$/, '')} zł`;
 
 /**
- * After scanning a customer's loyalty QR (or typing their account code), show
- * their open pickup orders at this spot so staff can mark them collected.
- * Cash orders are settled + earn points on collection.
+ * Collect order after a card scan (BRANDS_SPEC §4.8): the customer's open
+ * pickup orders at this spot. Cash orders are settled and earn points on
+ * collection. When nothing waits here, the customer's orders at the brand's
+ * other spots are shown: switch there, or send the customer there.
  */
 export function OrderCollect({
-  userId,
+  customer,
   spotId,
   onDone,
 }: {
-  // The scanned customer id or loyalty code.
-  userId: string;
-  spotId: string | null;
+  customer: LoyaltyCard;
+  spotId: string;
   onDone: () => void;
 }) {
   const { t } = useTranslation();
+  const { activeSpot, setActiveSpot } = useActiveSpot();
 
-  const [state, setState] = useState<'loading' | 'ready' | 'notfound'>('loading');
-  const [customer, setCustomer] = useState<LoyaltyCustomer | null>(null);
+  const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [orders, setOrders] = useState<CollectablePickupOrder[]>([]);
+  const [elsewhere, setElsewhere] = useState<PickupElsewhere[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // Per-order confirmation of points awarded after collecting.
+  // Per-order confirmation of the points earned at collection.
   const [collected, setCollected] = useState<Record<string, number>>({});
 
+  const brandName = customer.brandName || activeSpot?.brandName || '';
+  const stale = useCallback(() => spotStore.getActiveSpotId() !== spotId, [spotId]);
+
+  const loadElsewhere = useCallback(async () => {
+    const res = await getPickupOrdersElsewhere(spotId, customer.id, { silent: true });
+    if (!stale()) setElsewhere(res.data ?? []);
+  }, [spotId, customer.id, stale]);
+
   const load = useCallback(async () => {
-    if (!spotId) {
-      setState('notfound');
-      return;
-    }
     setState('loading');
-    const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
-    const customerRes = await getLoyaltyCustomer(userId, { token });
-    if (!customerRes.data) {
-      setState('notfound');
+    const res = await getCollectablePickupOrders(spotId, customer.id, { silent: true });
+    if (stale()) return;
+    if (res.error) {
+      setError(messageForError(res.error, t('Scan.collectLoadError')));
+      setState('error');
       return;
     }
-    setCustomer(customerRes.data);
-    const ordersRes = await getCollectablePickupOrders(spotId, customerRes.data.id, { token });
-    setOrders(ordersRes.data ?? []);
+    const list = res.data ?? [];
+    setOrders(list);
     setState('ready');
-  }, [spotId, userId]);
+    if (list.length === 0) void loadElsewhere();
+  }, [spotId, customer.id, stale, loadElsewhere, t]);
 
   useEffect(() => {
     void load();
@@ -64,44 +74,26 @@ export function OrderCollect({
   const collect = async (order: CollectablePickupOrder) => {
     setBusyId(order.id);
     setError(null);
-    try {
-      const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
-      const res = await collectPickupOrder(order.id, { token });
-      if (res.error || !res.data) {
-        setError(res.error?.message || t('Scan.collectError'));
-        return;
-      }
-      setCollected((c) => ({ ...c, [order.id]: res.data!.pointsAwarded }));
-      // Drop it from the open list.
-      setOrders((list) => list.filter((o) => o.id !== order.id));
-    } finally {
-      setBusyId(null);
+    const res = await collectPickupOrder(order.id, { silent: true });
+    if (stale()) return;
+    setBusyId(null);
+    if (res.error || !res.data) {
+      setError(messageForError(res.error, t('Scan.collectError')));
+      return;
     }
+    setCollected((c) => ({ ...c, [order.id]: res.data!.pointsAwarded }));
+    const rest = orders.filter((o) => o.id !== order.id);
+    setOrders(rest);
+    if (rest.length === 0) void loadElsewhere();
   };
 
   if (state === 'loading') {
     return (
       <View className="items-center rounded-2xl border border-gray-200 bg-white p-8">
         <ActivityIndicator color="#EC2828" />
-        <Typography variant="body-small-regular" className="mt-3 text-gray-500">
-          {t('Scan.lookingUp')}
+        <Typography variant="body-small-regular" className="mt-3 text-gray-600">
+          {t('Scan.lookingUpOrders')}
         </Typography>
-      </View>
-    );
-  }
-
-  if (state === 'notfound') {
-    return (
-      <View className="items-center rounded-2xl border border-gray-200 bg-white p-8">
-        <Ionicons name="alert-circle" size={48} color="#EC2828" />
-        <Typography variant="body-base-bold" className="mt-3 text-center text-text-primary">
-          {t('Scan.customerNotFound')}
-        </Typography>
-        <Pressable onPress={onDone} className="mt-5 rounded-xl px-6 py-3" style={{ backgroundColor: '#EC2828' }}>
-          <Typography variant="body-base-bold" className="text-white">
-            {t('Scan.tryAgain')}
-          </Typography>
-        </Pressable>
       </View>
     );
   }
@@ -111,80 +103,83 @@ export function OrderCollect({
   return (
     <View className="gap-4">
       {error && (
-        <View className="rounded-xl bg-red-50 px-4 py-3">
-          <Typography variant="body-small-regular" style={{ color: '#B91C1C' }}>
+        <View className="rounded-xl bg-red-50 px-4 py-3" accessibilityRole="alert">
+          <Typography variant="body-base-regular" style={{ color: '#B91C1C' }}>
             {error}
           </Typography>
         </View>
       )}
 
-      {/* Customer header */}
-      {customer && (
-        <View className="rounded-2xl border border-gray-200 bg-white p-4">
-          <Typography variant="body-base-bold" className="text-text-primary">
-            {customer.name || t('Scan.customer')}
+      <View className="rounded-2xl border border-gray-200 bg-white p-4">
+        <Typography variant="body-lg-bold" className="text-text-primary">
+          {customer.name?.trim() || t('Scan.customer')}
+        </Typography>
+        {!!customer.loyaltyCode && (
+          <Typography variant="body-base-regular" className="text-gray-600">
+            {customer.loyaltyCode}
           </Typography>
-          {customer.loyaltyCode && (
-            <Typography variant="body-small-regular" className="text-gray-500">
-              {customer.loyaltyCode}
-            </Typography>
-          )}
-        </View>
-      )}
+        )}
+      </View>
 
-      {/* Just-collected confirmations */}
       {justCollected.map(([id, pts]) => (
         <View key={id} className="flex-row items-center rounded-2xl border border-green-200 bg-green-50 p-4">
-          <Ionicons name="checkmark-circle" size={22} color="#16A34A" />
-          <Typography variant="body-small-semibold" className="ml-2 flex-1" style={{ color: '#15803D' }}>
-            {pts > 0 ? t('Scan.collectedWithPoints', { points: pts }) : t('Scan.collectedDone')}
+          <Ionicons name="checkmark-circle" size={24} color="#16A34A" />
+          <Typography variant="body-base-semibold" className="ml-2 flex-1" style={{ color: '#14532D' }}>
+            {pts > 0 ? t('Scan.collectedWithPointsAtBrand', { count: pts, brand: brandName }) : t('Scan.collectedDone')}
           </Typography>
         </View>
       ))}
 
-      {/* Open pickup orders */}
-      {orders.length === 0 ? (
-        <View className="items-center rounded-2xl border border-gray-200 bg-white p-8">
-          <Ionicons name="bag-check-outline" size={40} color="#9CA3AF" />
-          <Typography variant="body-base-regular" className="mt-3 text-center text-gray-500">
-            {justCollected.length ? t('Scan.noMoreOrders') : t('Scan.noPickupOrders')}
-          </Typography>
-        </View>
+      {state === 'ready' && orders.length === 0 ? (
+        elsewhere.length > 0 ? (
+          elsewhere.map((o) => (
+            <PickupElsewhereBanner
+              key={o.orderId}
+              order={o}
+              canSwitch={spotStore.isAccessible(o.spotId)}
+              onSwitch={(id) => void setActiveSpot(id, 'user')}
+            />
+          ))
+        ) : (
+          <View className="items-center rounded-2xl border border-gray-200 bg-white p-8">
+            <Ionicons name="bag-check-outline" size={40} color="#6B7280" />
+            <Typography variant="body-base-regular" className="mt-3 text-center text-gray-600">
+              {justCollected.length ? t('Scan.noMoreOrders') : t('Scan.noPickupOrders')}
+            </Typography>
+          </View>
+        )
       ) : (
         orders.map((order) => {
           const isCash = order.paymentStatus !== 'paid';
           const itemCount = order.items.reduce((n, i) => n + i.quantity, 0);
+          const busy = busyId === order.id;
           return (
             <View key={order.id} className="rounded-2xl border border-gray-200 bg-white p-4">
               <View className="flex-row items-center justify-between">
-                <Typography variant="body-base-bold" className="text-text-primary">
+                <Typography variant="body-lg-bold" className="text-text-primary">
                   #{order.orderNumber}
                 </Typography>
-                <View
-                  className="rounded-full px-3 py-1"
-                  style={{ backgroundColor: isCash ? '#FEF3C7' : '#DCFCE7' }}
-                >
-                  <Typography variant="body-very-small-medium" style={{ color: isCash ? '#92400E' : '#15803D' }}>
+                <View className="rounded-full px-3 py-1" style={{ backgroundColor: isCash ? '#FEF3C7' : '#DCFCE7' }}>
+                  <Typography variant="body-small-semibold" style={{ color: isCash ? '#92400E' : '#15803D' }}>
                     {isCash ? t('Scan.payAtSpot') : t('Scan.paidOnline')}
                   </Typography>
                 </View>
               </View>
-              <Typography variant="body-small-regular" className="mt-1 text-gray-500">
+              <Typography variant="body-base-regular" className="mt-1 text-gray-600">
                 {t('Scan.itemsAndTotal', { count: itemCount, total: zl(order.total) })}
               </Typography>
               <Pressable
-                onPress={() => collect(order)}
-                disabled={busyId === order.id}
-                className="mt-3 items-center rounded-xl py-3.5"
-                style={{ backgroundColor: busyId === order.id ? '#F4A3A3' : '#EC2828' }}
+                onPress={() => void collect(order)}
+                disabled={!!busyId}
+                accessibilityRole="button"
+                className="mt-3 items-center justify-center rounded-xl"
+                style={{ minHeight: 56, backgroundColor: busy ? '#F4A3A3' : '#EC2828' }}
               >
-                {busyId === order.id ? (
+                {busy ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
                   <Typography variant="body-base-bold" className="text-white">
-                    {isCash
-                      ? t('Scan.collectAndCharge', { total: zl(order.total) })
-                      : t('Scan.markCollected')}
+                    {isCash ? t('Scan.collectAndCharge', { total: zl(order.total) }) : t('Scan.markCollected')}
                   </Typography>
                 )}
               </Pressable>
@@ -193,8 +188,26 @@ export function OrderCollect({
         })
       )}
 
-      <Pressable onPress={onDone} className="items-center rounded-xl border border-gray-300 bg-white py-3.5">
-        <Typography variant="body-base-bold" className="text-gray-600">
+      {state === 'error' && (
+        <Pressable
+          onPress={() => void load()}
+          accessibilityRole="button"
+          className="items-center justify-center rounded-xl"
+          style={{ minHeight: 56, backgroundColor: '#EC2828' }}
+        >
+          <Typography variant="body-base-bold" className="text-white">
+            {t('Scan.tryAgain')}
+          </Typography>
+        </Pressable>
+      )}
+
+      <Pressable
+        onPress={onDone}
+        accessibilityRole="button"
+        className="items-center justify-center rounded-xl border border-gray-300 bg-white"
+        style={{ minHeight: 56 }}
+      >
+        <Typography variant="body-base-bold" className="text-gray-700">
           {t('Scan.done')}
         </Typography>
       </Pressable>

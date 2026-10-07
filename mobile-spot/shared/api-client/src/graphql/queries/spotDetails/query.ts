@@ -24,6 +24,16 @@ export const SPOT_DETAILS_QUERY = gql`
       courierPayout
       pickupEnabled
       onlinePaymentEnabled
+      isActive
+      brand {
+        id
+        name
+      }
+      city {
+        id
+        name
+        nameLocal
+      }
     }
   }
 `;

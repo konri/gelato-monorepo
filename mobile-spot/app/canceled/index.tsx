@@ -1,5 +1,6 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { withSpotScope } from '@/components/hoc/withSpotScope';
 import { AttentionOrderCard } from '@/components/organisms/AttentionOrderCard';
 import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import { useSpotAttentionOrders } from '@/hooks/useSpotOrders';
@@ -9,7 +10,7 @@ import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, RefreshControl, ScrollView, View } from 'react-native';
 
-export default function CanceledScreen() {
+function CanceledScreen() {
   const { t } = useTranslation();
   const { orders, loading, refetch } = useSpotAttentionOrders();
   const [refreshing, setRefreshing] = useState(false);
@@ -28,7 +29,7 @@ export default function CanceledScreen() {
 
   return (
     <View className="flex-1 bg-gray-50">
-      <ScreenHeader title={t('SpotCanceled.title')} backFallback="/(tabs)" />
+      <ScreenHeader title={t('SpotCanceled.title')} backFallback="/(tabs)" spotScoped />
 
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
@@ -60,3 +61,5 @@ export default function CanceledScreen() {
     </View>
   );
 }
+
+export default withSpotScope(CanceledScreen);

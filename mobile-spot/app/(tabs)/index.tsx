@@ -1,23 +1,27 @@
 import Lockup from '@/assets/images/loodly_lockup.svg';
 import { Typography } from '@/components/atoms/Typography';
+import { withSpotScope } from '@/components/hoc/withSpotScope';
 import { SpotOrderCard } from '@/components/molecules/SpotOrderCard';
+import { OtherSpotsStrip } from '@/components/organisms/OtherSpotsStrip';
+import { useSpotRealtime } from '@/components/organisms/RealtimeProvider';
+import { TabHeader } from '@/components/organisms/TabHeader';
 import { useToast } from '@/components/organisms/ToastProvider';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
 import { TAB_BAR_TOTAL_HEIGHT } from '@/constants/tabBarStyles';
+import { useSession } from '@/contexts/SessionProvider';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { useSpotOrderSubscription } from '@/hooks/useSpotOrderSubscription';
 import {
   advanceOrderStatus,
   claimOrder,
-  getStoredSpotContext,
   terminateOrder,
   useSpotOrders,
 } from '@/hooks/useSpotOrders';
+import { spotStore } from '@/stores/spotStore';
 import { scheduledForSortKey } from '@/utils/scheduledFor';
 import { getSpotUnreadCount } from '@repo/api-client';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import {
@@ -28,29 +32,26 @@ import {
   ScrollView,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export default function SpotOrdersScreen() {
+function SpotOrdersScreen() {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
   const { isWide } = useBreakpoint();
   // Active orders = anything not yet ready/delivered. We fetch all and filter.
-  const { orders, loading, refetch, setOrders } = useSpotOrders(null);
+  const { orders, loading, refetch, setOrders, spotId } = useSpotOrders(null);
   const toast = useToast();
+  const { userId } = useSession();
   const [refreshing, setRefreshing] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
   const [unread, setUnread] = useState(0);
   const hasNew = useRef(false);
 
-  useEffect(() => {
-    void getStoredSpotContext().then((c) => setUserId(c.userId));
-  }, []);
-
+  // The bell counts this spot's notifications (plus spot-less ones).
   const loadUnread = useCallback(async () => {
+    if (!spotId) return;
     const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
-    const res = await getSpotUnreadCount({ token });
+    const res = await getSpotUnreadCount({ token, spotId });
+    if (spotStore.getActiveSpotId() !== spotId) return;
     setUnread(res.data ?? 0);
-  }, []);
+  }, [spotId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -59,9 +60,10 @@ export default function SpotOrdersScreen() {
     }, [refetch, loadUnread]),
   );
 
-  // Live: a new order arrives → refetch so it appears; a claim → refetch so it
-  // moves/disappears for everyone else.
-  useSpotOrderSubscription(true, {
+  // Live (active spot only): a new order arrives → refetch so it appears; a
+  // claim → refetch so it moves/disappears for everyone else; a reconnect or a
+  // spot switch → refetch whatever may have been missed.
+  useSpotRealtime({
     onNewOrder: () => {
       hasNew.current = true;
       void refetch();
@@ -69,16 +71,20 @@ export default function SpotOrdersScreen() {
     onOrderClaimed: () => {
       void refetch();
     },
+    onResync: () => {
+      void refetch();
+    },
   });
 
+  // Pull-to-refresh also revalidates the spot context (spots, levels, counts).
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await refetch();
+      await Promise.all([refetch(), spotStore.refresh('pullToRefresh'), loadUnread()]);
     } finally {
       setRefreshing(false);
     }
-  }, [refetch]);
+  }, [refetch, loadUnread]);
 
   const handleClaim = async (id: string) => {
     const res = await claimOrder(id);
@@ -118,61 +124,61 @@ export default function SpotOrdersScreen() {
 
   return (
     <View className="flex-1 bg-gray-50">
-      <View
-        className="border-b border-gray-200 bg-white px-6 pb-4"
-        style={{ paddingTop: (isWide ? 0 : insets.top) + 16 }}
-      >
-        <ResponsiveContainer>
-          <View className="flex-row items-center justify-between">
-            {/* Logo hidden on wide layout — the sidebar already shows the brand. */}
-            {isWide ? (
-              <Typography variant="heading-32-bold" className="text-text-primary">
-                {t('SpotTabs.orders')}
-              </Typography>
-            ) : (
-              // SPOT tucks under the cone (centred on the cone axis, which sits
-              // at ~32% of the lockup width) rather than beside it.
-              <View style={{ width: 88, height: 61 }}>
-                <Lockup width={88} height={61} />
-                <View
-                  style={{ position: 'absolute', left: 26, width: 56, bottom: -3, alignItems: 'center' }}
+      <TabHeader
+        title={t('SpotTabs.orders')}
+        left={
+          // Logo hidden on wide layout — the sidebar already shows the brand.
+          isWide ? undefined : (
+            // SPOT tucks under the cone (centred on the cone axis, which sits
+            // at ~32% of the lockup width) rather than beside it.
+            <View style={{ width: 88, height: 61 }}>
+              <Lockup width={88} height={61} />
+              <View
+                style={{ position: 'absolute', left: 26, width: 56, bottom: -3, alignItems: 'center' }}
+              >
+                <Typography
+                  variant="body-very-small-medium"
+                  style={{ color: '#EC2828', letterSpacing: 2, fontSize: 9 }}
                 >
-                  <Typography
-                    variant="body-very-small-medium"
-                    style={{ color: '#EC2828', letterSpacing: 2, fontSize: 9 }}
-                  >
-                    SPOT
-                  </Typography>
-                </View>
+                  SPOT
+                </Typography>
+              </View>
+            </View>
+          )
+        }
+        right={
+          <View className="flex-row items-center gap-3">
+            {pending.length > 0 && (
+              <View className="flex-row items-center rounded-full px-3 py-1" style={{ backgroundColor: '#EC2828' }}>
+                <Ionicons name="cart" size={14} color="#fff" />
+                <Typography variant="body-small-bold" className="ml-1 text-white">
+                  {pending.length}
+                </Typography>
               </View>
             )}
-            <View className="flex-row items-center gap-3">
-              {pending.length > 0 && (
-                <View className="flex-row items-center rounded-full px-3 py-1" style={{ backgroundColor: '#EC2828' }}>
-                  <Ionicons name="cart" size={14} color="#fff" />
-                  <Typography variant="body-small-bold" className="ml-1 text-white">
-                    {pending.length}
+            {/* Bell → notification center, with unread badge. */}
+            <Pressable
+              onPress={() => router.push('/notifications')}
+              hitSlop={8}
+              className="relative"
+              accessibilityRole="button"
+              accessibilityLabel={t('Notifications.title')}
+            >
+              <Ionicons name="notifications-outline" size={24} color="#212121" />
+              {unread > 0 && (
+                <View
+                  className="absolute -right-1.5 -top-1.5 min-w-4 items-center justify-center rounded-full px-1"
+                  style={{ backgroundColor: '#EC2828' }}
+                >
+                  <Typography variant="body-very-small-medium" className="text-white" style={{ fontSize: 10 }}>
+                    {unread > 9 ? '9+' : String(unread)}
                   </Typography>
                 </View>
               )}
-              {/* Bell → notification center, with unread badge. */}
-              <Pressable onPress={() => router.push('/notifications')} hitSlop={8} className="relative">
-                <Ionicons name="notifications-outline" size={24} color="#212121" />
-                {unread > 0 && (
-                  <View
-                    className="absolute -right-1.5 -top-1.5 min-w-4 items-center justify-center rounded-full px-1"
-                    style={{ backgroundColor: '#EC2828' }}
-                  >
-                    <Typography variant="body-very-small-medium" className="text-white" style={{ fontSize: 10 }}>
-                      {unread > 9 ? '9+' : String(unread)}
-                    </Typography>
-                  </View>
-                )}
-              </Pressable>
-            </View>
+            </Pressable>
           </View>
-        </ResponsiveContainer>
-      </View>
+        }
+      />
 
       <ScrollView
         className="flex-1"
@@ -182,6 +188,8 @@ export default function SpotOrdersScreen() {
         }
       >
         <ResponsiveContainer>
+        {/* What is waiting at the user's other spots (switchable users only). */}
+        <OtherSpotsStrip />
         {loading && orders.length === 0 ? (
           <View className="py-10 items-center">
             <ActivityIndicator color="#EC2828" />
@@ -246,3 +254,5 @@ export default function SpotOrdersScreen() {
     </View>
   );
 }
+
+export default withSpotScope(SpotOrdersScreen);

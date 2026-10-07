@@ -1,167 +1,214 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { withSpotScope } from '@/components/hoc/withSpotScope';
+import { AccessGuard } from '@/components/molecules/AccessGuard';
 import { ScreenHeader } from '@/components/molecules/ScreenHeader';
+import { SpotMultiSelect, type SpotOption } from '@/components/molecules/Staff/SpotMultiSelect';
+import { StaffActionsSheet } from '@/components/molecules/Staff/StaffActionsSheet';
+import { StaffMemberRow } from '@/components/molecules/Staff/StaffMemberRow';
+import { atLeast } from '@/auth/levels';
+import { canAssignSpots, canManageMember, creatableKinds, type StaffCaller } from '@/auth/staffRules';
+import { spotCityName, useActiveSpot } from '@/hooks/useActiveSpot';
 import { useRole } from '@/hooks/useRole';
+import { spotStore, type StaffSpotVM } from '@/stores/spotStore';
 import { downloadReport } from '@/services/downloadReport';
+import { messageForError } from '@/utils/errorCodes';
 import {
-  getSpotStaffAdmins,
-  getSpotStaffEmployees,
+  getBrandStaff,
   getSpotStaffSessions,
-  createSpotStaff,
-  inviteSpotStaff,
-  adminResetStaffPassword,
+  inviteStaff,
   setStaffLoginDisabled,
-  type StaffMember,
+  type BrandStaffMember,
+  type InviteStaffInput,
+  type StaffKind,
   type StaffLoginSession,
 } from '@repo/api-client';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { goBackOr } from '@/utils/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  Switch,
-  TextInput,
-  View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ActivityIndicator, Pressable, ScrollView, TextInput, View } from 'react-native';
 
-const inputCls = 'rounded-xl border border-gray-300 px-4 py-3 text-base';
+const inputCls = 'rounded-xl border border-gray-300 px-4 text-base';
+const LANGUAGE: Record<string, InviteStaffInput['language']> = { pl: 'PL', en: 'EN', ua: 'UA' };
 
-type StaffRow = StaffMember & { kind: 'admin' | 'employee' };
+type Scope = 'spot' | 'brand';
 
-export default function StaffScreen() {
+function Segmented<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (v: T) => void;
+}) {
+  return (
+    <View className="flex-row rounded-xl bg-gray-100 p-1" accessibilityRole="tablist">
+      {options.map((o) => {
+        const active = value === o.value;
+        return (
+          <Pressable
+            key={o.value}
+            onPress={() => onChange(o.value)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: active }}
+            className="flex-1 items-center justify-center rounded-lg px-1"
+            style={{ minHeight: 44, backgroundColor: active ? '#fff' : 'transparent' }}
+          >
+            <Typography variant="body-base-bold" style={{ color: active ? '#B91C1C' : '#4B5563' }} numberOfLines={1}>
+              {o.label}
+            </Typography>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+/**
+ * Team screen (BRANDS_SPEC §4.7). Spot admins add employees to one of their
+ * spots; brand admins (and the Loodly team) also add spot admins with one or
+ * more spots, and can look at the whole brand. Every member has a "…" menu
+ * with the actions the caller may use. The server enforces the same rules.
+ */
+function StaffScreen() {
   const { t, i18n } = useTranslation();
-  const insets = useSafeAreaInsets();
-  const { spotId, userId, isAdmin, loading: roleLoading } = useRole();
+  const { userId, level, staffKind } = useRole();
+  const { activeSpotId: spotId, brandId, spots } = useActiveSpot();
 
-  const [staff, setStaff] = useState<StaffRow[]>([]);
+  const brandSpots = useMemo(() => spots.filter((s) => s.brandId === brandId), [spots, brandId]);
+  const toOption = useCallback(
+    (s: StaffSpotVM): SpotOption => ({
+      id: s.spotId,
+      name: s.name,
+      subtitle: spotCityName(s, i18n.language) ?? s.address,
+      inactive: !s.isActive,
+    }),
+    [i18n.language],
+  );
+  const employeeSpots = useMemo(
+    () => brandSpots.filter((s) => atLeast(s.level, 'MANAGE_SPOT')).map(toOption),
+    [brandSpots, toOption],
+  );
+  const adminSpots = useMemo(
+    () => brandSpots.filter((s) => atLeast(s.level, 'MANAGE_BRAND')).map(toOption),
+    [brandSpots, toOption],
+  );
+  const caller: StaffCaller = useMemo(
+    () => ({ userId, staffKind, level, managedSpotIds: new Set(employeeSpots.map((s) => s.id)) }),
+    [userId, staffKind, level, employeeSpots],
+  );
+  const kinds = creatableKinds(caller);
+  const brandWide = atLeast(level, 'MANAGE_BRAND');
+
+  const [scope, setScope] = useState<Scope>('spot');
+  const [staff, setStaff] = useState<BrandStaffMember[]>([]);
   const [sessions, setSessions] = useState<StaffLoginSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [actionsFor, setActionsFor] = useState<BrandStaffMember | null>(null);
+  const loadReq = useRef(0);
 
-  // Create form. `mode` toggles between handing over a temp password and
-  // emailing a set-password invite (branded with the spot's logo/details).
-  const [form, setForm] = useState({ email: '', name: '', password: '', role: 'EMPLOYEE' as 'EMPLOYEE' | 'SPOT_ADMIN' });
+  // Invite form: emailed invitation (they set their own password) or a
+  // temporary password handed over in person.
   const [mode, setMode] = useState<'invite' | 'password'>('invite');
+  const [kind, setKind] = useState<StaffKind>('EMPLOYEE');
+  const [formSpotIds, setFormSpotIds] = useState<string[]>(spotId ? [spotId] : []);
+  const [form, setForm] = useState({ email: '', name: '', password: '' });
+
+  const formSpotOptions = kind === 'SPOT_ADMIN' ? adminSpots : employeeSpots;
 
   const load = useCallback(async () => {
     if (!spotId) {
       setLoading(false);
       return;
     }
-    const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
-    const [admins, employees, sess] = await Promise.all([
-      getSpotStaffAdmins(spotId, { token }),
-      getSpotStaffEmployees(spotId, { token }),
-      getSpotStaffSessions(spotId, { token }),
+    const req = ++loadReq.current;
+    const [list, sess] = await Promise.all([
+      getBrandStaff(scope === 'brand' && brandId ? { brandId } : { spotId }, { silent: true }),
+      getSpotStaffSessions(spotId, { silent: true }),
     ]);
-    const rows: StaffRow[] = [
-      ...(admins.data ?? []).map((a) => ({ ...a, kind: 'admin' as const })),
-      ...(employees.data ?? []).map((e) => ({ ...e, kind: 'employee' as const })),
-    ];
-    setStaff(rows);
+    // Stale guard: the spot or the list scope changed while loading.
+    if (req !== loadReq.current || spotStore.getActiveSpotId() !== spotId) return;
+    if (list.error) setError(messageForError(list.error, t('Staff.loadError')));
+    setStaff(list.data ?? []);
     setSessions(sess.data ?? []);
     setLoading(false);
-  }, [spotId]);
+  }, [spotId, brandId, scope, t]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
+  const changeKind = (next: StaffKind) => {
+    setKind(next);
+    const options = next === 'SPOT_ADMIN' ? adminSpots : employeeSpots;
+    setFormSpotIds(spotId && options.some((o) => o.id === spotId) ? [spotId] : options[0] ? [options[0].id] : []);
+  };
+
   const create = async () => {
-    if (!spotId || !form.email.trim() || !form.name.trim()) return;
-    if (mode === 'password' && !form.password.trim()) return;
+    const email = form.email.trim();
+    const name = form.name.trim();
+    if (!email || !name) return;
+    if (formSpotIds.length === 0) {
+      setError(t('Staff.spotsRequired'));
+      return;
+    }
     setBusy(true);
     setError(null);
     setNotice(null);
-    try {
-      const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
-      const res =
-        mode === 'invite'
-          ? await inviteSpotStaff(
-              { spotId, email: form.email.trim(), name: form.name.trim(), role: form.role },
-              { token },
-            )
-          : await createSpotStaff(
-              {
-                spotId,
-                email: form.email.trim(),
-                name: form.name.trim(),
-                password: form.password,
-                role: form.role,
-              },
-              { token },
-            );
-      if (res.error || !res.data) throw new Error(res.error?.message || t('Staff.createError'));
-      setForm({ email: '', name: '', password: '', role: 'EMPLOYEE' });
-      setNotice(mode === 'invite' ? t('Staff.invited', { email: res.data.email }) : t('Staff.created'));
-      await load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t('Staff.createError'));
-    } finally {
-      setBusy(false);
+    // A spot admin invited again as spot admin gets the new spots added.
+    const existing = staff.find((m) => m.email.toLowerCase() === email.toLowerCase());
+    const res = await inviteStaff(
+      {
+        email,
+        name,
+        kind,
+        spotIds: kind === 'EMPLOYEE' ? formSpotIds.slice(0, 1) : formSpotIds,
+        password: mode === 'password' ? form.password : undefined,
+        language: LANGUAGE[i18n.language.toLowerCase()],
+        // The Loodly team names the brand; brand staff never do.
+        brandId: level === 'PLATFORM' && brandId ? brandId : undefined,
+      },
+      { silent: true },
+    );
+    if (spotStore.getActiveSpotId() !== spotId) return;
+    setBusy(false);
+    if (res.error || !res.data) {
+      setError(messageForError(res.error, t('Staff.createError')));
+      return;
     }
+    setForm({ email: '', name: '', password: '' });
+    setNotice(
+      existing && existing.kind === 'SPOT_ADMIN' && kind === 'SPOT_ADMIN'
+        ? t('Staff.spotsUpdated', { name: res.data.name?.trim() || res.data.email })
+        : mode === 'invite'
+          ? t('Staff.invited', { email: res.data.email })
+          : t('Staff.created'),
+    );
+    await load();
   };
 
-  const resetPassword = (member: StaffRow) => {
-    // Email the staff member a set-password code so THEY choose their own
-    // password (same flow as the invite) — the admin never sets it directly.
-    const doReset = async () => {
-      setBusy(true);
-      setError(null);
-      setNotice(null);
-      try {
-        const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
-        const res = await adminResetStaffPassword(member.id, { token });
-        if (res.error) throw new Error(res.error.message);
-        setNotice(t('Staff.passwordResetSent', { email: member.email }));
-      } catch (e) {
-        setError(e instanceof Error ? e.message : t('Staff.resetError'));
-      } finally {
-        setBusy(false);
-      }
-    };
-    const title = t('Staff.resetPassword');
-    const message = t('Staff.resetConfirm', { email: member.email });
-    if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
-      if (window.confirm(`${title}\n\n${message}`)) void doReset();
-    } else {
-      Alert.alert(title, message, [
-        { text: t('Staff.cancel'), style: 'cancel' },
-        { text: t('Staff.resetSendCta'), onPress: () => void doReset() },
-      ]);
-    }
-  };
-
-  const toggleLogin = async (member: StaffRow) => {
+  const toggleLogin = async (member: BrandStaffMember) => {
     setBusy(true);
     setError(null);
-    try {
-      const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
-      const res = await setStaffLoginDisabled(member.id, !member.loginDisabled, { token });
-      if (res.error) throw new Error(res.error.message);
-      await load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t('Staff.updateError'));
-    } finally {
-      setBusy(false);
+    const res = await setStaffLoginDisabled(member.id, !member.loginDisabled, { silent: true });
+    setBusy(false);
+    if (res.error) {
+      setError(messageForError(res.error, t('Staff.updateError')));
+      return;
     }
+    await load();
   };
 
   const exportSessions = async () => {
     if (!spotId) return;
     setExporting(true);
     try {
-      await downloadReport(`sessions/${spotId}`, `sessions-${spotId}.pdf`, i18n.language);
+      await downloadReport(`sessions/${spotId}?includeSwitches=1`, `sessions-${spotId}.pdf`, i18n.language);
     } catch {
       setError(t('Staff.exportError'));
     } finally {
@@ -169,196 +216,195 @@ export default function StaffScreen() {
     }
   };
 
-  const timeAgo = useMemo(
-    () => (iso: string) => {
-      const d = new Date(iso);
-      return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    },
-    [],
-  );
-
-  if (!roleLoading && !isAdmin) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white px-8" style={{ paddingTop: insets.top }}>
-        <Ionicons name="lock-closed-outline" size={40} color="#9CA3AF" />
-        <Typography variant="body-base-regular" className="mt-3 text-center text-gray-500">
-          {t('Staff.adminOnly')}
-        </Typography>
-        <Pressable onPress={() => goBackOr()} className="mt-5 rounded-xl px-6 py-3" style={{ backgroundColor: '#EC2828' }}>
-          <Typography variant="body-base-bold" className="text-white">{t('Staff.back')}</Typography>
-        </Pressable>
-      </View>
-    );
-  }
+  const formatWhen = (iso: string) => {
+    const d = new Date(iso);
+    return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  };
 
   const canCreate =
+    kinds.length > 0 &&
     !!form.email.trim() &&
     !!form.name.trim() &&
+    formSpotIds.length > 0 &&
     (mode === 'invite' || form.password.length >= 8) &&
     !busy;
 
   return (
     <View className="flex-1 bg-gray-50">
-      <ScreenHeader title={t('Staff.title')} />
+      <ScreenHeader title={t('Staff.title')} spotScoped />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
         <ResponsiveContainer maxWidth={680}>
           {notice && (
-            <View className="mb-4 rounded-xl bg-green-50 px-4 py-3">
-              <Typography variant="body-small-regular" style={{ color: '#15803D' }}>{notice}</Typography>
+            <View className="mb-4 rounded-xl bg-green-50 px-4 py-3" accessibilityLiveRegion="polite">
+              <Typography variant="body-base-semibold" style={{ color: '#15803D' }}>{notice}</Typography>
             </View>
           )}
           {error && (
-            <View className="mb-4 rounded-xl bg-red-50 px-4 py-3">
-              <Typography variant="body-small-regular" style={{ color: '#B91C1C' }}>{error}</Typography>
+            <View className="mb-4 rounded-xl bg-red-50 px-4 py-3" accessibilityRole="alert">
+              <Typography variant="body-base-semibold" style={{ color: '#B91C1C' }}>{error}</Typography>
             </View>
           )}
 
-          {/* Create staff */}
-          <View className="mb-6 rounded-2xl bg-white p-4">
-            <Typography variant="body-base-bold" className="mb-3 text-text-primary">{t('Staff.addMember')}</Typography>
+          {/* Add a team member */}
+          {kinds.length > 0 && (
+            <View className="mb-6 gap-3 rounded-2xl bg-white p-4">
+              <Typography variant="body-lg-bold" className="text-text-primary" accessibilityRole="header">
+                {t('Staff.addMember')}
+              </Typography>
 
-            {/* Invite by email vs. hand over a temporary password. */}
-            <View className="mb-3 flex-row rounded-xl bg-gray-100 p-1">
-              {(['invite', 'password'] as const).map((m) => {
-                const active = mode === m;
-                return (
-                  <Pressable
-                    key={m}
-                    onPress={() => setMode(m)}
-                    className="flex-1 items-center rounded-lg py-2"
-                    style={{ backgroundColor: active ? '#fff' : 'transparent' }}
-                  >
-                    <Typography variant="body-small-bold" style={{ color: active ? '#EC2828' : '#6B7280' }}>
-                      {t(m === 'invite' ? 'Staff.modeInvite' : 'Staff.modePassword')}
-                    </Typography>
-                  </Pressable>
-                );
-              })}
-            </View>
+              {kinds.length > 1 && (
+                <Segmented
+                  value={kind}
+                  onChange={changeKind}
+                  options={kinds.map((k) => ({ value: k, label: t(`Roles.${k}`) }))}
+                />
+              )}
 
-            <View className="mb-3 flex-row rounded-xl bg-gray-100 p-1">
-              {(['EMPLOYEE', 'SPOT_ADMIN'] as const).map((r) => {
-                const active = form.role === r;
-                return (
-                  <Pressable
-                    key={r}
-                    onPress={() => setForm((f) => ({ ...f, role: r }))}
-                    className="flex-1 items-center rounded-lg py-2"
-                    style={{ backgroundColor: active ? '#fff' : 'transparent' }}
-                  >
-                    <Typography variant="body-small-bold" style={{ color: active ? '#EC2828' : '#6B7280' }}>
-                      {t(r === 'EMPLOYEE' ? 'Staff.roleEmployee' : 'Staff.roleAdmin')}
-                    </Typography>
-                  </Pressable>
-                );
-              })}
-            </View>
-            <TextInput
-              className={`${inputCls} mb-2`}
-              placeholder={t('Staff.name')}
-              value={form.name}
-              onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
-            />
-            <TextInput
-              className={`${inputCls} mb-2`}
-              placeholder={t('Staff.email')}
-              value={form.email}
-              onChangeText={(v) => setForm((f) => ({ ...f, email: v }))}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-            {mode === 'password' ? (
+              {formSpotOptions.length > 1 && (
+                <View>
+                  <Typography variant="body-base-semibold" className="mb-1 text-text-primary">
+                    {t(kind === 'SPOT_ADMIN' ? 'Staff.spotsLabel' : 'Staff.spotLabel')}
+                  </Typography>
+                  <Typography variant="body-small-regular" className="mb-2 text-gray-600">
+                    {t(kind === 'SPOT_ADMIN' ? 'Staff.pickSpotsHint' : 'Staff.pickSpotHint')}
+                  </Typography>
+                  <SpotMultiSelect
+                    options={formSpotOptions}
+                    mode={kind === 'SPOT_ADMIN' ? 'multi' : 'single'}
+                    selected={formSpotIds}
+                    onChange={setFormSpotIds}
+                    disabled={busy}
+                  />
+                </View>
+              )}
+
+              <Segmented
+                value={mode}
+                onChange={setMode}
+                options={[
+                  { value: 'invite', label: t('Staff.modeInvite') },
+                  { value: 'password', label: t('Staff.modePassword') },
+                ]}
+              />
+
               <TextInput
                 className={inputCls}
-                placeholder={t('Staff.tempPassword')}
-                value={form.password}
-                onChangeText={(v) => setForm((f) => ({ ...f, password: v }))}
-                autoCapitalize="none"
+                style={{ minHeight: 52 }}
+                placeholder={t('Staff.name')}
+                placeholderTextColor="#6B7280"
+                accessibilityLabel={t('Staff.name')}
+                value={form.name}
+                onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
               />
-            ) : (
-              <Typography variant="body-small-regular" className="text-gray-500">
-                {t('Staff.inviteHint')}
-              </Typography>
-            )}
-            <Pressable
-              onPress={create}
-              disabled={!canCreate}
-              className="mt-3 items-center rounded-xl py-4"
-              style={{ backgroundColor: canCreate ? '#EC2828' : '#F4A3A3' }}
-            >
-              {busy ? (
-                <ActivityIndicator color="#fff" />
+              <TextInput
+                className={inputCls}
+                style={{ minHeight: 52 }}
+                placeholder={t('Staff.email')}
+                placeholderTextColor="#6B7280"
+                accessibilityLabel={t('Staff.email')}
+                value={form.email}
+                onChangeText={(v) => setForm((f) => ({ ...f, email: v }))}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+              {mode === 'password' ? (
+                <TextInput
+                  className={inputCls}
+                  style={{ minHeight: 52 }}
+                  placeholder={t('Staff.tempPassword')}
+                  placeholderTextColor="#6B7280"
+                  accessibilityLabel={t('Staff.tempPassword')}
+                  value={form.password}
+                  onChangeText={(v) => setForm((f) => ({ ...f, password: v }))}
+                  autoCapitalize="none"
+                />
               ) : (
-                <Typography variant="body-base-bold" className="text-white">
-                  {t(mode === 'invite' ? 'Staff.sendInvite' : 'Staff.create')}
+                <Typography variant="body-small-regular" className="text-gray-600">
+                  {t('Staff.inviteHint')}
                 </Typography>
               )}
-            </Pressable>
-          </View>
-
-          {/* Staff list */}
-          <Typography variant="body-base-bold" className="mb-2 text-text-primary">{t('Staff.team')}</Typography>
-          {loading ? (
-            <View className="py-8 items-center"><ActivityIndicator color="#EC2828" /></View>
-          ) : staff.length === 0 ? (
-            <Typography variant="body-small-regular" className="text-gray-500">{t('Staff.noStaff')}</Typography>
-          ) : (
-            staff.map((m) => (
-              <View key={`${m.kind}-${m.id}`} className="mb-3 rounded-2xl bg-white p-4">
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-1 pr-2">
-                    <Typography variant="body-base-semibold" className="text-text-primary">
-                      {m.name || m.email}
-                    </Typography>
-                    <Typography variant="body-small-regular" className="text-gray-500">{m.email}</Typography>
-                  </View>
-                  <View
-                    className="rounded-full px-3 py-1"
-                    style={{ backgroundColor: m.kind === 'admin' ? '#FEECEC' : '#EEF2FF' }}
-                  >
-                    <Typography variant="body-very-small-medium" style={{ color: m.kind === 'admin' ? '#EC2828' : '#4F46E5' }}>
-                      {t(m.kind === 'admin' ? 'Staff.roleAdmin' : 'Staff.roleEmployee')}
-                    </Typography>
-                  </View>
-                </View>
-                <View className="mt-3 flex-row items-center justify-between">
-                  <View className="flex-row items-center">
-                    <Switch
-                      value={!m.loginDisabled}
-                      onValueChange={() => toggleLogin(m)}
-                      disabled={busy || m.id === userId}
-                      trackColor={{ true: '#EC2828', false: '#D1D5DB' }}
-                      thumbColor="#fff"
-                    />
-                    <Typography variant="body-small-regular" className="ml-2 text-gray-600">
-                      {t(m.loginDisabled ? 'Staff.loginDisabled' : 'Staff.loginEnabled')}
-                    </Typography>
-                  </View>
-                  <Pressable onPress={() => resetPassword(m)} disabled={busy} hitSlop={8}>
-                    <Typography variant="body-small-semibold" style={{ color: '#EC2828' }}>
-                      {t('Staff.resetPassword')}
-                    </Typography>
-                  </Pressable>
-                </View>
-              </View>
-            ))
+              <Pressable
+                onPress={() => void create()}
+                disabled={!canCreate}
+                accessibilityRole="button"
+                className="items-center justify-center rounded-xl"
+                style={{ minHeight: 56, backgroundColor: canCreate ? '#EC2828' : '#F4A3A3' }}
+              >
+                {busy ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Typography variant="body-base-bold" className="text-white">
+                    {t(mode === 'invite' ? 'Staff.sendInvite' : 'Staff.create')}
+                  </Typography>
+                )}
+              </Pressable>
+            </View>
           )}
 
-          {/* Login sessions */}
+          {/* Team */}
+          <Typography variant="body-lg-bold" className="mb-2 text-text-primary" accessibilityRole="header">
+            {t('Staff.team')}
+          </Typography>
+          {brandWide && brandSpots.length > 1 && (
+            <View className="mb-3">
+              <Segmented
+                value={scope}
+                onChange={(s) => {
+                  setScope(s);
+                  setLoading(true);
+                }}
+                options={[
+                  { value: 'spot', label: t('Staff.scopeSpot') },
+                  { value: 'brand', label: t('Staff.scopeBrand') },
+                ]}
+              />
+            </View>
+          )}
+          {loading ? (
+            <View className="items-center py-8"><ActivityIndicator color="#EC2828" /></View>
+          ) : staff.length === 0 ? (
+            <Typography variant="body-base-regular" className="text-gray-600">
+              {t(scope === 'brand' ? 'Staff.noStaffBrand' : 'Staff.noStaff')}
+            </Typography>
+          ) : (
+            staff.map((m) => {
+              const manage = canManageMember(caller, m);
+              const assign = canAssignSpots(caller, m);
+              return (
+                <StaffMemberRow
+                  key={m.id}
+                  member={m}
+                  isSelf={m.id === userId}
+                  showSpots={brandSpots.length > 1}
+                  canToggleLogin={manage}
+                  hasActions={manage || assign}
+                  busy={busy}
+                  onToggleLogin={() => void toggleLogin(m)}
+                  onOpenActions={() => setActionsFor(m)}
+                />
+              );
+            })
+          )}
+
+          {/* Sign-ins at this spot */}
           <View className="mb-2 mt-6 flex-row items-center justify-between">
-            <Typography variant="body-base-bold" className="text-text-primary">{t('Staff.sessions')}</Typography>
+            <Typography variant="body-lg-bold" className="text-text-primary" accessibilityRole="header">
+              {t('Staff.sessions')}
+            </Typography>
             <Pressable
-              onPress={exportSessions}
+              onPress={() => void exportSessions()}
               disabled={exporting}
-              className="flex-row items-center rounded-full border border-gray-300 bg-white px-3 py-1.5"
+              accessibilityRole="button"
+              className="flex-row items-center rounded-full border border-gray-300 bg-white px-4"
+              style={{ minHeight: 44 }}
             >
               {exporting ? (
                 <ActivityIndicator size="small" color="#EC2828" />
               ) : (
                 <>
-                  <Ionicons name="download-outline" size={15} color="#EC2828" />
-                  <Typography variant="body-small-semibold" className="ml-1" style={{ color: '#EC2828' }}>
+                  <Ionicons name="download-outline" size={16} color="#B91C1C" />
+                  <Typography variant="body-small-semibold" className="ml-1" style={{ color: '#B91C1C' }}>
                     {t('Staff.exportPdf')}
                   </Typography>
                 </>
@@ -366,25 +412,52 @@ export default function StaffScreen() {
             </Pressable>
           </View>
           {loading ? null : sessions.length === 0 ? (
-            <Typography variant="body-small-regular" className="text-gray-500">{t('Staff.noSessions')}</Typography>
+            <Typography variant="body-base-regular" className="text-gray-600">{t('Staff.noSessions')}</Typography>
           ) : (
             sessions.slice(0, 30).map((s) => (
               <View key={s.id} className="mb-2 flex-row items-center justify-between rounded-xl bg-white px-4 py-3">
                 <View className="flex-1 pr-2">
-                  <Typography variant="body-small-semibold" className="text-text-primary">{s.staffName}</Typography>
-                  <Typography variant="body-very-small-medium" className="text-gray-500">
-                    {t(s.role === 'SPOT_ADMIN' ? 'Staff.roleAdmin' : 'Staff.roleEmployee')}
+                  <Typography variant="body-base-semibold" className="text-text-primary">{s.staffName}</Typography>
+                  <Typography variant="body-small-regular" className="text-gray-600">
+                    {t(`Roles.${s.role}`, { defaultValue: s.role })}
+                    {' · '}
+                    {t(s.event === 'SPOT_SWITCH' ? 'Staff.eventSwitched' : 'Staff.eventLogin')}
                     {s.ipAddress ? ` · ${s.ipAddress}` : ''}
                   </Typography>
                 </View>
-                <Typography variant="body-very-small-medium" className="text-gray-500">
-                  {timeAgo(s.loginAt)}
+                <Typography variant="body-small-regular" className="text-gray-600">
+                  {formatWhen(s.loginAt)}
                 </Typography>
               </View>
             ))
           )}
         </ResponsiveContainer>
       </ScrollView>
+
+      <StaffActionsSheet
+        member={actionsFor}
+        canManage={!!actionsFor && canManageMember(caller, actionsFor)}
+        canAssign={!!actionsFor && canAssignSpots(caller, actionsFor)}
+        employeeSpots={employeeSpots}
+        adminSpots={adminSpots}
+        onClose={() => setActionsFor(null)}
+        onChanged={(message) => {
+          setActionsFor(null);
+          setError(null);
+          setNotice(message);
+          void load();
+        }}
+      />
     </View>
   );
 }
+
+function GuardedStaff() {
+  return (
+    <AccessGuard min="MANAGE_SPOT" messageKey="Staff.adminOnly">
+      <StaffScreen />
+    </AccessGuard>
+  );
+}
+
+export default withSpotScope(GuardedStaff);

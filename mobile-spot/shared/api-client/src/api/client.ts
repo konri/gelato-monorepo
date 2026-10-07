@@ -1,4 +1,7 @@
 import { config } from '@/config';
+import { t as translate } from 'i18next';
+import { clientHeaders } from '../clientInfo';
+import { CLIENT_ERROR_CODES, fetchWithTimeout, isRequestTimeoutError } from '../utils/fetchWithTimeout';
 import { safeGetItem } from '../utils/safeAsyncStorage';
 import type { ApiResponse } from './types';
 
@@ -14,6 +17,7 @@ async function makeRequest<T>(
 
   const defaultHeaders = {
     'Content-Type': 'application/json',
+    ...clientHeaders(),
     ...(token && { 'Authorization': `Bearer ${token}` }),
   };
 
@@ -26,8 +30,9 @@ async function makeRequest<T>(
   };
 
   try {
-    const response = await fetch(url, config);
-    
+    // 15 s deadline (Android's OkHttp has no read timeout of its own).
+    const response = await fetchWithTimeout(url, config);
+
     let data;
     try {
       data = await response.json();
@@ -39,9 +44,13 @@ async function makeRequest<T>(
     }
 
     if (!response.ok) {
+      // REST error bodies carry a machine-readable `code` (e.g. NO_MEMBERSHIP,
+      // UPGRADE_REQUIRED) next to the localized `error` text.
       return {
         error: data.error || data.message || `HTTP error! status: ${response.status}`,
         status: response.status,
+        code: typeof data.code === 'string' ? data.code : undefined,
+        details: data,
       };
     }
 
@@ -50,9 +59,14 @@ async function makeRequest<T>(
       status: response.status,
     };
   } catch (error) {
+    // No answer at all: a client-side code and a localized text (screens such
+    // as login show `error` as is).
+    const code = isRequestTimeoutError(error) ? CLIENT_ERROR_CODES.TIMEOUT : CLIENT_ERROR_CODES.NETWORK;
+    const text = translate(`Errors.codes.${code}`, { defaultValue: '' });
     return {
-      error: error instanceof Error ? error.message : 'Network error',
+      error: text || (error instanceof Error ? error.message : 'Network error'),
       status: 0,
+      code,
     };
   }
 }

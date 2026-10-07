@@ -51,5 +51,5 @@ export type MenuItem = {
   weightGrams?: number | null;
 };
 
-export type SpotTastesResponse = { spotTastes: MenuTaste[] };
-export type SpotProductsResponse = { spotProducts: MenuProduct[] };
+export type ManagedTastesResponse = { spotTastes: MenuTaste[] };
+export type ManagedProductsResponse = { spotProducts: MenuProduct[] };

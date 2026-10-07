@@ -1,5 +1,6 @@
 import { Typography } from '@/components/atoms/Typography';
 import { onRequestError } from '@/shared/api-client/src/errorEvents';
+import { errorCodeMessage } from '@/utils/errorCodes';
 import { Ionicons } from '@expo/vector-icons';
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -8,10 +9,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export type ToastType = 'success' | 'error' | 'info';
 
-type ToastState = { id: number; type: ToastType; message: string };
+type ToastOptions = {
+  /** Tapping the toast runs this (then dismisses), e.g. open another spot's order. */
+  onPress?: () => void;
+};
+
+type ToastState = { id: number; type: ToastType; message: string; onPress?: () => void };
 
 type ToastContextValue = {
-  show: (message: string, type?: ToastType) => void;
+  show: (message: string, type?: ToastType, options?: ToastOptions) => void;
   success: (message: string) => void;
   error: (message: string) => void;
 };
@@ -25,6 +31,7 @@ const STYLES: Record<ToastType, { bg: string; icon: any }> = {
 };
 
 const DURATION_MS = 3200;
+const ACTION_DURATION_MS = 6000;
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
@@ -43,10 +50,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, [opacity, translateY]);
 
   const show = useCallback(
-    (message: string, type: ToastType = 'info') => {
+    (message: string, type: ToastType = 'info', options?: ToastOptions) => {
       if (!message) return;
       idRef.current += 1;
-      setToast({ id: idRef.current, type, message });
+      setToast({ id: idRef.current, type, message, onPress: options?.onPress });
       opacity.setValue(0);
       translateY.setValue(-16);
       Animated.parallel([
@@ -54,16 +61,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         Animated.spring(translateY, { toValue: 0, useNativeDriver: true, friction: 8 }),
       ]).start();
       if (hideTimer.current) clearTimeout(hideTimer.current);
-      hideTimer.current = setTimeout(dismiss, DURATION_MS);
+      // A toast with an action stays a little longer so it can be tapped.
+      hideTimer.current = setTimeout(dismiss, options?.onPress ? ACTION_DURATION_MS : DURATION_MS);
     },
     [opacity, translateY, dismiss],
   );
 
   // Global error toasts from the api-client choke point (backend down, etc.).
+  // A server error code maps to `Errors.codes.*` (SCOPE_FORBIDDEN keeps the
+  // server's own localized text); anything else gets the generic text.
   useEffect(() => {
-    const unsub = onRequestError(({ kind }) => {
+    const unsub = onRequestError(({ kind, message, code }) => {
+      const byCode = errorCodeMessage(code, message);
       show(
-        kind === 'network' ? t('Errors.networkError') : t('Errors.somethingWrong'),
+        byCode ?? (kind === 'network' ? t('Errors.networkError') : t('Errors.somethingWrong')),
         'error',
       );
     });
@@ -98,7 +109,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           }}
         >
           <Pressable
-            onPress={dismiss}
+            onPress={() => {
+              const action = toast.onPress;
+              dismiss();
+              action?.();
+            }}
+            accessibilityRole={toast.onPress ? 'button' : undefined}
             style={{
               flexDirection: 'row',
               alignItems: 'center',

@@ -3,6 +3,7 @@ import { Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Typography } from '@/components/atoms/Typography';
+import { SidebarBrandBlock } from '@/components/molecules/SpotSwitcher/SidebarBrandBlock';
 import { useRole } from '@/hooks/useRole';
 import { visibleNavItems } from './navItems';
 
@@ -12,7 +13,8 @@ const BRAND = '#EC2828';
 
 /**
  * Left sidebar navigation for tablet/web. Rendered as the Tabs `tabBar` when
- * the viewport is wide; role-filters items (admin-only entries hidden for
+ * the viewport is wide; shows the brand and the active spot on top (with the
+ * spot switcher), role-filters items (admin-only entries hidden for
  * employees) and reflects/controls the active route via expo-router state.
  */
 export function SpotSidebar({ state, navigation }: BottomTabBarProps) {
@@ -33,29 +35,8 @@ export function SpotSidebar({ state, navigation }: BottomTabBarProps) {
         paddingHorizontal: 12,
       }}
     >
-      {/* Brand */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, marginBottom: 28 }}>
-        <View
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            backgroundColor: BRAND,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Ionicons name="ice-cream" size={20} color="#fff" />
-        </View>
-        <View style={{ marginLeft: 10 }}>
-          <Typography variant="body-lg-bold" className="text-text-primary leading-5">
-            Loodly
-          </Typography>
-          <Typography variant="body-very-small-medium" style={{ color: BRAND, letterSpacing: 2 }}>
-            SPOT
-          </Typography>
-        </View>
-      </View>
+      {/* Brand + active spot (switcher pill when the user has several spots) */}
+      <SidebarBrandBlock />
 
       {/* Nav items */}
       {items.map((item) => {

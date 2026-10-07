@@ -1,30 +1,21 @@
 import { useAppInitialization } from '@/hooks/useAppInitialization'
 import { useFonts } from 'expo-font'
-import { router, Stack } from 'expo-router'
-import { useEffect } from 'react'
+import { Stack } from 'expo-router'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import 'react-native-reanimated'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { onSessionExpired } from '@/shared/api-client/src/session'
-import { useAuthState } from '@/hooks/useAuthState'
+import { SessionProvider } from '@/contexts/SessionProvider'
+import { SpotContextProvider } from '@/contexts/SpotContextProvider'
 import { OrderAlertProvider } from '@/components/organisms/OrderAlertProvider'
+import { RealtimeProvider } from '@/components/organisms/RealtimeProvider'
 import { ToastProvider } from '@/components/organisms/ToastProvider'
+import { UpgradeRequiredOverlay } from '@/components/organisms/UpgradeRequiredOverlay'
 import { NotificationBridge } from '@/components/NotificationBridge'
 import '../translations'
 import './global.css'
 
 export default function RootLayout() {
   useAppInitialization()
-  const { isLoggedIn } = useAuthState()
-
-  // When a request can't be authorized (token expired + refresh failed), the
-  // session module clears storage and fires this — send the user to login.
-  useEffect(() => {
-    const unsubscribe = onSessionExpired(() => {
-      router.replace('/login')
-    })
-    return unsubscribe
-  }, [])
 
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
@@ -37,33 +28,44 @@ export default function RootLayout() {
     return null
   }
 
+  // Session → spot context → one realtime socket. Session expiry (a request
+  // that can't be authorized) is handled inside SessionProvider.
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ToastProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="login" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="menu/index" options={{ headerShown: false }} />
-            <Stack.Screen name="spot-details/index" options={{ headerShown: false }} />
-            <Stack.Screen name="dashboard/index" options={{ headerShown: false }} />
-            <Stack.Screen name="complaints/index" options={{ headerShown: false }} />
-            <Stack.Screen name="news/index" options={{ headerShown: false }} />
-            <Stack.Screen name="news_comments/[postId]" options={{ headerShown: false }} />
-            <Stack.Screen name="staff/index" options={{ headerShown: false }} />
-            <Stack.Screen name="history/index" options={{ headerShown: false }} />
-            <Stack.Screen name="notifications/index" options={{ headerShown: false }} />
-            <Stack.Screen name="notification/[id]" options={{ headerShown: false }} />
-            <Stack.Screen name="canceled/index" options={{ headerShown: false }} />
-            <Stack.Screen name="courier/[id]" options={{ headerShown: false }} />
-            <Stack.Screen name="settings/edit-profile" options={{ headerShown: false }} />
-            <Stack.Screen name="order/[id]" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" options={{ headerShown: true }} />
-          </Stack>
-          {/* App-wide incoming-order alert (audible; dismissable when several staff). */}
-          <OrderAlertProvider enabled={isLoggedIn} />
-          {/* Bridges push notifications → toast / deep-link. */}
-          <NotificationBridge />
+          <SessionProvider>
+            <SpotContextProvider>
+              <RealtimeProvider>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="login/index" options={{ headerShown: false }} />
+                  <Stack.Screen name="choose-spot" options={{ headerShown: false, gestureEnabled: false }} />
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen name="menu/index" options={{ headerShown: false }} />
+                  <Stack.Screen name="spot-details/index" options={{ headerShown: false }} />
+                  <Stack.Screen name="dashboard/index" options={{ headerShown: false }} />
+                  <Stack.Screen name="complaints/index" options={{ headerShown: false }} />
+                  <Stack.Screen name="news/index" options={{ headerShown: false }} />
+                  <Stack.Screen name="news_comments/[postId]" options={{ headerShown: false }} />
+                  <Stack.Screen name="staff/index" options={{ headerShown: false }} />
+                  <Stack.Screen name="history/index" options={{ headerShown: false }} />
+                  <Stack.Screen name="notifications/index" options={{ headerShown: false }} />
+                  <Stack.Screen name="notification/[id]" options={{ headerShown: false }} />
+                  <Stack.Screen name="canceled/index" options={{ headerShown: false }} />
+                  <Stack.Screen name="courier/[id]" options={{ headerShown: false }} />
+                  <Stack.Screen name="settings/edit-profile" options={{ headerShown: false }} />
+                  <Stack.Screen name="order/[id]" options={{ headerShown: false }} />
+                  <Stack.Screen name="+not-found" options={{ headerShown: true }} />
+                </Stack>
+                {/* App-wide incoming-order alert for the active spot (audible;
+                    dismissable when several staff work there). */}
+                <OrderAlertProvider />
+                {/* Bridges push notifications → toast / deep-link. */}
+                <NotificationBridge />
+                <UpgradeRequiredOverlay />
+              </RealtimeProvider>
+            </SpotContextProvider>
+          </SessionProvider>
         </ToastProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

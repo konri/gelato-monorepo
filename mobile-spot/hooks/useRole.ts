@@ -1,53 +1,51 @@
-import { useEffect, useState } from 'react';
-import { getStoredSpotContext } from './useSpotOrders';
+import { atLeast, capabilitiesFor, type AccessLevel, type Capabilities } from '@/auth/levels';
+import { useSession } from '@/contexts/SessionProvider';
+import type { StaffKindVM } from '@/shared/api-client/src/api/types';
+import { useMemo } from 'react';
+import { useSpotState } from './useActiveSpot';
 
 export type SpotRoleInfo = {
   roles: string[];
-  spotId: string | null;
   userId: string | null;
-  /** SPOT_ADMIN (or a global admin) — can manage products, spot, dashboards. */
+  /** The active spot (reactive; null until one is selected). */
+  spotId: string | null;
+  /** The caller's level at the active spot. */
+  level: AccessLevel | null;
+  staffKind: StaffKindVM | null;
+  /** MANAGE_SPOT or higher at the active spot (spot admin, brand admin, Loodly team). */
   isAdmin: boolean;
-  /** EMPLOYEE with no admin role — restricted to operational screens. */
+  /** MANAGE_BRAND or higher at the active spot. */
+  isBrandAdmin: boolean;
+  isPlatform: boolean;
+  /** OPERATE only at the active spot. */
   isEmployee: boolean;
+  can: Capabilities;
   loading: boolean;
 };
 
-const ADMIN_ROLES = ['SPOT_ADMIN', 'SPOTS_ADMIN', 'SUPER_ADMIN'];
-
 /**
- * The logged-in staff member's role in the spot app, read from the stored
- * spot context. Drives Admin-vs-Employee gating across the UI.
+ * The staff member's role at the ACTIVE spot (BRANDS_SPEC §4.5). The level
+ * comes from the spot context (myStaffContext / login), never from the global
+ * roles, and follows every spot switch.
  */
 export function useRole(): SpotRoleInfo {
-  const [state, setState] = useState<Omit<SpotRoleInfo, 'loading'>>({
-    roles: [],
-    spotId: null,
-    userId: null,
-    isAdmin: false,
-    isEmployee: false,
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    getStoredSpotContext()
-      .then((ctx) => {
-        if (cancelled) return;
-        const roles = ctx.roles ?? [];
-        const isAdmin = roles.some((r) => ADMIN_ROLES.includes(r));
-        setState({
-          roles,
-          spotId: ctx.spotId,
-          userId: ctx.userId,
-          isAdmin,
-          isEmployee: !isAdmin && roles.includes('EMPLOYEE'),
-        });
-      })
-      .finally(() => !cancelled && setLoading(false));
-    return () => {
-      cancelled = true;
+  const session = useSession();
+  const spot = useSpotState();
+  return useMemo(() => {
+    const spotId = spot.status === 'ready' ? spot.activeSpotId : null;
+    const level = spotId ? spot.spots.find((s) => s.spotId === spotId)?.level ?? null : null;
+    return {
+      roles: Array.isArray(session.user?.roles) ? (session.user?.roles as string[]) : [],
+      userId: session.userId ?? spot.userId,
+      spotId,
+      level,
+      staffKind: spot.staffKind,
+      isAdmin: atLeast(level, 'MANAGE_SPOT'),
+      isBrandAdmin: atLeast(level, 'MANAGE_BRAND'),
+      isPlatform: level === 'PLATFORM',
+      isEmployee: level === 'OPERATE',
+      can: capabilitiesFor(level),
+      loading: session.status === 'loading' || spot.status === 'idle' || spot.status === 'loading',
     };
-  }, []);
-
-  return { ...state, loading };
+  }, [session.user, session.userId, session.status, spot]);
 }

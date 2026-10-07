@@ -1,4 +1,5 @@
 import { StandardTabsLayout } from "@/components/organisms/StandardTabsLayout";
+import { StaffTabsGate } from "@/components/organisms/StaffTabsGate";
 import { colors } from "@/constants/colors";
 import { useTabsConfig } from "@/hooks/useTabsConfig";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
@@ -7,7 +8,17 @@ import { useTranslation } from "react-i18next";
 import { DynamicColorIOS, Platform } from "react-native";
 import {getSfIcon} from "@/components/organisms/StandardTabsLayout/utils";
 
+// The gate (auth / spot redirects, push registration, banners) wraps the iOS
+// layout too: before, iOS had no auth redirect and no push registration (C6).
 export default function TabsLayout() {
+    return (
+        <StaffTabsGate>
+            <IosTabs />
+        </StaffTabsGate>
+    );
+}
+
+function IosTabs() {
     const { t } = useTranslation();
     const { config } = useTabsConfig();
 

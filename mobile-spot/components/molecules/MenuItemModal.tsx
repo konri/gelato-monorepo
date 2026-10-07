@@ -1,5 +1,6 @@
 import { Typography } from '@/components/atoms/Typography';
 import { config } from '@/config';
+import { clientHeaders } from '@/shared/api-client/src/clientInfo';
 import {
   createTaste,
   updateTaste,
@@ -41,7 +42,7 @@ async function uploadImage(kind: 'taste' | 'product', id: string, uri: string) {
   }
   await fetch(`${config.REST_API_URL}/upload/${kind}/${id}`, {
     method: 'POST',
-    headers: token ? { authorization: `Bearer ${token}` } : {},
+    headers: { ...clientHeaders(), ...(token ? { authorization: `Bearer ${token}` } : {}) },
     body: form,
   });
 }

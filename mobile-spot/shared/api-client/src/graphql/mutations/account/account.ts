@@ -5,9 +5,3 @@ export const DELETE_ACCOUNT_MUTATION = gql`
     deleteAccount
   }
 `;
-
-export const SEND_CONTACT_MESSAGE_MUTATION = gql`
-  mutation SendContactMessage($email: String!, $title: String!, $message: String!) {
-    sendContactMessage(email: $email, title: $title, message: $message)
-  }
-`;

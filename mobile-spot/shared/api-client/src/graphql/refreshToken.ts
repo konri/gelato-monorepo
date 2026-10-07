@@ -1,4 +1,6 @@
 import { config } from '@/config';
+import { clientHeaders } from '../clientInfo';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout';
 import { safeGetItem, safeSetItem } from '../utils/safeAsyncStorage';
 
 // Inlined as a string (rather than a gql document) so we can POST it via raw
@@ -25,9 +27,10 @@ export const refreshAccessToken = async (apiUrl: string = config.API_URL): Promi
       const refreshToken = await safeGetItem('refresh_token');
       if (!refreshToken) return null;
 
-      const response = await fetch(`${apiUrl}/graphql`, {
+      // Every request that hit UNAUTHENTICATED waits on this one: never let it hang.
+      const response = await fetchWithTimeout(`${apiUrl}/graphql`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...clientHeaders() },
         body: JSON.stringify({
           query: REFRESH_TOKEN_MUTATION,
           variables: { refreshToken },

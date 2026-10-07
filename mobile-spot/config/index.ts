@@ -28,6 +28,20 @@ export const config = {
   // Legal pages (landing-page-new, static export)
   TERMS_URL: 'https://loodly.pl/terms',
   PRIVACY_POLICY_URL: 'https://loodly.pl/policy',
+
+  // Admin web (brand setup: rewards, promotions, spots, cities, logo). Same
+  // target as the backend's GELATO_ADMIN_URL. Empty = the link is hidden.
+  ADMIN_WEB_URL: ENV === 'prod'
+    ? (process.env.EXPO_PUBLIC_ADMIN_WEB_URL_PROD || '')
+    : (process.env.EXPO_PUBLIC_ADMIN_WEB_URL_DEV || 'http://localhost:5173'),
+
+  // Store pages for the "Update app" button (UPGRADE_REQUIRED). The Play Store
+  // URL follows the Android package id in app.json; the App Store URL needs the
+  // numeric app id, so it comes from the environment (empty = button hidden).
+  APP_STORE_URL: process.env.EXPO_PUBLIC_SPOT_APP_STORE_URL || '',
+  PLAY_STORE_URL:
+    process.env.EXPO_PUBLIC_SPOT_PLAY_STORE_URL ||
+    'https://play.google.com/store/apps/details?id=com.konradhopek.gelato.spot',
 } as const;
 
 export const GOOGLE_SIGNIN_CONFIG = {

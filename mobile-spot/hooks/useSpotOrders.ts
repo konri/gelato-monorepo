@@ -8,59 +8,38 @@ import {
   updateOrderStatus as updateOrderStatusApi,
   type SpotOrder,
 } from '@repo/api-client';
+import { useActiveSpotId } from '@/hooks/useActiveSpot';
+import { refreshEmitter } from '@/hooks/useRefreshEmitter';
+import { spotStore } from '@/stores/spotStore';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const SPOT_CTX_KEY = 'spotContext';
-
-// Persist the staff member's spot id + identity at login (the whoami sync can
-// overwrite userData without these fields, so we keep our own copy).
-export async function storeSpotContext(ctx: {
-  spotId: string | null;
-  userId: string | null;
-  roles: string[];
-}) {
-  await AsyncStorage.setItem(SPOT_CTX_KEY, JSON.stringify(ctx));
-}
-
-// The logged-in staff member's spot id + identity.
-export async function getStoredSpotContext(): Promise<{
-  spotId: string | null;
-  userId: string | null;
-  roles: string[];
-}> {
-  try {
-    const raw = await AsyncStorage.getItem(SPOT_CTX_KEY);
-    if (raw) return JSON.parse(raw);
-    // Fallback: userData (in case ctx wasn't stored).
-    const ud = await AsyncStorage.getItem('userData');
-    const u = ud ? JSON.parse(ud) : null;
-    return { spotId: u?.spotId ?? null, userId: u?.id ?? null, roles: u?.roles ?? [] };
-  } catch {
-    return { spotId: null, userId: null, roles: [] };
-  }
-}
-
-// Fetch spot orders for a given status filter (null = all).
+// Fetch the ACTIVE spot's orders for a given status filter (null = all).
 // `pollMs` adds a polling fallback (default 30s) so the queue stays fresh even
 // if the websocket subscription drops — set to 0 to disable.
 export function useSpotOrders(status: string | null, pollMs = 30000) {
+  const spotId = useActiveSpotId();
   const [orders, setOrders] = useState<SpotOrder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [spotId, setSpotId] = useState<string | null>(null);
+
+  // A different spot: drop the previous spot's list right away.
+  useEffect(() => {
+    setOrders([]);
+    setLoading(true);
+  }, [spotId]);
 
   const load = useCallback(async () => {
-    const ctx = await getStoredSpotContext();
-    setSpotId(ctx.spotId);
-    if (!ctx.spotId) {
+    if (!spotId) {
       setOrders([]);
       setLoading(false);
       return;
     }
     const token = await AsyncStorage.getItem('access_token');
-    const res = await getSpotOrders(ctx.spotId, status, { token: token || undefined });
+    const res = await getSpotOrders(spotId, status, { token: token || undefined });
+    // Stale guard: the spot changed while the request was in flight.
+    if (spotStore.getActiveSpotId() !== spotId) return;
     setOrders(res.data ?? []);
     setLoading(false);
-  }, [status]);
+  }, [status, spotId]);
 
   useEffect(() => {
     void load();
@@ -81,21 +60,27 @@ export function useSpotOrders(status: string | null, pollMs = 30000) {
 // Orders needing spot attention in the last 24h (terminated / cancelled /
 // incident-held) — the "Needs attention" section on the Prepared tab.
 export function useSpotAttentionOrders(pollMs = 30000) {
+  const spotId = useActiveSpotId();
   const [orders, setOrders] = useState<SpotOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    setOrders([]);
+    setLoading(true);
+  }, [spotId]);
+
   const load = useCallback(async () => {
-    const ctx = await getStoredSpotContext();
-    if (!ctx.spotId) {
+    if (!spotId) {
       setOrders([]);
       setLoading(false);
       return;
     }
     const token = await AsyncStorage.getItem('access_token');
-    const res = await getSpotAttentionOrders(ctx.spotId, { token: token || undefined });
+    const res = await getSpotAttentionOrders(spotId, { token: token || undefined });
+    if (spotStore.getActiveSpotId() !== spotId) return;
     setOrders(res.data ?? []);
     setLoading(false);
-  }, []);
+  }, [spotId]);
 
   useEffect(() => {
     void load();
@@ -108,6 +93,9 @@ export function useSpotAttentionOrders(pollMs = 30000) {
     const id = setInterval(() => void loadRef.current(), pollMs);
     return () => clearInterval(id);
   }, [pollMs]);
+
+  // A courier incident / foreground push (refreshEmitter) → refetch now.
+  useEffect(() => refreshEmitter.subscribe(() => void loadRef.current()), []);
 
   return { orders, loading, refetch: load };
 }

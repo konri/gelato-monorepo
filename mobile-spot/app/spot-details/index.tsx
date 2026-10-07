@@ -1,10 +1,15 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { withSpotScope } from '@/components/hoc/withSpotScope';
+import { AccessGuard } from '@/components/molecules/AccessGuard';
 import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import { config } from '@/config';
+import { spotCityName, useActiveSpotId } from '@/hooks/useActiveSpot';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { useRole } from '@/hooks/useRole';
 import { useToast } from '@/components/organisms/ToastProvider';
-import { getStoredSpotContext } from '@/hooks/useSpotOrders';
+import { clientHeaders } from '@/shared/api-client/src/clientInfo';
+import { spotStore } from '@/stores/spotStore';
 import {
   getSpotDetails,
   updateSpotDetails,
@@ -44,7 +49,7 @@ async function uploadSpotImage(spotId: string, uri: string, type: 'logo' | 'cove
   }
   const res = await fetch(`${config.REST_API_URL}/upload/spot/${spotId}?type=${type}`, {
     method: 'POST',
-    headers: token ? { authorization: `Bearer ${token}` } : {},
+    headers: { ...clientHeaders(), ...(token ? { authorization: `Bearer ${token}` } : {}) },
     body: form,
   });
   if (!res.ok) {
@@ -53,10 +58,13 @@ async function uploadSpotImage(spotId: string, uri: string, type: 'logo' | 'cove
   }
 }
 
-export default function SpotDetailsScreen() {
-  const { t } = useTranslation();
+function SpotDetailsScreen() {
+  const { t, i18n } = useTranslation();
   const { isWide } = useBreakpoint();
   const toast = useToast();
+  const spotId = useActiveSpotId();
+  // Name, address and GPS are crucial fields: brand admins only (E4).
+  const canEditCrucial = useRole().can.editCrucialSpotFields;
 
   const [spot, setSpot] = useState<SpotDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,13 +91,14 @@ export default function SpotDetailsScreen() {
   const [hours, setHours] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
-    const ctx = await getStoredSpotContext();
-    if (!ctx.spotId) {
+    if (!spotId) {
       setLoading(false);
       return;
     }
     const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
-    const res = await getSpotDetails(ctx.spotId, { token });
+    const res = await getSpotDetails(spotId, { token });
+    // Stale guard: the spot changed while loading.
+    if (spotStore.getActiveSpotId() !== spotId) return;
     const s = res.data;
     if (s) {
       setSpot(s);
@@ -116,7 +125,7 @@ export default function SpotDetailsScreen() {
       );
     }
     setLoading(false);
-  }, []);
+  }, [spotId]);
 
   useEffect(() => {
     void load();
@@ -136,15 +145,16 @@ export default function SpotDetailsScreen() {
         form.latitude.trim() && form.longitude.trim() && !isNaN(lat) && !isNaN(lng)
           ? { latitude: lat, longitude: lng }
           : {};
+      // Without MANAGE_BRAND the crucial fields are left out entirely (not
+      // just unchanged), so float drift in the GPS can never trip the check.
+      const crucial = canEditCrucial ? { name: form.name, address: form.address, ...gps } : {};
       const res = await updateSpotDetails(
         {
           id: spot.id,
-          name: form.name,
-          address: form.address,
+          ...crucial,
           phone: form.phone,
           email: form.email,
           description: form.description,
-          ...gps,
           openingHours: JSON.stringify(hours),
           hasSeating: form.hasSeating,
           seatingCapacity: form.seatingCapacity ? parseInt(form.seatingCapacity, 10) : undefined,
@@ -222,7 +232,7 @@ export default function SpotDetailsScreen() {
 
   return (
     <View className="flex-1 bg-gray-50">
-      <ScreenHeader title={t('SpotDetails.title')} />
+      <ScreenHeader title={t('SpotDetails.title')} spotScoped />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         <ResponsiveContainer maxWidth={640}>
@@ -267,36 +277,73 @@ export default function SpotDetailsScreen() {
             </View>
           </View>
 
-          <Field label={t('SpotDetails.name')} value={form.name} onChangeText={set('name')} />
-          <Field label={t('SpotDetails.address')} value={form.address} onChangeText={set('address')} />
+          {/* Brand and city: read-only here (changed in the admin web). */}
+          <View className="mb-3 rounded-xl bg-white px-4 py-3">
+            <ReadOnlyRow label={t('SpotDetails.brandLabel')} value={spot.brand?.name ?? '—'} />
+            <ReadOnlyRow
+              label={t('SpotDetails.cityLabel')}
+              value={
+                spotCityName(
+                  spot.city ? { cityName: spot.city.name, cityNameLocal: spot.city.nameLocal ?? null } : null,
+                  i18n.language,
+                ) ?? '—'
+              }
+            />
+          </View>
+
+          {canEditCrucial ? (
+            <>
+              <Field label={t('SpotDetails.name')} value={form.name} onChangeText={set('name')} />
+              <Field label={t('SpotDetails.address')} value={form.address} onChangeText={set('address')} />
+            </>
+          ) : (
+            <View className="mb-3 rounded-xl bg-white px-4 py-3">
+              <LockedRow label={t('SpotDetails.name')} value={form.name} />
+              <LockedRow label={t('SpotDetails.address')} value={form.address} />
+              <LockedRow
+                label={t('SpotDetails.coordinates')}
+                value={form.latitude && form.longitude ? `${form.latitude}, ${form.longitude}` : '—'}
+              />
+              <View className="mt-2 flex-row items-start">
+                <Ionicons name="lock-closed-outline" size={16} color="#6B7280" style={{ marginTop: 2 }} />
+                <Typography variant="body-small-regular" className="ml-1.5 flex-1 text-gray-600">
+                  {t('SpotDetails.crucialLocked')}
+                </Typography>
+              </View>
+            </View>
+          )}
           <Field label={t('SpotDetails.phone')} value={form.phone} onChangeText={set('phone')} keyboardType="phone-pad" />
           <Field label={t('SpotDetails.email')} value={form.email} onChangeText={set('email')} keyboardType="email-address" />
           <Field label={t('SpotDetails.description')} value={form.description} onChangeText={set('description')} multiline />
 
-          {/* GPS coordinates — drive the delivery-radius map. */}
-          <Typography variant="body-small-semibold" className="mb-1.5 mt-1 text-gray-700">
-            {t('SpotDetails.coordinates')}
-          </Typography>
-          <View className="flex-row gap-3">
-            <View className="flex-1">
-              <Field
-                label={t('SpotDetails.latitude')}
-                value={form.latitude}
-                onChangeText={set('latitude')}
-                keyboardType="numbers-and-punctuation"
-                placeholder="52.2297"
-              />
-            </View>
-            <View className="flex-1">
-              <Field
-                label={t('SpotDetails.longitude')}
-                value={form.longitude}
-                onChangeText={set('longitude')}
-                keyboardType="numbers-and-punctuation"
-                placeholder="21.0122"
-              />
-            </View>
-          </View>
+          {canEditCrucial && (
+            <>
+              {/* GPS coordinates — drive the delivery-radius map. */}
+              <Typography variant="body-small-semibold" className="mb-1.5 mt-1 text-gray-700">
+                {t('SpotDetails.coordinates')}
+              </Typography>
+              <View className="flex-row gap-3">
+                <View className="flex-1">
+                  <Field
+                    label={t('SpotDetails.latitude')}
+                    value={form.latitude}
+                    onChangeText={set('latitude')}
+                    keyboardType="numbers-and-punctuation"
+                    placeholder="52.2297"
+                  />
+                </View>
+                <View className="flex-1">
+                  <Field
+                    label={t('SpotDetails.longitude')}
+                    value={form.longitude}
+                    onChangeText={set('longitude')}
+                    keyboardType="numbers-and-punctuation"
+                    placeholder="21.0122"
+                  />
+                </View>
+              </View>
+            </>
+          )}
 
           {/* Opening hours */}
           <Typography variant="body-base-bold" className="mb-2 mt-4 text-text-primary">
@@ -447,6 +494,34 @@ export default function SpotDetailsScreen() {
   );
 }
 
+function ReadOnlyRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View className="flex-row items-center py-1.5">
+      <Typography variant="body-small-semibold" className="w-28 text-gray-600">
+        {label}
+      </Typography>
+      <Typography variant="body-base-regular" className="flex-1 text-text-primary">
+        {value}
+      </Typography>
+    </View>
+  );
+}
+
+// A crucial field the caller can't change (brand admin only).
+function LockedRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View className="flex-row items-center py-1.5" accessibilityState={{ disabled: true }}>
+      <Ionicons name="lock-closed-outline" size={16} color="#6B7280" />
+      <Typography variant="body-small-semibold" className="ml-1.5 w-28 text-gray-600">
+        {label}
+      </Typography>
+      <Typography variant="body-base-regular" className="flex-1 text-text-primary" selectable>
+        {value || '—'}
+      </Typography>
+    </View>
+  );
+}
+
 function Field({
   label,
   ...props
@@ -490,3 +565,13 @@ function PhotoRow({
     </Pressable>
   );
 }
+
+function GuardedSpotDetails() {
+  return (
+    <AccessGuard min="MANAGE_SPOT" messageKey="SpotDetails.adminOnly">
+      <SpotDetailsScreen />
+    </AccessGuard>
+  );
+}
+
+export default withSpotScope(GuardedSpotDetails);

@@ -1,4 +1,5 @@
 import { Typography } from '@/components/atoms/Typography';
+import { useActiveSpot } from '@/hooks/useActiveSpot';
 import { goBackOr } from '@/utils/navigation';
 import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
@@ -17,6 +18,11 @@ type Props = {
   right?: ReactNode;
   /** Hide the back button (top-level screens). */
   showBack?: boolean;
+  /**
+   * The screen belongs to the active spot: users with several spots see the
+   * spot's name in the subtitle, so they always know where they are editing.
+   */
+  spotScoped?: boolean;
 };
 
 /**
@@ -31,8 +37,12 @@ export function ScreenHeader({
   onBack,
   right,
   showBack = true,
+  spotScoped = false,
 }: Props) {
   const insets = useSafeAreaInsets();
+  const { activeSpot, canSwitch } = useActiveSpot();
+  const spotName = spotScoped && canSwitch ? activeSpot?.name : null;
+  const subtitleText = [subtitle, spotName].filter(Boolean).join(' · ');
   return (
     <View style={{ paddingTop: insets.top + 8 }} className="px-4 pb-2">
       <View className="flex-row items-center rounded-[28px] bg-white px-3 py-2.5 shadow-sm">
@@ -40,6 +50,7 @@ export function ScreenHeader({
           <Pressable
             onPress={onBack ?? (() => goBackOr(backFallback))}
             hitSlop={8}
+            accessibilityRole="button"
             className="h-10 w-10 items-center justify-center rounded-full bg-gray-100"
           >
             <Ionicons name="chevron-back" size={20} color="#212121" />
@@ -51,9 +62,9 @@ export function ScreenHeader({
           <Typography variant="body-lg-bold" className="text-center text-text-primary">
             {title}
           </Typography>
-          {!!subtitle && (
-            <Typography variant="body-small-regular" className="text-center text-gray-500">
-              {subtitle}
+          {!!subtitleText && (
+            <Typography variant="body-small-regular" className="text-center text-gray-600" numberOfLines={1}>
+              {subtitleText}
             </Typography>
           )}
         </View>

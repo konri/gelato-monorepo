@@ -1,18 +1,22 @@
 import Lockup from '@/assets/images/loodly_lockup.svg';
 import { Typography } from '@/components/atoms/Typography';
-import { useUserSync } from '@/hooks/useUserSync';
-import { storeSpotContext } from '@/hooks/useSpotOrders';
+import { canOpenUpdate, openUpdate } from '@/components/organisms/UpgradeRequiredOverlay';
+import { session, useSession } from '@/contexts/SessionProvider';
 import {
   adminForgotPassword,
   adminResetPassword,
   changeAdminPassword,
   loginUser,
+  type ApiResponse,
+  type LoginResponse,
 } from '@/shared/api-client';
+import { spotStore } from '@/stores/spotStore';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   TextInput,
   View,
@@ -22,7 +26,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function SpotLoginScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { handlePostLogin } = useUserSync();
+  const { noticeKey } = useSession();
 
   // An invite email deep-links here with ?mode=reset&email=… so a newly invited
   // spot admin lands directly on the set-password form (they have their code).
@@ -40,6 +44,15 @@ export default function SpotLoginScreen() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // The server asked for a newer build (426 UPGRADE_REQUIRED).
+  const [needsUpdate, setNeedsUpdate] = useState(false);
+
+  // A notice from the session (e.g. signed out to set a new password).
+  useEffect(() => {
+    if (!noticeKey) return;
+    setNotice(t(noticeKey));
+    session.clearNotice();
+  }, [noticeKey, t]);
 
   const subtitle =
     mode === 'firstLogin'
@@ -54,6 +67,21 @@ export default function SpotLoginScreen() {
     setMode(m);
     setError(null);
     setNotice(null);
+    setNeedsUpdate(false);
+  };
+
+  // A failed login: show the server's (localized) text; 426 adds "Update app".
+  const showLoginError = (res: ApiResponse<LoginResponse>) => {
+    setNeedsUpdate(res.status === 426 || res.code === 'UPGRADE_REQUIRED');
+    setError(res.error || t('Spot.loginFailed'));
+  };
+
+  // Signed in: seed the session + spot context, then ask for the spot when
+  // there is more than one (or none), else straight to the tabs.
+  const finishLogin = async (data: LoginResponse) => {
+    await session.signIn(data);
+    const status = spotStore.getState().status;
+    router.replace(status === 'ready' ? '/(tabs)' : '/choose-spot');
   };
 
   const doForgot = async () => {
@@ -89,31 +117,20 @@ export default function SpotLoginScreen() {
 
   const doLogin = async () => {
     setError(null);
+    setNeedsUpdate(false);
     setLoading(true);
     try {
       const res = await loginUser({ email, password, loginContext: 'ADMIN_WEB' });
       if (res.error || !res.data) {
-        setError(res.error || t('Spot.loginFailed'));
+        showLoginError(res);
         return;
       }
-      // Force a password change on first employee login.
-      if (res.data.user?.firstLogin) {
+      // Staff created with a handed-over password must set their own first.
+      if (res.data.user?.mustChangePassword || res.data.user?.firstLogin) {
         setMode('firstLogin');
         return;
       }
-      const u = res.data.user as any;
-      await storeSpotContext({
-        spotId: u?.spotId ?? null,
-        userId: u?.id ?? null,
-        roles: u?.roles ?? [],
-      });
-      await handlePostLogin(
-        res.data.user,
-        res.data.token.access_token,
-        'email',
-        res.data.refreshToken,
-      );
-      router.replace('/(tabs)');
+      await finishLogin(res.data);
     } finally {
       setLoading(false);
     }
@@ -128,27 +145,17 @@ export default function SpotLoginScreen() {
         setError(res.error);
         return;
       }
-      // Re-login with the new password to get a fresh (first-login-cleared) session.
+      // Re-login with the new password to get a fresh (unrestricted) session.
       const login = await loginUser({
         email,
         password: newPassword,
         loginContext: 'ADMIN_WEB',
       });
-      if (login.data) {
-        const u = login.data.user as any;
-        await storeSpotContext({
-          spotId: u?.spotId ?? null,
-          userId: u?.id ?? null,
-          roles: u?.roles ?? [],
-        });
-        await handlePostLogin(
-          login.data.user,
-          login.data.token.access_token,
-          'email',
-          login.data.refreshToken,
-        );
-        router.replace('/(tabs)');
+      if (login.error || !login.data) {
+        showLoginError(login);
+        return;
       }
+      await finishLogin(login.data);
     } finally {
       setLoading(false);
     }
@@ -182,10 +189,22 @@ export default function SpotLoginScreen() {
         </View>
 
         {error && (
-          <View className="mb-4 rounded-xl bg-red-50 px-4 py-3">
+          <View className="mb-4 rounded-xl bg-red-50 px-4 py-3" accessibilityRole="alert">
             <Typography variant="body-small-regular" style={{ color: '#B91C1C' }}>
               {error}
             </Typography>
+            {needsUpdate && canOpenUpdate() && (
+              <Pressable
+                onPress={openUpdate}
+                accessibilityRole="button"
+                className="mt-3 items-center justify-center rounded-xl"
+                style={{ backgroundColor: '#EC2828', minHeight: 48 }}
+              >
+                <Typography variant="body-base-bold" className="text-white">
+                  {Platform.OS === 'web' ? t('Upgrade.ctaWeb') : t('Upgrade.cta')}
+                </Typography>
+              </Pressable>
+            )}
           </View>
         )}
         {notice && (

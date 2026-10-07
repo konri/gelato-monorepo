@@ -1,5 +1,6 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { withSpotScope } from '@/components/hoc/withSpotScope';
 import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import { MenuItemModal } from '@/components/molecules/MenuItemModal';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
@@ -21,11 +22,12 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export default function MenuScreen() {
+function MenuScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { isWide } = useBreakpoint();
-  const { isAdmin } = useRole();
+  // Add / edit / delete need MANAGE_SPOT; availability switches are for everyone.
+  const isAdmin = useRole().can.editMenu;
   const { sections, spotId, loading, error, refetch, toggleAvailability, removeItem } =
     useSpotMenu();
 
@@ -60,6 +62,7 @@ export default function MenuScreen() {
       <ScreenHeader
         title={t('SpotMenu.title')}
         subtitle={isWide ? t('SpotMenu.subtitle') : undefined}
+        spotScoped
         right={
           isAdmin ? (
             <Pressable
@@ -162,7 +165,6 @@ function MenuRow({
     <View className="flex-row items-center rounded-2xl bg-white p-3 shadow-sm">
       <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-gray-100">
         {item.imageUrl ? (
-          // eslint-disable-next-line jsx-a11y/alt-text
           <Ionicons name="fast-food-outline" size={22} color="#9CA3AF" />
         ) : (
           <Ionicons name={item.kind === 'taste' ? 'ice-cream-outline' : 'cafe-outline'} size={22} color="#9CA3AF" />
@@ -198,3 +200,5 @@ function MenuRow({
     </View>
   );
 }
+
+export default withSpotScope(MenuScreen);

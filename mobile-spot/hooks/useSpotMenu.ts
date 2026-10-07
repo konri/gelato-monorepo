@@ -11,7 +11,8 @@ import {
   type MenuProduct,
 } from '@repo/api-client';
 import { useCallback, useEffect, useState } from 'react';
-import { getStoredSpotContext } from './useSpotOrders';
+import { spotStore } from '@/stores/spotStore';
+import { useActiveSpotId } from './useActiveSpot';
 
 // Section order mirrors the client app's TYPE_ORDER.
 const TYPE_ORDER = [
@@ -79,25 +80,25 @@ function groupByType(items: MenuItem[]): MenuSection[] {
 }
 
 export function useSpotMenu() {
+  const spotId = useActiveSpotId();
   const [sections, setSections] = useState<MenuSection[]>([]);
-  const [spotId, setSpotId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     setError(false);
-    const ctx = await getStoredSpotContext();
-    setSpotId(ctx.spotId);
-    if (!ctx.spotId) {
+    if (!spotId) {
       setSections([]);
       setLoading(false);
       return;
     }
     const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
     const [tastes, products] = await Promise.all([
-      getManagedTastes(ctx.spotId, { token }),
-      getManagedProducts(ctx.spotId, { token }),
+      getManagedTastes(spotId, { token }),
+      getManagedProducts(spotId, { token }),
     ]);
+    // Stale guard: the spot changed while loading.
+    if (spotStore.getActiveSpotId() !== spotId) return;
     if (tastes.error || products.error) {
       setError(true);
       setLoading(false);
@@ -105,7 +106,7 @@ export function useSpotMenu() {
     }
     setSections(groupByType(toItems(tastes.data ?? [], products.data ?? [])));
     setLoading(false);
-  }, []);
+  }, [spotId]);
 
   useEffect(() => {
     void load();

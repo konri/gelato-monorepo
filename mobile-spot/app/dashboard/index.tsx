@@ -1,8 +1,11 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { withSpotScope } from '@/components/hoc/withSpotScope';
+import { AccessGuard } from '@/components/molecules/AccessGuard';
 import { ScreenHeader } from '@/components/molecules/ScreenHeader';
+import { useActiveSpotId } from '@/hooks/useActiveSpot';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { getStoredSpotContext } from '@/hooks/useSpotOrders';
+import { spotStore } from '@/stores/spotStore';
 import {
   getSpotDashboard,
   getSpotEmployees,
@@ -39,11 +42,11 @@ function rangeFor(preset: Preset): { from: string; to: string } {
 const empName = (e: SpotEmployee) =>
   e.name || [e.firstName, e.surname].filter(Boolean).join(' ') || e.email;
 
-export default function DashboardScreen() {
+function DashboardScreen() {
   const { t, i18n } = useTranslation();
   const { isWide } = useBreakpoint();
 
-  const [spotId, setSpotId] = useState<string | null>(null);
+  const spotId = useActiveSpotId();
   const [preset, setPreset] = useState<Preset>('month');
   const [employees, setEmployees] = useState<SpotEmployee[]>([]);
   const [employeeId, setEmployeeId] = useState<string | null>(null);
@@ -53,15 +56,14 @@ export default function DashboardScreen() {
   const range = useMemo(() => rangeFor(preset), [preset]);
 
   useEffect(() => {
-    void getStoredSpotContext().then(async (ctx) => {
-      setSpotId(ctx.spotId);
-      if (ctx.spotId) {
-        const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
-        const emp = await getSpotEmployees(ctx.spotId, { token });
-        setEmployees(emp.data ?? []);
-      }
-    });
-  }, []);
+    if (!spotId) return;
+    void (async () => {
+      const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
+      const emp = await getSpotEmployees(spotId, { token });
+      if (spotStore.getActiveSpotId() !== spotId) return;
+      setEmployees(emp.data ?? []);
+    })();
+  }, [spotId]);
 
   const [exporting, setExporting] = useState<null | 'orders' | 'points'>(null);
 
@@ -70,6 +72,7 @@ export default function DashboardScreen() {
     setLoading(true);
     const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
     const res = await getSpotDashboard(spotId, range.from, range.to, employeeId, { token });
+    if (spotStore.getActiveSpotId() !== spotId) return;
     setData(res.data ?? null);
     setLoading(false);
   }, [spotId, range.from, range.to, employeeId]);
@@ -109,7 +112,7 @@ export default function DashboardScreen() {
 
   return (
     <View className="flex-1 bg-gray-50">
-      <ScreenHeader title={t('Dashboard.title')} />
+      <ScreenHeader title={t('Dashboard.title')} spotScoped />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         <ResponsiveContainer maxWidth={720}>
@@ -297,3 +300,13 @@ function FilterChip({
     </Pressable>
   );
 }
+
+function GuardedDashboard() {
+  return (
+    <AccessGuard min="MANAGE_SPOT" messageKey="Dashboard.adminOnly">
+      <DashboardScreen />
+    </AccessGuard>
+  );
+}
+
+export default withSpotScope(GuardedDashboard);

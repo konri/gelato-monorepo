@@ -33,6 +33,7 @@ export const useAuth = () => {
     }
   };
 
+  // Full sign-out hygiene (push token, realtime, spot context) lives in the session.
   const logout = async () => {
     await clearAuthState();
   };

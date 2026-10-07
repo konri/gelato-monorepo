@@ -1,7 +1,10 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { withSpotScope } from '@/components/hoc/withSpotScope';
+import { AccessGuard } from '@/components/molecules/AccessGuard';
 import { ScreenHeader } from '@/components/molecules/ScreenHeader';
-import { getStoredSpotContext } from '@/hooks/useSpotOrders';
+import { useActiveSpotId } from '@/hooks/useActiveSpot';
+import { spotStore } from '@/stores/spotStore';
 import {
   getSpotComplaints,
   resolveComplaint,
@@ -24,27 +27,27 @@ import {
 
 type Filter = 'open' | 'resolved';
 
-export default function ComplaintsScreen() {
+function ComplaintsScreen() {
   const { t } = useTranslation();
 
-  const [spotId, setSpotId] = useState<string | null>(null);
+  const spotId = useActiveSpotId();
   const [filter, setFilter] = useState<Filter>('open');
   const [complaints, setComplaints] = useState<SpotComplaint[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
-    const ctx = await getStoredSpotContext();
-    setSpotId(ctx.spotId);
-    if (!ctx.spotId) {
+    if (!spotId) {
       setLoading(false);
       return;
     }
     const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
-    const res = await getSpotComplaints(ctx.spotId, filter, { token });
+    const res = await getSpotComplaints(spotId, filter, { token });
+    // Stale guard: the spot changed while loading.
+    if (spotStore.getActiveSpotId() !== spotId) return;
     setComplaints(res.data ?? []);
     setLoading(false);
-  }, [filter]);
+  }, [filter, spotId]);
 
   useEffect(() => {
     void load();
@@ -61,7 +64,7 @@ export default function ComplaintsScreen() {
 
   return (
     <View className="flex-1 bg-gray-50">
-      <ScreenHeader title={t('Complaints.title')} />
+      <ScreenHeader title={t('Complaints.title')} spotScoped />
 
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
@@ -201,3 +204,13 @@ function ComplaintCard({
     </View>
   );
 }
+
+function GuardedComplaints() {
+  return (
+    <AccessGuard min="MANAGE_SPOT" messageKey="Complaints.adminOnly">
+      <ComplaintsScreen />
+    </AccessGuard>
+  );
+}
+
+export default withSpotScope(GuardedComplaints);

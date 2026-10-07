@@ -56,6 +56,9 @@ export type OrderReview = {
 };
 
 export type OrderDetail = OrderListEntry & {
+  // The order's spot and its brand snapshot (OrderSpotSummary has no brand).
+  spotId?: string;
+  brandId?: string;
   fulfillmentType?: 'DELIVERY' | 'PICKUP';
   customerName?: string | null;
   subtotal: number;

@@ -1,9 +1,13 @@
 import { config } from '@/config';
+import { clientHeaders } from '../clientInfo';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout';
 import { safeGetItem } from '../utils/safeAsyncStorage';
 import { refreshAccessToken } from '../graphql/refreshToken';
 import type { ApiResponse } from './types';
 
 const REST_BASE_URL = config.REST_API_URL;
+// An image upload over a slow connection takes longer than a JSON request.
+const UPLOAD_TIMEOUT_MS = 60_000;
 
 export type UploadImageResponse = { imageUrl: string };
 
@@ -24,14 +28,15 @@ export async function uploadProfileImage(
     // React Native FormData file shape.
     formData.append('image', { uri, name: fileName, type: mimeType } as any);
 
-    return fetch(`${REST_BASE_URL}/upload/profile`, {
+    return fetchWithTimeout(`${REST_BASE_URL}/upload/profile`, {
       method: 'POST',
       headers: {
         // NOTE: do NOT set Content-Type; fetch sets the multipart boundary.
+        ...clientHeaders(),
         ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: formData,
-    });
+    }, UPLOAD_TIMEOUT_MS);
   };
 
   try {

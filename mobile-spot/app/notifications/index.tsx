@@ -11,8 +11,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { localizeNotification } from '@/utils/notificationDisplay';
+import { useActiveSpot } from '@/hooks/useActiveSpot';
 import { refreshEmitter } from '@/hooks/useRefreshEmitter';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -39,16 +40,25 @@ function iconFor(type: string): { name: any; color: string; bg: string } {
 
 export default function NotificationsScreen() {
   const { t } = useTranslation();
+  const { activeSpot, activeSpotId, canSwitch } = useActiveSpot();
   const [items, setItems] = useState<SpotNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  // The bell shows the active spot (plus spot-less rows); "All my spots" drops
+  // the filter. Not spot-scoped: the screen stays open across a switch.
+  const [allSpots, setAllSpots] = useState(false);
+  const filterSpotId = canSwitch && allSpots ? null : activeSpotId;
 
+  // Switching the filter quickly must not let the older response win.
+  const loadReq = useRef(0);
   const load = useCallback(async () => {
+    const req = ++loadReq.current;
     const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
-    const res = await getMySpotNotifications({ token });
+    const res = await getMySpotNotifications({ token, spotId: filterSpotId });
+    if (req !== loadReq.current) return;
     setItems(res.data ?? []);
     setLoading(false);
-  }, []);
+  }, [filterSpotId]);
 
   useEffect(() => {
     void load();
@@ -75,7 +85,7 @@ export default function NotificationsScreen() {
 
   const markAll = async () => {
     const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
-    await markAllSpotNotificationsRead({ token });
+    await markAllSpotNotificationsRead({ token, spotId: filterSpotId });
     setItems((prev) => prev.map((x) => ({ ...x, isRead: true })));
   };
 
@@ -107,6 +117,36 @@ export default function NotificationsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#EC2828" />}
       >
         <ResponsiveContainer maxWidth={640}>
+          {canSwitch && activeSpot && (
+            <View className="mb-3 flex-row gap-2" accessibilityRole="tablist">
+              {[
+                { key: 'spot', label: activeSpot.name, selected: !allSpots, onPress: () => setAllSpots(false) },
+                { key: 'all', label: t('Notifications.allSpots'), selected: allSpots, onPress: () => setAllSpots(true) },
+              ].map((chip) => (
+                <Pressable
+                  key={chip.key}
+                  onPress={chip.onPress}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: chip.selected }}
+                  className="flex-shrink items-center justify-center rounded-full px-4"
+                  style={{
+                    minHeight: 44,
+                    backgroundColor: chip.selected ? '#EC2828' : '#fff',
+                    borderWidth: 1,
+                    borderColor: chip.selected ? '#EC2828' : '#D1D5DB',
+                  }}
+                >
+                  <Typography
+                    variant="body-base-semibold"
+                    style={{ color: chip.selected ? '#fff' : '#374151' }}
+                    numberOfLines={1}
+                  >
+                    {chip.label}
+                  </Typography>
+                </Pressable>
+              ))}
+            </View>
+          )}
           {loading ? (
             <View className="py-10 items-center"><ActivityIndicator color="#EC2828" /></View>
           ) : items.length === 0 ? (
@@ -152,6 +192,14 @@ export default function NotificationsScreen() {
                         resizeMode="cover"
                       />
                     ) : null}
+                    {canSwitch && !!n.spotName && (
+                      <View className="mt-1 flex-row items-center">
+                        <Ionicons name="storefront-outline" size={14} color="#4B5563" />
+                        <Typography variant="body-small-semibold" className="ml-1 text-gray-600" numberOfLines={1}>
+                          {n.spotName}
+                        </Typography>
+                      </View>
+                    )}
                     <Typography variant="body-very-small-medium" className="mt-1 text-gray-400">
                       {timeAgo(n.createdAt)}
                     </Typography>

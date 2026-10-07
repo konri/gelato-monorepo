@@ -1,8 +1,10 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { withSpotScope } from '@/components/hoc/withSpotScope';
+import { AccessGuard } from '@/components/molecules/AccessGuard';
 import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import { useRole } from '@/hooks/useRole';
-import { goBackOr } from '@/utils/navigation';
+import { spotStore } from '@/stores/spotStore';
 import { getSpotOrders, type SpotOrder } from '@repo/api-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,17 +12,15 @@ import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Orders that are no longer in the active queue → history.
 const DONE_STATUSES = ['DELIVERED', 'COLLECTED', 'CANCELLED', 'FAILED', 'TERMINATED'];
 
 type DayGroup = { key: string; label: string; orders: SpotOrder[] };
 
-export default function OrderHistoryScreen() {
+function OrderHistoryScreen() {
   const { t, i18n } = useTranslation();
-  const insets = useSafeAreaInsets();
-  const { spotId, isAdmin, loading: roleLoading } = useRole();
+  const { spotId } = useRole();
 
   const [orders, setOrders] = useState<SpotOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +33,8 @@ export default function OrderHistoryScreen() {
     }
     const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
     const res = await getSpotOrders(spotId, null, { token });
+    // Stale guard: the spot changed while loading.
+    if (spotStore.getActiveSpotId() !== spotId) return;
     setOrders((res.data ?? []).filter((o) => DONE_STATUSES.includes(String(o.status))));
     setLoading(false);
   }, [spotId]);
@@ -81,23 +83,9 @@ export default function OrderHistoryScreen() {
     return '#6B7280';
   };
 
-  if (!roleLoading && !isAdmin) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white px-8" style={{ paddingTop: insets.top }}>
-        <Ionicons name="lock-closed-outline" size={40} color="#9CA3AF" />
-        <Typography variant="body-base-regular" className="mt-3 text-center text-gray-500">
-          {t('History.adminOnly')}
-        </Typography>
-        <Pressable onPress={() => goBackOr()} className="mt-5 rounded-xl px-6 py-3" style={{ backgroundColor: '#EC2828' }}>
-          <Typography variant="body-base-bold" className="text-white">{t('History.back')}</Typography>
-        </Pressable>
-      </View>
-    );
-  }
-
   return (
     <View className="flex-1 bg-gray-50">
-      <ScreenHeader title={t('History.title')} />
+      <ScreenHeader title={t('History.title')} spotScoped />
 
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
@@ -153,3 +141,13 @@ export default function OrderHistoryScreen() {
     </View>
   );
 }
+
+function GuardedHistory() {
+  return (
+    <AccessGuard min="MANAGE_SPOT" messageKey="History.adminOnly">
+      <OrderHistoryScreen />
+    </AccessGuard>
+  );
+}
+
+export default withSpotScope(GuardedHistory);

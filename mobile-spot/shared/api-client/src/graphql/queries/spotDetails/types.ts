@@ -20,6 +20,9 @@ export type SpotDetails = {
   courierPayout?: number | null;
   pickupEnabled?: boolean;
   onlinePaymentEnabled?: boolean;
+  isActive?: boolean;
+  brand?: { id: string; name: string } | null;
+  city?: { id: string; name: string; nameLocal?: Record<string, string> | null } | null;
 };
 
 export type SpotDetailsResponse = { spot: SpotDetails | null };

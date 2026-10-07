@@ -2,10 +2,12 @@ import { DocumentNode } from '@apollo/client';
 import { CombinedGraphQLErrors, ServerError } from '@apollo/client/errors';
 import { logGraphQLError } from '@/utils/graphqlErrorLogger';
 import { OperationDefinitionNode } from 'graphql';
+import { CLIENT_ERROR_CODES, isNetworkFailure, isRequestTimeoutError } from '../utils/fetchWithTimeout';
 import { createApolloServerClient } from './apollo-server';
-import { ApolloServerConfig, GraphQLResult } from './types';
+import { ApolloServerConfig, GraphQLError, GraphQLResult } from './types';
 
-type GraphqlErrorsPayload = { errors?: ReadonlyArray<{ message?: string }> };
+type GraphqlErrorEntry = { message?: string; extensions?: Record<string, unknown> | null };
+type GraphqlErrorsPayload = { errors?: ReadonlyArray<GraphqlErrorEntry> };
 
 const operationNameFromDocument = (document: DocumentNode): string => {
   const operationDefinition = document.definitions.find(
@@ -41,29 +43,87 @@ function messageFromUnknownGraphQlError(error: unknown): string {
   return 'Unknown GraphQL error';
 }
 
+/**
+ * `errors[0].extensions` of a failed operation: `code` (UNAUTHENTICATED,
+ * SCOPE_FORBIDDEN, a loyalty code…) plus the code's extras. Apps branch on the
+ * code, never on the message text (BRANDS_SPEC §2.8).
+ */
+function extensionsFromUnknownGraphQlError(error: unknown): Record<string, unknown> | null {
+  if (CombinedGraphQLErrors.is(error)) {
+    const ext = error.errors[0]?.extensions;
+    return ext && typeof ext === 'object' ? (ext as Record<string, unknown>) : null;
+  }
+  if (ServerError.is(error)) {
+    const raw = error.bodyText?.trim();
+    if (!raw) return error.statusCode === 401 ? { code: 'UNAUTHENTICATED' } : null;
+    try {
+      const parsed = JSON.parse(raw) as GraphqlErrorsPayload & { code?: unknown };
+      const ext = parsed.errors?.[0]?.extensions;
+      if (ext && typeof ext === 'object') return ext;
+      // REST-style body ({ code, error }) from a gate in front of /graphql.
+      if (typeof parsed.code === 'string') return { code: parsed.code };
+    } catch {
+      /* body is not JSON */
+    }
+    return error.statusCode === 401 ? { code: 'UNAUTHENTICATED' } : null;
+  }
+  return null;
+}
+
+function toGraphQLError(error: unknown): GraphQLError {
+  // No answer from the server (15 s deadline, offline): a client-side code, so
+  // screens can say "connection problem, try again" and keep their requestId.
+  if (isRequestTimeoutError(error)) {
+    return { message: error.message, code: CLIENT_ERROR_CODES.TIMEOUT, extensions: null };
+  }
+  if (isNetworkFailure(error)) {
+    return { message: (error as Error).message, code: CLIENT_ERROR_CODES.NETWORK, extensions: null };
+  }
+  const extensions = extensionsFromUnknownGraphQlError(error);
+  const rawCode = extensions?.code;
+  return {
+    message: messageFromUnknownGraphQlError(error),
+    code: typeof rawCode === 'string' ? rawCode : undefined,
+    extensions,
+  };
+}
+
 export interface GraphQLOptions extends ApolloServerConfig {
   variables?: Record<string, any>;
   fetchPolicy?: 'cache-first' | 'network-only' | 'cache-only' | 'no-cache';
 }
 
-// An expired/invalid access token surfaces as one of these from the API.
-const isAuthError = (message: string): boolean => {
-  const m = message.toLowerCase();
-  return (
-    m.includes('access denied') ||
-    m.includes('not authenticated') ||
-    m.includes('unauthorized') ||
-    m.includes('unauthenticated') ||
-    m.includes('jwt expired') ||
-    m.includes('invalid token')
-  );
+// Builds before the brands release matched these texts; the server still sends
+// them for UNAUTHENTICATED ("Access denied! …"), so they only count when the
+// error carries no code at all (e.g. a bare HTTP 401 body).
+const LEGACY_AUTH_TEXTS = [
+  'access denied',
+  'not authenticated',
+  'unauthorized',
+  'unauthenticated',
+  'jwt expired',
+  'invalid token',
+];
+
+/**
+ * True when the session itself is invalid: `UNAUTHENTICATED`, or a code-less
+ * error with one of the legacy auth texts. Any other code (SCOPE_FORBIDDEN,
+ * BRAND_INACTIVE, AWARD_LIMIT_EXCEEDED…) is a domain error and never logs out.
+ */
+const isAuthError = (error: GraphQLError): boolean => {
+  if (error.code) return error.code === 'UNAUTHENTICATED';
+  const m = error.message.toLowerCase();
+  return LEGACY_AUTH_TEXTS.some((text) => m.includes(text));
 };
+
+// Codes with their own app-wide reaction (codeEvents) — no generic toast.
+const SILENT_CODES = new Set(['PASSWORD_CHANGE_REQUIRED', 'UPGRADE_REQUIRED']);
 
 export async function executeGraphQLQuery<T>(
   query: DocumentNode,
   options: GraphQLOptions = {},
 ): Promise<GraphQLResult<T>> {
-  const { variables = {}, token, apiUrl, fetchPolicy = 'network-only' } = options;
+  const { variables = {}, token, apiUrl, fetchPolicy = 'network-only', silent = false } = options;
   const resolvedOperationName = operationNameFromDocument(query);
 
   const operationType =
@@ -83,7 +143,7 @@ export async function executeGraphQLQuery<T>(
       if (mutateResult.error) {
         return {
           data: null,
-          error: { message: messageFromUnknownGraphQlError(mutateResult.error) },
+          error: toGraphQLError(mutateResult.error),
           success: false,
         };
       }
@@ -97,7 +157,7 @@ export async function executeGraphQLQuery<T>(
     if (queryResult.error) {
       return {
         data: null,
-        error: { message: messageFromUnknownGraphQlError(queryResult.error) },
+        error: toGraphQLError(queryResult.error),
         success: false,
       };
     }
@@ -113,7 +173,7 @@ export async function executeGraphQLQuery<T>(
     } catch (error: unknown) {
       return {
         data: null,
-        error: { message: messageFromUnknownGraphQlError(error) },
+        error: toGraphQLError(error),
         success: false,
       };
     }
@@ -121,29 +181,34 @@ export async function executeGraphQLQuery<T>(
 
   let result = await runSafe();
 
-  // On auth failure, transparently refresh the access token once and retry.
+  // On UNAUTHENTICATED, transparently refresh the access token once and retry.
   // If refresh can't recover (no/expired refresh token, or the retry still
-  // fails with an auth error), the session is dead → clear it and notify the
-  // app so it can redirect to login instead of looping "Access denied".
-  if (!result.success && result.error && isAuthError(result.error.message)) {
+  // fails with UNAUTHENTICATED), the session is dead → clear it and notify the
+  // app so it can redirect to login. Domain codes never log out.
+  if (!result.success && result.error && isAuthError(result.error)) {
     const { refreshAccessToken } = await import('./refreshToken');
     const newToken = await refreshAccessToken(apiUrl);
     if (newToken) {
       result = await runSafe(newToken);
     }
-    if (!result.success && result.error && isAuthError(result.error.message)) {
+    if (!result.success && result.error && isAuthError(result.error)) {
       const { handleSessionExpired } = await import('../session');
       await handleSessionExpired();
     }
   }
 
   if (!result.success && result.error) {
-    logGraphQLError({ message: result.error.message }, resolvedOperationName);
-    // Surface a friendly toast for non-auth failures (auth errors redirect to
+    const { message, code, extensions } = result.error;
+    logGraphQLError({ message }, resolvedOperationName);
+    // App-wide reactions: revalidate the spot context, forced password change,
+    // upgrade overlay.
+    const { emitCodeEvent } = await import('../codeEvents');
+    emitCodeEvent(code, message, extensions);
+    // Surface a friendly toast for other failures (auth errors redirect to
     // login via the session flow above, so we don't toast those).
-    if (!isAuthError(result.error.message)) {
+    if (!silent && !isAuthError(result.error) && !(code && SILENT_CODES.has(code))) {
       const { emitRequestError } = await import('../errorEvents');
-      emitRequestError(result.error.message);
+      emitRequestError(message, code);
     }
   }
   return result;

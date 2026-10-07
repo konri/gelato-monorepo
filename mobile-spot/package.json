@@ -12,6 +12,7 @@
     "web": "expo start --web",
     "build:web": "bash ./scripts/build-web-prod.sh",
     "lint": "expo lint",
+    "check:graphql": "node ./scripts/check-graphql.mjs",
     "ios": "expo run:ios"
   },
   "dependencies": {

@@ -7,6 +7,9 @@ export type SpotNotification = {
   data?: { orderId?: string; [key: string]: unknown } | null;
   isRead: boolean;
   createdAt: string;
+  spotId?: string | null;
+  spotName?: string | null;
+  brandId?: string | null;
 };
 
 export type SpotMyNotificationsResponse = { myNotifications: SpotNotification[] };

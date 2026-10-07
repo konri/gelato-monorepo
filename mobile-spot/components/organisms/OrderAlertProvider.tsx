@@ -1,9 +1,12 @@
 import { Typography } from '@/components/atoms/Typography';
+import { useSpotRealtime } from '@/components/organisms/RealtimeProvider';
+import { useSession } from '@/contexts/SessionProvider';
+import { useActiveSpot, useSpotState } from '@/hooks/useActiveSpot';
 import { useOrderAlertSound } from '@/hooks/useOrderAlertSound';
-import { useSpotOrderSubscription } from '@/hooks/useSpotOrderSubscription';
-import { claimOrder, getStoredSpotContext } from '@/hooks/useSpotOrders';
+import { claimOrder } from '@/hooks/useSpotOrders';
 import { onForegroundNotification } from '@/shared/api-client/src/notificationEvents';
-import { getSpotOrders, getSpotStaffAdmins, getSpotStaffEmployees } from '@repo/api-client';
+import { spotStore } from '@/stores/spotStore';
+import { getSpotOrders } from '@repo/api-client';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePathname } from 'expo-router';
@@ -22,26 +25,46 @@ type AlertOrder = {
 const PENDING_POLL_MS = 15_000;
 
 /**
- * App-wide incoming-order alert. When a new order arrives it shows a modal
- * with an audible alert. Accepting claims the order (making them responsible);
- * if another staff member claims it first, it's removed from the queue.
+ * App-wide incoming-order alert for the ACTIVE spot. When a new order arrives
+ * it shows a modal with an audible alert. Accepting claims the order (making
+ * them responsible); if another staff member claims it first, it's removed
+ * from the queue.
  *
  * When more than one person works the spot, a close (X) lets someone dismiss
  * the popup without claiming — the order stays in the queue for colleagues.
  * A lone worker still has to Accept (no X), so the order can't be silenced.
- * Mounted once at the root for logged-in staff.
+ *
+ * Enabled only when signed in with an active spot, and never on the login or
+ * choose-spot screens. A spot switch resets the queue. Orders at the user's
+ * other spots never pop up here (they show in the strip / as a toast).
+ * Mounted once at the root.
  */
-export function OrderAlertProvider({ enabled }: { enabled: boolean }) {
+export function OrderAlertProvider() {
   const { t } = useTranslation();
   const pathname = usePathname();
+  const session = useSession();
+  const { status, activeSpot, activeSpotId: spotId, canSwitch } = useActiveSpot();
+  const { staffKind } = useSpotState();
   const [queue, setQueue] = useState<AlertOrder[]>([]);
   const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [canDismiss, setCanDismiss] = useState(false);
   const dismissedRef = useRef(new Set<string>());
 
-  // Don't alert on the login screen even if a stale socket fires.
-  const active = enabled && queue.length > 0 && pathname !== '/login';
+  const enabled =
+    session.status === 'signedIn' &&
+    status === 'ready' &&
+    !!spotId &&
+    pathname !== '/login' &&
+    pathname !== '/choose-spot';
+
+  // Someone else can take the order: other members with a profile at the spot.
+  // StaffSpot.staffCount counts spot admins and employees (not brand admins),
+  // so a brand admin / Loodly team member working here is not in it.
+  const selfCounted = staffKind === 'SPOT_ADMIN' || staffKind === 'EMPLOYEE';
+  const staffCount = activeSpot?.staffCount ?? 0;
+  const canDismiss = selfCounted ? staffCount > 1 : staffCount >= 1;
+
+  const active = enabled && queue.length > 0;
   useOrderAlertSound(active);
 
   const current = queue[0] ?? null;
@@ -56,7 +79,8 @@ export function OrderAlertProvider({ enabled }: { enabled: boolean }) {
   }, []);
 
   const normalize = useCallback((payload: any): AlertOrder | null => {
-    // newOrderNotification payload = { spotId, order }.
+    // newOrderNotification payload = { spotId, spotName, brandId, order }.
+    if (payload?.spotId && payload.spotId !== spotStore.getActiveSpotId()) return null;
     const o = payload?.order ?? payload;
     if (!o?.id) return null;
     return {
@@ -71,10 +95,11 @@ export function OrderAlertProvider({ enabled }: { enabled: boolean }) {
   }, []);
 
   const loadPending = useCallback(async () => {
-    const ctx = await getStoredSpotContext();
-    if (!ctx.spotId) return;
+    if (!spotId) return;
     const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
-    const res = await getSpotOrders(ctx.spotId, 'PENDING', { token });
+    const res = await getSpotOrders(spotId, 'PENDING', { token });
+    // Stale guard: the spot changed while the request was in flight.
+    if (spotStore.getActiveSpotId() !== spotId) return;
     const pending = (res.data ?? []).filter((o) => !o.preparedById);
     for (const o of pending) {
       enqueue({
@@ -87,30 +112,15 @@ export function OrderAlertProvider({ enabled }: { enabled: boolean }) {
           : undefined,
       });
     }
-  }, [enqueue]);
+  }, [enqueue, spotId]);
 
-  const loadStaffCount = useCallback(async () => {
-    const ctx = await getStoredSpotContext();
-    if (!ctx.spotId) return;
-    const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
-    const [admins, employees] = await Promise.all([
-      getSpotStaffAdmins(ctx.spotId, { token }),
-      getSpotStaffEmployees(ctx.spotId, { token }),
-    ]);
-    const adminIds = (admins.data ?? []).map((a) => a.id);
-    const employeeIds = (employees.data ?? []).map((e) => e.id);
-    const unique = new Set([...adminIds, ...employeeIds]);
-    // Employees can't list staff — if the queries fail, still offer dismiss
-    // so a colleague isn't stuck behind someone else's modal.
-    if (unique.size === 0 && (admins.error || employees.error)) {
-      setCanDismiss(true);
-      return;
-    }
-    setCanDismiss(unique.size > 1);
-  }, []);
-
-  useSpotOrderSubscription(enabled, {
+  // Live events for the active spot (RealtimeProvider subscribes with
+  // spotIds: [activeSpotId] and drops other spots' events).
+  const enabledRef = useRef(enabled);
+  enabledRef.current = enabled;
+  useSpotRealtime({
     onNewOrder: (payload) => {
+      if (!enabledRef.current) return;
       const order = normalize(payload);
       if (!order) return;
       enqueue(order);
@@ -122,15 +132,20 @@ export function OrderAlertProvider({ enabled }: { enabled: boolean }) {
         drop(claimedId);
       }
     },
+    onResync: () => {
+      if (enabledRef.current) void loadPending();
+    },
   });
 
-  // Foreground FCM (websocket down / backgrounded tab) → same modal.
+  // Foreground FCM (websocket down / backgrounded tab) → same modal. Pushes
+  // for another spot are ignored here; NotificationBridge toasts those.
   useEffect(() => {
     if (!enabled) return;
     return onForegroundNotification((data) => {
       const kind = data.kind || data.type || '';
       if (kind !== 'SPOT_NEW_ORDER') return;
       if (!data.orderId) return;
+      if (data.spotId && data.spotId !== spotStore.getActiveSpotId()) return;
       enqueue({
         id: data.orderId,
         orderNumber: data.orderNumber,
@@ -142,19 +157,16 @@ export function OrderAlertProvider({ enabled }: { enabled: boolean }) {
   useEffect(() => {
     if (!enabled) return;
     void loadPending();
-    void loadStaffCount();
     const id = setInterval(() => void loadPending(), PENDING_POLL_MS);
     return () => clearInterval(id);
-  }, [enabled, loadPending, loadStaffCount]);
+  }, [enabled, loadPending]);
 
-  // Clear the queue when logging out / disabling.
+  // A different spot (or signing out / disabling): start from a clean queue.
   useEffect(() => {
-    if (!enabled) {
-      dismissedRef.current.clear();
-      setQueue([]);
-      setCanDismiss(false);
-    }
-  }, [enabled]);
+    dismissedRef.current.clear();
+    setQueue([]);
+    setError(null);
+  }, [spotId, enabled]);
 
   const accept = async () => {
     if (!current) return;
@@ -163,8 +175,10 @@ export function OrderAlertProvider({ enabled }: { enabled: boolean }) {
     const res = await claimOrder(current.id);
     setClaiming(false);
     if (res.error) {
-      // Already claimed elsewhere → just drop it; otherwise surface the error.
-      if (res.error.message?.toLowerCase().includes('already')) {
+      // Already claimed elsewhere (or closed meanwhile) → just drop it;
+      // otherwise surface the error.
+      const m = res.error.message?.toLowerCase() ?? '';
+      if (m.includes('already') || m.includes('closed')) {
         drop(current.id);
       } else {
         setError(res.error.message ?? t('OrderAlert.error'));
@@ -206,6 +220,11 @@ export function OrderAlertProvider({ enabled }: { enabled: boolean }) {
             <Typography variant="heading-32-bold" className="mt-4 text-center text-text-primary">
               {t('OrderAlert.title')}
             </Typography>
+            {canSwitch && activeSpot && (
+              <Typography variant="body-lg-semibold" className="text-center text-text-primary">
+                {t('OrderAlert.atSpot', { spot: activeSpot.name })}
+              </Typography>
+            )}
             {queue.length > 1 && (
               <View className="mt-2 rounded-full px-3 py-1" style={{ backgroundColor: '#EC2828' }}>
                 <Typography variant="body-small-bold" className="text-white">

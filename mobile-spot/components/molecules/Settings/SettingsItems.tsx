@@ -11,7 +11,6 @@ import { deleteAccount } from '@repo/api-client';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
 import { LanguageSelectorModal } from './LanguageSelectorModal';
 import { CitySelectorModal } from './CitySelectorModal';
-import { ContactFormModal } from './ContactFormModal';
 
 export const SettingsItems = () => {
   const { t, i18n } = useTranslation();
@@ -20,7 +19,6 @@ export const SettingsItems = () => {
 
   const [languageOpen, setLanguageOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
-  const [contactOpen, setContactOpen] = useState(false);
   const [city, setCity] = useState<string | undefined>(undefined);
 
   // Preselect the city from the user's saved preference (localized name),
@@ -132,12 +130,6 @@ export const SettingsItems = () => {
           onPress={handleRate}
         />
         <DropdownItem
-          label={t('Settings.contactUs')}
-          iconName="mail-outline"
-          position="middle"
-          onPress={() => setContactOpen(true)}
-        />
-        <DropdownItem
           label={t('Settings.privacyPolicy')}
           iconName="shield-checkmark-outline"
           position="middle"
@@ -177,7 +169,6 @@ export const SettingsItems = () => {
         onClose={() => setCityOpen(false)}
         onSelected={setCity}
       />
-      <ContactFormModal visible={contactOpen} onClose={() => setContactOpen(false)} />
     </>
   );
 };

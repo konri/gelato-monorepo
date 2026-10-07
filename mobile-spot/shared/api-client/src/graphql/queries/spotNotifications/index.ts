@@ -16,24 +16,26 @@ export * from './types';
 
 // Distinct names (Spot*) to avoid clashing with the legacy Bonapka-template
 // notifications module still present in the barrel.
+// `spotId`: only that spot's rows (plus rows without a spot); omitted = all.
 export const getMySpotNotifications = async (
-  options: ApolloServerConfig & { unreadOnly?: boolean } = {},
+  options: ApolloServerConfig & { unreadOnly?: boolean; spotId?: string | null } = {},
 ): Promise<GraphQLResult<SpotNotification[]>> => {
-  const { unreadOnly, ...apollo } = options;
+  const { unreadOnly, spotId, ...apollo } = options;
   const res = await executeGraphQLQuery<SpotMyNotificationsResponse>(MY_NOTIFICATIONS_QUERY, {
     ...apollo,
-    variables: { unreadOnly: unreadOnly ?? false, limit: 50 },
+    variables: { unreadOnly: unreadOnly ?? false, limit: 50, spotId: spotId ?? null },
     fetchPolicy: 'network-only',
   });
   return { ...res, data: res.data ? res.data.myNotifications : null };
 };
 
 export const getSpotUnreadCount = async (
-  options: ApolloServerConfig = {},
+  options: ApolloServerConfig & { spotId?: string | null } = {},
 ): Promise<GraphQLResult<number>> => {
+  const { spotId, ...apollo } = options;
   const res = await executeGraphQLQuery<SpotUnreadCountResponse>(
     UNREAD_NOTIFICATION_COUNT_QUERY,
-    { ...options, fetchPolicy: 'network-only' },
+    { ...apollo, variables: { spotId: spotId ?? null }, fetchPolicy: 'network-only' },
   );
   return { ...res, data: res.data ? res.data.unreadNotificationCount : null };
 };
@@ -50,11 +52,12 @@ export const markSpotNotificationRead = async (
 };
 
 export const markAllSpotNotificationsRead = async (
-  options: ApolloServerConfig = {},
+  options: ApolloServerConfig & { spotId?: string | null } = {},
 ): Promise<GraphQLResult<boolean>> => {
+  const { spotId, ...apollo } = options;
   const res = await executeGraphQLQuery<{ markAllNotificationsRead: boolean }>(
     MARK_ALL_NOTIFICATIONS_READ_MUTATION,
-    { ...options },
+    { ...apollo, variables: { spotId: spotId ?? null } },
   );
   return { ...res, data: res.data ? res.data.markAllNotificationsRead : null };
 };

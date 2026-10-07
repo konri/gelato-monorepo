@@ -1,3 +1,4 @@
+import { getInstallId } from '@/utils/deviceId';
 import { logger } from '@/utils/logger';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
@@ -7,7 +8,9 @@ import { Platform } from 'react-native';
 // Configure notification behavior
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    // `shouldShowAlert` is deprecated in expo-notifications 0.32: banner + list.
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
@@ -101,7 +104,9 @@ export class NotificationService {
   async getDeviceInfo() {
     return {
       platform: Platform.OS,
-      deviceId: Constants.sessionId || 'unknown',
+      // Stable per install (not per launch), so the server keeps one row per
+      // device and can pin it to the active spot.
+      deviceId: await getInstallId(),
       deviceName: Constants.deviceName || 'Unknown Device',
     };
   }

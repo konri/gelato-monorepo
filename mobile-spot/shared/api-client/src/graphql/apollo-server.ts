@@ -2,6 +2,8 @@ import { config } from '@/config';
 import { logger } from '@/utils/logger';
 import { ApolloClient, ApolloLink, HttpLink, InMemoryCache } from '@apollo/client';
 import { map } from 'rxjs/operators';
+import { clientHeaders } from '../clientInfo';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout';
 import { safeGetItem } from '../utils/safeAsyncStorage';
 import { ApolloServerConfig } from './types';
 
@@ -61,12 +63,16 @@ export const createApolloServerClient = async (apolloConfig: ApolloServerConfig 
   const httpLink = new HttpLink({
     uri: `${apiUrl}/graphql`,
     credentials: 'include',
+    // 15 s deadline: a stalled request fails with REQUEST_TIMEOUT instead of
+    // hanging forever (Android's OkHttp has no read timeout).
+    fetch: (input, init) => fetchWithTimeout(input, init),
   });
 
   const authLink = new ApolloLink((operation, forward) => {
     operation.setContext(({ headers = {} }) => ({
       headers: {
         ...headers,
+        ...clientHeaders(),
         authorization: token ? `Bearer ${token}` : '',
       },
     }));

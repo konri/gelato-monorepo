@@ -13,7 +13,9 @@ export const useAppInitialization = () => {
       if (language) {
         await i18n.changeLanguage(language.toLowerCase())
       } else {
-        const deviceLanguage = getLocales()[0].languageCode?.toUpperCase() || 'EN'
+        // The app calls Ukrainian "UA"; devices report the ISO code "uk".
+        const code = getLocales()[0]?.languageCode?.toUpperCase() || 'EN'
+        const deviceLanguage = code === 'UK' ? 'UA' : code
         const languageToSet = isLanguageSupported(deviceLanguage) ? deviceLanguage : 'EN'
         await i18n.changeLanguage(languageToSet.toLowerCase())
       }

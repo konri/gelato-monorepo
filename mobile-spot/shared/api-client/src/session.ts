@@ -13,13 +13,18 @@ const listeners = new Set<Listener>();
 // Guard so a burst of failing requests only triggers one logout.
 let expiring = false;
 
-const AUTH_KEYS = [
+// Everything tied to the signed-in session. `staff.session.v2` is the cached
+// spot context and `spotContext` the pre-brands key; both go with the session.
+// `staff.activeSpot.v2.<userId>` (the last spot per user) is kept on purpose.
+export const AUTH_KEYS = [
   'isLoggedIn',
   'userData',
   'access_token',
   'refresh_token',
   'userEmail',
   'isFirstTimeLogin',
+  'spotContext',
+  'staff.session.v2',
 ];
 
 export const onSessionExpired = (listener: Listener): (() => void) => {

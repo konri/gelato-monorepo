@@ -24,12 +24,20 @@ export type GraphQLClientConfig = {
 export type ApolloServerConfig = {
   token?: string;
   apiUrl?: string;
+  /**
+   * The caller shows the failure itself (inline error), so skip the global
+   * error toast. App-wide reactions (logout, upgrade, revalidation) still run.
+   */
+  silent?: boolean;
 };
 
 export type GraphQLError = {
   message: string;
+  /** The server's `errors[0].extensions.code` (e.g. SCOPE_FORBIDDEN), when present. */
   code?: string;
   statusCode?: number;
+  /** The rest of `errors[0].extensions` (e.g. `{ cap, kind }` for AWARD_LIMIT_EXCEEDED). */
+  extensions?: Record<string, unknown> | null;
   details?: any;
 };
 

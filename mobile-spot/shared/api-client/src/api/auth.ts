@@ -115,21 +115,3 @@ export async function resetPasswordWithCode(
     newPassword,
   });
 }
-export async function updatePermissions(
-  locationPermission: boolean,
-  notificationPermission: boolean,
-  preferredCity?: string
-): Promise<any> {
-  const { executeGraphQLQuery } = await import("../graphql/client");
-  const { UPDATE_PERMISSIONS } = await import("./graphql-operations");
-
-  const result = await executeGraphQLQuery(UPDATE_PERMISSIONS, {
-    variables: {
-      location: locationPermission,
-      notification: notificationPermission,
-      city: preferredCity,
-    },
-  });
-
-  return result;
-}

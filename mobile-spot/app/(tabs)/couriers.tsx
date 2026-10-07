@@ -1,10 +1,13 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { withSpotScope } from '@/components/hoc/withSpotScope';
 import { CourierEarnings } from '@/components/molecules/CourierEarnings';
+import { TabHeader } from '@/components/organisms/TabHeader';
 import { TAB_BAR_TOTAL_HEIGHT } from '@/constants/tabBarStyles';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { useActiveSpotId } from '@/hooks/useActiveSpot';
 import { useRole } from '@/hooks/useRole';
-import { getStoredSpotContext } from '@/hooks/useSpotOrders';
+import { spotStore } from '@/stores/spotStore';
 import {
   getSpotCouriers,
   getSpotCourierApplications,
@@ -25,18 +28,18 @@ import {
   ScrollView,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Mode = 'list' | 'earnings';
 
-export default function CouriersScreen() {
+function CouriersScreen() {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
   const { isWide } = useBreakpoint();
-  const { isAdmin } = useRole();
+  const { can } = useRole();
+  // Applications and earnings are spot-admin tools (MANAGE_SPOT).
+  const isAdmin = can.reviewCourierApplications;
+  const spotId = useActiveSpotId();
 
   const [mode, setMode] = useState<Mode>('list');
-  const [spotId, setSpotId] = useState<string | null>(null);
   const [couriers, setCouriers] = useState<SpotCourier[]>([]);
   const [applications, setApplications] = useState<SpotCourierApplication[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,21 +47,21 @@ export default function CouriersScreen() {
   const [actionError, setActionError] = useState(false);
 
   const load = useCallback(async () => {
-    const ctx = await getStoredSpotContext();
-    setSpotId(ctx.spotId);
-    if (!ctx.spotId) {
+    if (!spotId) {
       setLoading(false);
       return;
     }
     const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
     const [c, a] = await Promise.all([
-      getSpotCouriers(ctx.spotId, { token }),
-      isAdmin ? getSpotCourierApplications(ctx.spotId, { token }) : Promise.resolve({ data: [] } as any),
+      getSpotCouriers(spotId, { token }),
+      isAdmin ? getSpotCourierApplications(spotId, { token }) : Promise.resolve({ data: [] } as any),
     ]);
+    // Stale guard: the spot changed while loading.
+    if (spotStore.getActiveSpotId() !== spotId) return;
     setCouriers(c.data ?? []);
     setApplications(a.data ?? []);
     setLoading(false);
-  }, [isAdmin]);
+  }, [isAdmin, spotId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -87,16 +90,7 @@ export default function CouriersScreen() {
 
   return (
     <View className="flex-1 bg-gray-50">
-      <View
-        className="border-b border-gray-200 bg-white px-6 pb-4"
-        style={{ paddingTop: (isWide ? 0 : insets.top) + 16 }}
-      >
-        <ResponsiveContainer>
-          <Typography variant={isWide ? 'heading-32-bold' : 'body-lg-bold'} className="text-text-primary">
-            {t('Couriers.title')}
-          </Typography>
-        </ResponsiveContainer>
-      </View>
+      <TabHeader title={t('Couriers.title')} />
 
       <ScrollView
         className="flex-1"
@@ -124,8 +118,8 @@ export default function CouriersScreen() {
             </View>
           )}
 
-          {mode === 'earnings' && isAdmin && spotId ? (
-            <CourierEarnings spotId={spotId} />
+          {mode === 'earnings' && can.viewCourierEarnings && spotId ? (
+            <CourierEarnings key={spotId} spotId={spotId} />
           ) : loading ? (
             <View className="py-10 items-center">
               <ActivityIndicator color="#EC2828" />
@@ -259,3 +253,5 @@ export default function CouriersScreen() {
     </View>
   );
 }
+
+export default withSpotScope(CouriersScreen);

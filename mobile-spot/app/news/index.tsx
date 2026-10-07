@@ -1,8 +1,12 @@
 import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
+import { withSpotScope } from '@/components/hoc/withSpotScope';
+import { AccessGuard } from '@/components/molecules/AccessGuard';
 import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import { config } from '@/config';
 import { useRole } from '@/hooks/useRole';
+import { clientHeaders } from '@/shared/api-client/src/clientInfo';
+import { spotStore } from '@/stores/spotStore';
 import {
   getSpotNews,
   createSpotNews,
@@ -12,7 +16,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import { goBackOr } from '@/utils/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -23,7 +26,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Uploads one image to a news post; appends to its images[]. Throws the
 // server error message so the screen can surface it.
@@ -39,7 +41,7 @@ async function uploadNewsImage(newsId: string, uri: string) {
   }
   const res = await fetch(`${config.REST_API_URL}/upload/news/${newsId}`, {
     method: 'POST',
-    headers: token ? { authorization: `Bearer ${token}` } : {},
+    headers: { ...clientHeaders(), ...(token ? { authorization: `Bearer ${token}` } : {}) },
     body: form,
   });
   if (!res.ok) {
@@ -48,10 +50,9 @@ async function uploadNewsImage(newsId: string, uri: string) {
   }
 }
 
-export default function NewsComposerScreen() {
+function NewsComposerScreen() {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
-  const { spotId, isAdmin, loading: roleLoading } = useRole();
+  const { spotId } = useRole();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -70,6 +71,8 @@ export default function NewsComposerScreen() {
     }
     const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
     const res = await getSpotNews(spotId, { token });
+    // Stale guard: the spot changed while loading.
+    if (spotStore.getActiveSpotId() !== spotId) return;
     setPosts(res.data ?? []);
     setLoadingPosts(false);
   }, [spotId]);
@@ -119,27 +122,11 @@ export default function NewsComposerScreen() {
     }
   };
 
-  if (!roleLoading && !isAdmin) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white px-8" style={{ paddingTop: insets.top }}>
-        <Ionicons name="lock-closed-outline" size={40} color="#9CA3AF" />
-        <Typography variant="body-base-regular" className="mt-3 text-center text-gray-500">
-          {t('News.adminOnly')}
-        </Typography>
-        <Pressable onPress={() => goBackOr()} className="mt-5 rounded-xl px-6 py-3" style={{ backgroundColor: '#EC2828' }}>
-          <Typography variant="body-base-bold" className="text-white">
-            {t('News.back')}
-          </Typography>
-        </Pressable>
-      </View>
-    );
-  }
-
   const canPublish = !!title.trim() && !!description.trim() && !posting;
 
   return (
     <View className="flex-1 bg-gray-50">
-      <ScreenHeader title={t('News.title')} />
+      <ScreenHeader title={t('News.title')} spotScoped />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         <ResponsiveContainer maxWidth={640}>
@@ -266,3 +253,13 @@ export default function NewsComposerScreen() {
     </View>
   );
 }
+
+function GuardedNews() {
+  return (
+    <AccessGuard min="MANAGE_SPOT" messageKey="News.adminOnly">
+      <NewsComposerScreen />
+    </AccessGuard>
+  );
+}
+
+export default withSpotScope(GuardedNews);

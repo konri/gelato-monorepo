@@ -15,8 +15,8 @@ import {
 import {
   MenuTaste,
   MenuProduct,
-  SpotTastesResponse,
-  SpotProductsResponse,
+  ManagedTastesResponse,
+  ManagedProductsResponse,
 } from './types';
 
 export * from './types';
@@ -25,7 +25,7 @@ export const getManagedTastes = async (
   spotId: string,
   options: ApolloServerConfig = {},
 ): Promise<GraphQLResult<MenuTaste[]>> => {
-  const res = await executeGraphQLQuery<SpotTastesResponse>(SPOT_TASTES_QUERY, {
+  const res = await executeGraphQLQuery<ManagedTastesResponse>(SPOT_TASTES_QUERY, {
     ...options,
     variables: { spotId },
     fetchPolicy: 'network-only',
@@ -37,7 +37,7 @@ export const getManagedProducts = async (
   spotId: string,
   options: ApolloServerConfig = {},
 ): Promise<GraphQLResult<MenuProduct[]>> => {
-  const res = await executeGraphQLQuery<SpotProductsResponse>(SPOT_PRODUCTS_QUERY, {
+  const res = await executeGraphQLQuery<ManagedProductsResponse>(SPOT_PRODUCTS_QUERY, {
     ...options,
     variables: { spotId },
     fetchPolicy: 'network-only',

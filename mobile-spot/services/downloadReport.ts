@@ -1,4 +1,5 @@
 import { config } from '@/config';
+import { clientHeaders } from '@/shared/api-client/src/clientInfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
@@ -19,9 +20,10 @@ export async function downloadReport(
   const sep = path.includes('?') ? '&' : '?';
   const langQuery = lang ? `${sep}lang=${encodeURIComponent(lang)}` : '';
   const url = `${config.REST_API_URL}/reports/${path}${langQuery}`;
+  const headers = { ...clientHeaders(), ...(token ? { authorization: `Bearer ${token}` } : {}) };
 
   if (Platform.OS === 'web') {
-    const res = await fetch(url, { headers: token ? { authorization: `Bearer ${token}` } : {} });
+    const res = await fetch(url, { headers });
     if (!res.ok) throw new Error(`Report failed: ${res.status}`);
     const blob = await res.blob();
     const objectUrl = URL.createObjectURL(blob);
@@ -39,9 +41,7 @@ export async function downloadReport(
   const FileSystem = require('expo-file-system');
   const Sharing = require('expo-sharing');
   const target = `${FileSystem.cacheDirectory}${filename}`;
-  const { uri, status } = await FileSystem.downloadAsync(url, target, {
-    headers: token ? { authorization: `Bearer ${token}` } : {},
-  });
+  const { uri, status } = await FileSystem.downloadAsync(url, target, { headers });
   if (status !== 200) throw new Error(`Report failed: ${status}`);
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(uri, { mimeType: 'application/pdf' });
