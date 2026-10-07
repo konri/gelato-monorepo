@@ -112,7 +112,9 @@
           }
         }
       ],
-      "./plugins/withNonModularHeaders"
+      "./plugins/withNonModularHeaders",
+      "./plugins/withPodDeploymentTarget",
+      "./plugins/withSceneLifecycle"
     ],
     "experiments": {
       "typedRoutes": true

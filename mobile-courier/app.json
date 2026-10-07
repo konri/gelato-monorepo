@@ -36,13 +36,7 @@
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [
-              "gelato",
-              "com.googleusercontent.apps.268509902642-pa9ad931n8507bknd4njd9ol8abdp4v3"
-            ]
-          },
-          {
-            "CFBundleURLSchemes": [
-              "gelato",
+              "gelatocourier",
               "com.googleusercontent.apps.268509902642-pa9ad931n8507bknd4njd9ol8abdp4v3"
             ]
           }
@@ -118,7 +112,9 @@
           }
         }
       ],
-      "./plugins/withNonModularHeaders"
+      "./plugins/withNonModularHeaders",
+      "./plugins/withPodDeploymentTarget",
+      "./plugins/withSceneLifecycle"
     ],
     "experiments": {
       "typedRoutes": true
