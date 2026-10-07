@@ -10,6 +10,7 @@ import {
 } from "@react-google-maps/api";
 import type { Spot } from "../lib/types";
 import { publicConfig } from "../lib/public-config";
+import { LoodlyMark } from "./brand/LoodlyMark";
 import { boundsFor, densestCitySpots, isSpotOpenNow } from "../lib/spot-utils";
 import { useI18n } from "../i18n/I18nProvider";
 
@@ -244,8 +245,8 @@ function MapSpotPreview({ spot, onClose }: { spot: Spot; onClose: () => void }) 
             // eslint-disable-next-line @next/next/no-img-element
             <img src={spot.coverUrl} alt={spot.name} className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-3xl">
-              <span aria-hidden>🍦</span>
+            <div className="flex h-full w-full items-center justify-center">
+              <LoodlyMark className="h-10 w-10" />
             </div>
           )}
         </div>
@@ -254,13 +255,13 @@ function MapSpotPreview({ spot, onClose }: { spot: Spot; onClose: () => void }) 
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <h3 className="truncate font-bold text-espresso">{spot.name}</h3>
-              <p className="truncate text-xs text-espresso/60">📍 {spot.address}</p>
+              <p className="truncate text-xs text-espresso/70">📍 {spot.address}</p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close"
-              className="shrink-0 rounded-full p-1 text-espresso/40 transition-colors hover:bg-cream-soft hover:text-espresso"
+              aria-label={t("spot.close")}
+              className="shrink-0 rounded-full p-1 text-espresso/70 transition-colors hover:bg-cream-soft hover:text-espresso focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-berry"
             >
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                 <path d="M4 4l10 10M14 4L4 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
@@ -271,8 +272,8 @@ function MapSpotPreview({ spot, onClose }: { spot: Spot; onClose: () => void }) 
           <div className="mt-auto flex items-center justify-between gap-2 pt-2">
             {open !== null ? (
               <span
-                className={`rounded-full px-2.5 py-1 text-xs font-semibold text-white ${
-                  open ? "bg-pistachio" : "bg-espresso/70"
+                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                  open ? "bg-pistachio text-espresso" : "bg-espresso/70 text-white"
                 }`}
               >
                 {open ? t("spots.open_now") : t("spots.closed")}

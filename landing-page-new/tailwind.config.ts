@@ -23,10 +23,16 @@ const config: Config = {
         },
         // Strawberry pink
         strawberry: "#ff6f91",
-        // Pistachio green
-        pistachio: "#8bc34a",
-        // Mango / amber
-        mango: "#ffb020",
+        // Pistachio green. `dark` is the text shade (6.3:1 on white).
+        pistachio: {
+          DEFAULT: "#8bc34a",
+          dark: "#3d6b1f",
+        },
+        // Mango / amber. `dark` is the text shade (6.4:1 on white).
+        mango: {
+          DEFAULT: "#ffb020",
+          dark: "#8a5200",
+        },
         // Vanilla cream backgrounds
         cream: {
           DEFAULT: "#fff8f0",

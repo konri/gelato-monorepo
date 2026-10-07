@@ -105,13 +105,13 @@ export function BoxPickerModal({ box, onClose, onConfirm }: Props) {
             <h2 className="truncate text-lg font-black text-espresso">
               {localized(box.titleLocal, box.title, locale)}
             </h2>
-            <p className="mt-0.5 text-xs text-espresso/60">{t("spot.box_pick_up_to", { max })}</p>
+            <p className="mt-0.5 text-xs text-espresso/70">{t("spot.box_pick_up_to", { max })}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label={t("spot.close")}
-            className="shrink-0 rounded-full p-1.5 text-espresso/50 transition-colors hover:bg-cream-soft hover:text-espresso"
+            className="shrink-0 rounded-full p-1.5 text-espresso/70 transition-colors hover:bg-cream-soft hover:text-espresso focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-berry"
           >
             <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
               <path d="M4 4l10 10M14 4L4 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
@@ -134,7 +134,7 @@ export function BoxPickerModal({ box, onClose, onConfirm }: Props) {
         ) : (
           <div className="flex-1 overflow-y-auto p-4">
             {tastes.length === 0 ? (
-              <p className="py-10 text-center text-sm text-espresso/55">{t("spot.menu_empty")}</p>
+              <p className="py-10 text-center text-sm text-espresso/70">{t("spot.menu_empty")}</p>
             ) : (
               tastes.map((tt) => {
                 const qty = picked[tt.id] ?? 0;
@@ -155,7 +155,7 @@ export function BoxPickerModal({ box, onClose, onConfirm }: Props) {
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold text-espresso">{title}</p>
                       {tt.subtitle && (
-                        <p className="truncate text-xs text-espresso/55">{tt.subtitle}</p>
+                        <p className="truncate text-xs text-espresso/70">{tt.subtitle}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2 pr-1">

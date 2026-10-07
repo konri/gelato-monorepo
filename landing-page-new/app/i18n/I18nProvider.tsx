@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from "react";
@@ -14,7 +15,7 @@ import {
   type Locale,
 } from "./translations";
 
-type TParams = Record<string, string | number>;
+export type TParams = Record<string, string | number>;
 
 type I18nContextValue = {
   locale: Locale;
@@ -58,7 +59,7 @@ function interpolate(template: string, params?: TParams): string {
   );
 }
 
-function resolve(
+export function resolve(
   dict: Record<string, unknown>,
   key: string,
   params?: TParams,
@@ -72,6 +73,17 @@ function resolve(
   const template = lookup(dict, key);
   if (template === undefined) return key;
   return interpolate(template, params);
+}
+
+/** Resolve `key` in `dicts[locale]`, falling back to `dicts.pl`, then to the key itself. */
+function resolveWithFallback(
+  dicts: Record<Locale, Record<string, unknown>>,
+  locale: Locale,
+  key: string,
+  params?: TParams,
+): string {
+  const value = resolve(dicts[locale], key, params);
+  return value === key && locale !== defaultLocale ? resolve(dicts[defaultLocale], key, params) : value;
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
@@ -100,8 +112,10 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem(STORAGE_KEY, next);
   };
 
+  // A key missing in en/ua falls back to the Polish copy (the source
+  // language) before the raw key is shown.
   const t = (key: string, params?: TParams) =>
-    resolve(dictionaries[locale], key, params);
+    resolveWithFallback(dictionaries, locale, key, params);
 
   return (
     <I18nContext.Provider value={{ locale, setLocale, t }}>
@@ -116,4 +130,36 @@ export function useI18n() {
     throw new Error("useI18n must be used within an I18nProvider");
   }
   return ctx;
+}
+
+/**
+ * Adds a page-specific namespace on top of the shared dictionaries, so its
+ * copy ships only with the route that uses it (e.g. `business.json` on
+ * `/for-business`). Inside, `t("<name>.x")` reads `dicts[locale].x` (with the
+ * same Polish fallback); every other key goes to the parent `t`.
+ */
+export function I18nNamespace({
+  name,
+  dicts,
+  children,
+}: {
+  name: string;
+  dicts: Record<Locale, Record<string, unknown>>;
+  children: ReactNode;
+}) {
+  const parent = useI18n();
+  const prefix = `${name}.`;
+  const value = useMemo<I18nContextValue>(() => {
+    const scoped = Object.fromEntries(
+      Object.entries(dicts).map(([l, d]) => [l, { [name]: d }]),
+    ) as Record<Locale, Record<string, unknown>>;
+    return {
+      ...parent,
+      t: (key, params) =>
+        key.startsWith(prefix)
+          ? resolveWithFallback(scoped, parent.locale, key, params)
+          : parent.t(key, params),
+    };
+  }, [parent, name, prefix, dicts]);
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }

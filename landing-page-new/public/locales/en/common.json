@@ -1,105 +1,173 @@
 {
   "site": {
-    "title": "Loodly — Artisan Ice Cream & Coffee Delivery",
-    "description": "Order premium artisan ice cream and coffee from local spots. Fast delivery, live courier tracking, and loyalty rewards in one app."
+    "title": "Loodly — ice cream shops, bakeries, cafés & pastry shops",
+    "description": "Order from local ice cream shops, bakeries, cafés and pastry shops for pickup or delivery. One card everywhere: collect points and swap them for rewards."
   },
   "nav": {
     "home": "Home",
-    "spots": "Spots",
+    "spots": "Locations",
     "features": "Why us",
     "app": "App",
     "contact": "Contact",
-    "order": "Order delivery"
+    "order": "Order delivery",
+    "how": "How it works",
+    "rewards": "Rewards",
+    "business": "For business",
+    "menu_open": "Open menu",
+    "menu_close": "Close menu",
+    "skip": "Skip to content",
+    "main_nav": "Main menu"
   },
   "lang": {
+    "label": "Language",
     "pl": "Polski",
     "en": "English",
     "ua": "Українська"
   },
   "hero": {
-    "badge": "New flavors every day",
-    "title": "Artisan ice cream, right to your door",
-    "subtitle": "Discover the best ice cream and sorbets from local spots in your city. Order in the app, track your courier live, and earn points toward rewards.",
+    "badge": "Not just ice cream",
+    "title": "Ice cream, coffee and pastries from your neighborhood — in one app",
+    "subtitle": "Order from ice cream shops, bakeries, cafés and pastry shops in your city — for pickup or delivery. Show one card at the counter, collect points and swap them for rewards.",
+    "cta_find": "Find a location",
+    "cta_how": "See how it works",
+    "cta_download": "Get the app",
     "cta_order": "Order now",
-    "cta_download": "Download the app"
+    "business_link": "Own a shop or café? See Loodly for business"
   },
-  "stats": {
-    "flavors": "ice cream & sorbet flavors",
-    "spots": "spots across your city",
-    "delivery": "min average delivery time",
-    "users": "happy customers"
+  "categories": {
+    "title": "From morning coffee to ice cream for dessert",
+    "subtitle": "Local favorites in one app. See what's in your city.",
+    "cta": "Browse locations",
+    "icecream": {
+      "name": "Ice cream shops",
+      "desc": "Scoops, sundaes and ice cream to go"
+    },
+    "bakery": {
+      "name": "Bakeries",
+      "desc": "Fresh bread and pastries — order ahead, pick up on your way"
+    },
+    "cafe": {
+      "name": "Cafés",
+      "desc": "Coffee to go, ordered from your phone"
+    },
+    "confectionery": {
+      "name": "Pastry shops",
+      "desc": "Cakes, tarts and sweet treats for any occasion"
+    }
+  },
+  "how": {
+    "title": "How it works",
+    "subtitle": "From order to reward in four steps.",
+    "step1": {
+      "title": "Pick a location",
+      "description": "Choose your city and a location on the map. You'll see the menu, opening hours and whether it offers pickup or delivery."
+    },
+    "step2": {
+      "title": "Order or show your card",
+      "description": "Order in the app for pickup or delivery. Buying in person? Show your Loodly card at the counter."
+    },
+    "step3": {
+      "title": "Collect points",
+      "description": "You earn points for app orders and for purchases at the counter — they go straight to your card."
+    },
+    "step4": {
+      "title": "Get your reward",
+      "description": "Once you have enough points, swap them for a reward in the app or at the counter."
+    }
+  },
+  "loyalty": {
+    "badge": "Loyalty program",
+    "title": "One card everywhere",
+    "lead": "Like the old stamp card — except you can't lose it. It's on your phone, and you show it at every location on Loodly.",
+    "r1_title": "Points stay where you earn them",
+    "r1_body": "Every logo in the app has its own balance. Spend the points at any location under the same name — around the corner or in another city.",
+    "r2_title": "QR code or barcode",
+    "r2_body": "Pick whichever you prefer — staff scan it at the counter. One tap makes the code bigger and your screen brighter.",
+    "r3_title": "Sometimes you get extra points",
+    "r3_body": "Like double points on Thursdays from 10 a.m. to 2 p.m. There can also be points on your birthday and for inviting a friend — you'll see it all in the app.",
+    "cta": "See example rewards",
+    "mock_title": "Your points",
+    "mock_card": "Your Loodly card",
+    "mock_qr": "QR code",
+    "mock_barcode": "Barcode",
+    "mock_points_one": "{{n}} point",
+    "mock_points_few": "{{n}} points",
+    "mock_points_many": "{{n}} points",
+    "mock_caption": "Example app screen",
+    "mock_alt": "Example app screen: a card with a code and three separate points balances."
+  },
+  "rewards": {
+    "title": "What can you get for your points?",
+    "subtitle": "A few examples, from a coffee and a croissant to an umbrella with a logo. Every rewards catalog is different — you'll find the current rewards and their prices in points in the app.",
+    "group_menu": "From the menu",
+    "group_merch": "Merch with a logo",
+    "items": {
+      "coffee": "Free coffee",
+      "croissant": "Free croissant",
+      "scoop": "Free scoop of ice cream",
+      "umbrella": "Umbrella",
+      "mug": "Mug",
+      "tote": "Tote bag",
+      "cap": "Baseball cap",
+      "thermal": "Travel mug",
+      "tshirt": "T-shirt",
+      "cake": "Free slice of cake"
+    },
+    "note": "Merch is shown with the Loodly logo — these are just examples."
   },
   "features": {
     "title": "Why Loodly?",
-    "subtitle": "No artificial shortcuts — just natural ingredients and an honest approach.",
-    "natural": {
-      "title": "Natural ingredients",
-      "description": "No dyes, no preservatives, no artificial flavor enhancers. Only the good stuff."
+    "subtitle": "Everything you need to shop local, the easy way.",
+    "pickup": {
+      "title": "Pickup at the location",
+      "description": "Order ahead in the app and pick it up when it's ready. Show your card at pickup and the points land in your account."
     },
-    "vegan": {
-      "title": "Something for everyone",
-      "description": "Vegan, sugar-free, sorbets, and gluten-free options — there's a scoop for you."
+    "delivery": {
+      "title": "Delivery you can follow on the map",
+      "description": "Where a location delivers, order to your door and watch your courier on the map."
     },
-    "fast": {
-      "title": "Fast delivery",
-      "description": "Fresh ice cream in an insulated loodbox, delivered in 30–60 minutes and perfectly chilled."
+    "pay": {
+      "title": "Pay your way",
+      "description": "Online — by card, BLIK, Apple Pay or Google Pay — or in person at pickup, where the location allows it."
     },
-    "loyalty": {
-      "title": "Loyalty program",
-      "description": "Earn points on every order and redeem them for free ice cream and rewards."
+    "menu": {
+      "title": "Up-to-date menus",
+      "description": "Prices, descriptions and allergens, all together. When something sells out, staff mark it right away."
     },
-    "tracking": {
-      "title": "Live tracking",
-      "description": "Watch your courier on the map in real time, all the way to your door."
+    "map": {
+      "title": "Locations on the map",
+      "description": "Pick your city and see what's open now, where you can get delivery and where to pick up."
     },
-    "quality": {
-      "title": "Honest portions",
-      "description": "Weighed portions and free tastings. You pay for exactly what you get."
-    }
-  },
-  "flavor": {
-    "badge": "Flavor of the day",
-    "title": "Something new every day",
-    "name": "Belgian chocolate with salted caramel",
-    "description": "Creamy Belgian chocolate cut through with a ribbon of salted caramel. Available today in select spots and for delivery.",
-    "cta_taste": "Find a spot",
-    "cta_order": "Order delivery"
-  },
-  "how": {
-    "title": "How delivery works",
-    "subtitle": "Four simple steps from the app to your door.",
-    "step1": {
-      "title": "Order in the app",
-      "description": "Pick your flavors and loodbox size, add your address, and pay in seconds."
-    },
-    "step2": {
-      "title": "We pack the loodbox",
-      "description": "Your ice cream goes into an insulated 0.5 kg or 1.0 kg loodbox."
-    },
-    "step3": {
-      "title": "Courier on the way",
-      "description": "By bike, e-scooter, or car — with a live route preview in the app."
-    },
-    "step4": {
-      "title": "Delivered to your door",
-      "description": "Receive your order contactless, right at your doorstep."
+    "news": {
+      "title": "News and offers",
+      "description": "Updates and offers from the locations you like, all together in the app."
     }
   },
   "app": {
-    "title": "The whole world of ice cream in one app",
-    "subtitle": "Check flavor availability, order delivery, collect points, and redeem rewards.",
-    "point1": "Check live flavor availability at every spot",
-    "point2": "Order delivery and track your courier on the map",
-    "point3": "Earn points on every single order",
-    "point4": "Redeem points for free ice cream and rewards",
+    "title": "It's all in the Loodly app",
+    "subtitle": "Menus, orders, your card and rewards — always at hand.",
+    "point1": "Browse menus and opening hours of locations in your city",
+    "point2": "Order for pickup or delivery and follow your order",
+    "point3": "Show one card at the counter — QR code or barcode",
+    "point4": "Collect points and swap them for rewards",
     "ios": "Download on the App Store",
     "android": "Get it on Google Play",
-    "qr_hint": "Scan to download"
+    "qr_hint": "Scan to download",
+    "web_cta": "Order on the website",
+    "web_hint": "You can also order at loodly.pl — no app needed.",
+    "mock_title": "Your order",
+    "mock_status": "Ready for pickup"
+  },
+  "teaser": {
+    "title": "Run an ice cream shop, bakery, café or pastry shop?",
+    "body": "Take online orders, reward your regulars and work with couriers — in one system, from a single location to several cities.",
+    "cta": "Explore Loodly for business"
   },
   "cta": {
-    "ready": "Ready for the best ice cream in town?",
-    "subtitle": "Download the Loodly app and order your first loodbox today.",
-    "download_now": "Download the app"
+    "ready": "Craving something good?",
+    "subtitle": "Get Loodly, find a location near you and start collecting points with your first purchase.",
+    "subtitle_web": "Find a location near you, order and start collecting points with your first purchase.",
+    "download_now": "Get the app"
   },
   "auth": {
     "login": "Log in",
@@ -217,22 +285,22 @@
     "back": "Back to rewards"
   },
   "spots": {
-    "title": "Our spots",
-    "subtitle": "Pick a city and find the nearest Loodly spot on the map.",
+    "title": "Locations in your city",
+    "subtitle": "Pick a city and find the nearest location on the map.",
     "all_cities": "All cities",
     "select_city": "Select a city",
-    "count_one": "{{count}} spot",
-    "count_few": "{{count}} spots",
-    "count_many": "{{count}} spots",
-    "loading": "Loading spots…",
-    "none": "No spots in this city yet — check back soon!",
-    "error": "Couldn't load spots. Please try again later.",
+    "count_one": "{{count}} location",
+    "count_few": "{{count}} locations",
+    "count_many": "{{count}} locations",
+    "loading": "Loading locations…",
+    "none": "No locations in this city yet — check back soon!",
+    "error": "Couldn't load locations. Please try again later.",
     "open_now": "Open now",
     "closed": "Closed",
-    "view_spot": "View spot",
+    "view_spot": "View location",
     "map_list_view": "List",
     "map_map_view": "Map",
-    "map_unavailable": "Map unavailable — no Google Maps key set. Spots listed below.",
+    "map_unavailable": "Map unavailable — no Google Maps key set. Locations are listed below.",
     "delivery_available": "Delivery available",
     "pickup_available": "Pickup available",
     "delivery_radius": "Delivery radius: {{km}} km",
@@ -240,11 +308,11 @@
     "locate_me": "Show my location"
   },
   "spot": {
-    "back": "Back to spots",
+    "back": "Back to locations",
     "directions": "Get directions",
     "call": "Call",
     "email": "Send email",
-    "order_here": "Order from this spot",
+    "order_here": "Order from this location",
     "address": "Address",
     "contact": "Contact",
     "opening_hours": "Opening hours",
@@ -254,7 +322,7 @@
     "accessibility": "Accessibility",
     "delivery": "Delivery",
     "ordering": "Ordering",
-    "pickup_available": "Pickup at the spot — no address or GPS needed.",
+    "pickup_available": "Pickup at the location — no address or GPS needed.",
     "delivery_radius": "Delivery radius",
     "delivery_fee": "Delivery fee",
     "free_delivery": "Free delivery over {{amount}} zł",
@@ -262,7 +330,7 @@
     "reviews": "Reviews",
     "no_reviews": "No reviews yet.",
     "menu": "Menu",
-    "menu_empty": "This spot hasn't added any products yet.",
+    "menu_empty": "This location hasn't added any products yet.",
     "add": "Add",
     "from": "from",
     "category": {
@@ -277,7 +345,7 @@
       "MERCHANDISE": "Merchandise",
       "OTHER": "Other"
     },
-    "not_found": "Spot not found.",
+    "not_found": "Location not found.",
     "weekday": {
       "monday": "Monday",
       "tuesday": "Tuesday",
@@ -300,16 +368,16 @@
     "box_configure": "Choose scoops"
   },
   "footer": {
-    "tagline": "Artisan ice cream and coffee delivery — straight from local spots.",
+    "tagline": "Ice cream shops, bakeries, cafés and pastry shops near you — ordering, delivery and one card for points.",
     "company": "Company",
-    "about": "About us",
     "contact": "Contact",
-    "careers": "Careers",
     "legal": "Legal",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
-    "made": "Made with ❤️ for ice cream lovers",
-    "copyright": "© 2026 Loodly. All rights reserved."
+    "made": "Made with ❤️ for local flavors",
+    "copyright": "© 2026 Loodly. All rights reserved.",
+    "business": "For business",
+    "email_label": "Email us"
   },
   "checkout": {
     "pay_now": "Pay now",

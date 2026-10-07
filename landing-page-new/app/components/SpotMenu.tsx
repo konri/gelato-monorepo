@@ -10,6 +10,7 @@ import { buildMenuSections } from "../lib/spot-utils";
 import type { LocalizedName, MenuItem } from "../lib/types";
 import { MenuItemDetailModal } from "./MenuItemDetailModal";
 import { BoxPickerModal } from "./BoxPickerModal";
+import { LoodlyMark } from "./brand/LoodlyMark";
 
 function localized(value: LocalizedName | null | undefined, fallback: string, locale: Locale) {
   return (value && value[locale]) || fallback;
@@ -115,8 +116,8 @@ export function SpotMenu({ spotId, spotName }: { spotId: string; spotName: strin
   if (isEmpty) {
     return (
       <div className="rounded-3xl border border-dashed border-berry/20 bg-cream-soft p-8 text-center">
-        <div className="text-4xl">🍨</div>
-        <p className="mt-3 text-sm text-espresso/60">{t("spot.menu_empty")}</p>
+        <LoodlyMark className="mx-auto h-12 w-12" />
+        <p className="mt-3 text-sm text-espresso/65">{t("spot.menu_empty")}</p>
       </div>
     );
   }
@@ -145,7 +146,7 @@ export function SpotMenu({ spotId, spotName }: { spotId: string; spotName: strin
                     <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-2xl">
-                      {item.kind === "taste" ? "🍦" : "🥤"}
+                      {item.kind === "taste" ? <span aria-hidden>🍦</span> : <LoodlyMark className="h-10 w-10" />}
                     </div>
                   )}
                 </button>
@@ -158,10 +159,10 @@ export function SpotMenu({ spotId, spotName }: { spotId: string; spotName: strin
                     {localized(item.titleLocal, item.title, locale)}
                   </button>
                   {item.subtitle && (
-                    <p className="truncate text-xs text-espresso/55">{item.subtitle}</p>
+                    <p className="truncate text-xs text-espresso/70">{item.subtitle}</p>
                   )}
                   {item.allergens.length > 0 && (
-                    <p className="mt-0.5 truncate text-xs text-mango">
+                    <p className="mt-0.5 truncate text-xs text-mango-dark">
                       ⚠️ {item.allergens.join(", ")}
                     </p>
                   )}

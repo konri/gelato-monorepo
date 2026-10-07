@@ -6,6 +6,8 @@ import { AuthProvider } from "./auth/AuthProvider";
 import { AuthModalProvider } from "./auth/AuthModalProvider";
 import { CartProvider } from "./lib/cart";
 import { StaticExportSpotGate } from "./components/StaticExportSpotGate";
+import pl from "../public/locales/pl/common.json";
+import { BASE_OPEN_GRAPH, SITE_URL } from "./lib/seo";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -18,11 +20,16 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
+// Static metadata in Polish (primary market); the visible copy switches
+// language on the client via the I18nProvider.
 export const metadata: Metadata = {
-  title: "Loodly — Rzemieślnicze lody i kawa z dostawą",
-  description:
-    "Zamów premium lody rzemieślnicze i kawę z lokalnych punktów. Szybka dostawa, śledzenie kuriera na żywo i program lojalnościowy w jednej aplikacji.",
+  metadataBase: new URL(SITE_URL),
+  title: pl.site.title,
+  description: pl.site.description,
   icons: { icon: "/favicon.ico" },
+  // og:url is set per page (`/` and `/for-business`), so other routes never
+  // claim the home page as their URL.
+  openGraph: BASE_OPEN_GRAPH,
 };
 
 export default function RootLayout({

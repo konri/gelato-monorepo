@@ -17,6 +17,19 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
+/* Reduced motion: stop the decorative floats/fades and smooth scrolling.
+   Lottie scenes handle this themselves (poster frame, Play button). */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-slow,
+  .animate-float-medium,
+  .animate-fade-up {
+    animation: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

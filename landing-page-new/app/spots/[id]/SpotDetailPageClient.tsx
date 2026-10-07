@@ -1,7 +1,7 @@
 "use client";
 
 import { Header } from "../../components/Header";
-import { Footer } from "../../components/LandingSections";
+import { Footer } from "../../components/Footer";
 import { SpotDetail } from "../../components/SpotDetail";
 import { useSpotRouteId } from "../../lib/useSpotRouteId";
 
@@ -11,7 +11,7 @@ export function SpotDetailPageClient({ id }: { id: string }) {
   return (
     <>
       <Header />
-      <main className="pt-16">
+      <main id="main" className="pt-16">
         {spotId ? (
           <SpotDetail spotId={spotId} />
         ) : (

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useI18n } from "../i18n/I18nProvider";
 import type { Locale } from "../i18n/translations";
 import type { LocalizedName, MenuItem } from "../lib/types";
+import { LoodlyMark } from "./brand/LoodlyMark";
 
 function localized(value: LocalizedName | null | undefined, fallback: string, locale: Locale) {
   return (value && value[locale]) || fallback;
@@ -62,7 +63,7 @@ export function MenuItemDetailModal({ item, quantity, onClose, onAdd, onDecremen
             <img src={item.imageUrl} alt={title} className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-6xl">
-              {item.kind === "taste" ? "🍦" : "🥤"}
+              {item.kind === "taste" ? <span aria-hidden>🍦</span> : <LoodlyMark className="h-20 w-20" />}
             </div>
           )}
           <button
@@ -79,21 +80,21 @@ export function MenuItemDetailModal({ item, quantity, onClose, onAdd, onDecremen
 
         <div className="p-5">
           <h2 className="text-xl font-black text-espresso">{title}</h2>
-          {item.subtitle && <p className="mt-0.5 text-sm text-espresso/60">{item.subtitle}</p>}
+          {item.subtitle && <p className="mt-0.5 text-sm text-espresso/70">{item.subtitle}</p>}
 
           <p className="mt-3 text-sm leading-relaxed text-espresso/75">
             {item.description || t("spot.no_description")}
           </p>
 
           {item.kcalPerPortion != null && (
-            <p className="mt-3 text-xs font-semibold text-espresso/55">
+            <p className="mt-3 text-xs font-semibold text-espresso/70">
               🔥 {t("spot.calories", { count: item.kcalPerPortion })}
             </p>
           )}
 
           {item.allergens.length > 0 && (
             <div className="mt-3">
-              <p className="text-xs font-bold uppercase tracking-wide text-mango">
+              <p className="text-xs font-bold uppercase tracking-wide text-mango-dark">
                 {t("spot.ingredients")}
               </p>
               <p className="mt-1 text-sm text-espresso/70">⚠️ {item.allergens.join(", ")}</p>

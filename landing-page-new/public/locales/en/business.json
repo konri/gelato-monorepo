@@ -1,0 +1,244 @@
+{
+  "meta": {
+    "title": "Loodly for business — orders, loyalty and delivery",
+    "description": "Online orders, a loyalty card with points, rewards, couriers and reports for ice cream shops, bakeries, cafés and pastry shops — connected to your receipts and invoicing system."
+  },
+  "hero": {
+    "eyebrow": "Loodly for business",
+    "title": "Orders, points and delivery — one system for all your locations",
+    "subtitle": "For ice cream shops, bakeries, cafés and pastry shops — from a single location to a chain across several cities.",
+    "subtitle_more": "Customers order in the Loodly app and collect points with you on one card, and we connect Loodly to the system you use for receipts and invoices.",
+    "chips": {
+      "orders": "Online orders",
+      "card": "Loyalty card with points",
+      "couriers": "Couriers",
+      "locations": "Many locations, one program",
+      "integration": "Works with your system"
+    },
+    "cta_contact": "Let's talk",
+    "cta_story": "See how it works",
+    "cta_pricing": "Pricing",
+    "visual_alt": "Illustration: the brand console on a laptop, a tablet with orders at the location, a customer's phone with their card, and a courier on a scooter."
+  },
+  "story": {
+    "eyebrow": "Step by step",
+    "title": "From your first sign-in to your first delivery",
+    "subtitle": "Here's what getting started and an ordinary day with Loodly look like — the same for bakeries, cafés, ice cream shops and pastry shops.",
+    "step": "Step {{n}} of {{total}}",
+    "acts": {
+      "setup": { "title": "Before you open the doors", "subtitle": "You set up your brand and locations in the brand console in your browser, and your menu in the Loodly Spot app." },
+      "counter": { "title": "At the counter", "subtitle": "Your team works in the Loodly Spot app — on a phone, a tablet or in the browser at the register." },
+      "beyond": { "title": "Beyond the counter", "subtitle": "App orders and deliveries land in the same place as the rest of your work." }
+    },
+    "scenes": {
+      "account": {
+        "kicker": "Brand console",
+        "title": "We set up your brand account",
+        "body": "We create your brand on Loodly and email an invitation to your first admin. You set your own password and you're in the brand console.",
+        "alt": "Animation: an invitation envelope drops into a laptop, a sign-in form appears and a green check mark confirms it."
+      },
+      "brand": {
+        "kicker": "Brand console",
+        "title": "Show customers who you are",
+        "body": "Add your logo, a cover photo, a description in several languages and the cities you work in. That's how customers will see you in the Loodly app and on the website.",
+        "alt": "Animation: a banner, a logo, description lines and three city tags appear in the brand console, followed by a save confirmation."
+      },
+      "spots": {
+        "kicker": "Brand console",
+        "title": "Add your locations",
+        "body": "Each location has its own address, opening hours, team, and pickup, delivery and payment settings. New locations start as drafts — you activate them when they're ready.",
+        "alt": "Animation: three locations appear on a city map, linked to the brand logo, and their markers turn green."
+      },
+      "menu": {
+        "kicker": "Loodly Spot",
+        "title": "Fill in your menu",
+        "body": "In the Loodly Spot app, add products with photos, prices and allergens — and decide how many points each one earns. When something sells out, your team marks it in one tap.",
+        "alt": "Animation: product cards appear on a tablet — coffee, a croissant, ice cream and cake — and one product is briefly switched off."
+      },
+      "scan": {
+        "kicker": "7:30 a.m.",
+        "title": "Scan the customer's card",
+        "body": "The customer shows a QR code or barcode in the app. Scan it with the camera or a barcode scanner and you instantly see their points with your brand and any rewards ready to hand over.",
+        "alt": "Animation: a scanner reads the barcode on a customer's phone, then a green confirmation and a points coin appear."
+      },
+      "points": {
+        "kicker": "Thursday, 10 a.m.",
+        "title": "Points for every purchase — sometimes double",
+        "body": "Staff add points from ready-made templates, and app orders earn points automatically. Want to liven up the quieter hours? Set up a promotion such as double points on Thursdays from 10 a.m. to 2 p.m. — at one location or all of them.",
+        "alt": "Animation: a clock hand moves into the highlighted 10-to-2 window, a “times two” badge appears and coins drop onto the card in pairs."
+      },
+      "rewards": {
+        "kicker": "1 p.m.",
+        "title": "Happy customers who come back",
+        "body": "Customers swap points for your rewards: a coffee, a pastry, a scoop of ice cream or merch with your logo — in the app or right at the counter. Points collected with you can only be spent with you, at any of your locations.",
+        "alt": "Animation: a mug with a logo pops out of a gift box, two customers smile and little hearts float up."
+      },
+      "moreOrders": {
+        "kicker": "3 p.m.",
+        "title": "Orders even when customers aren't in the shop",
+        "body": "Customers order in the Loodly app and on the website — from home, from work or on the go, for pickup or delivery. Your location's news, birthday points and referrals keep you on their mind between visits.",
+        "alt": "Animation: orders fly to the shop from a house, an office and a park, and a stack of tickets grows on the counter."
+      },
+      "onlineOrders": {
+        "kicker": "5:30 p.m.",
+        "title": "Online orders, straight to your tablet",
+        "body": "A new order shows up in the Loodly Spot app with a sound alert. You accept it, prepare it and mark it ready, and the customer sees every step.",
+        "alt": "Animation: an order flies from a customer's phone to the shop's tablet, a bell rings, the order is accepted and its status changes to ready."
+      },
+      "couriers": {
+        "kicker": "6 p.m.",
+        "title": "Courier on the way, live on the map",
+        "body": "Couriers using the Loodly Courier app apply to your location, and you choose who to accept and set what they earn per delivery. Assign the order and the customer follows it live.",
+        "alt": "Animation: a courier rides from the shop to the customer's home, ending with a pin and a green check mark."
+      }
+    }
+  },
+  "benefits": {
+    "title": "What Loodly gives you",
+    "subtitle": "Everyday tools for you, your team and your customers.",
+    "loyalty": { "title": "A loyalty program without paper", "body": "Instead of stamp cards, one card on your customer's phone. You choose the rewards and their price in points — and customers get a reason to come back to you." },
+    "orders": { "title": "Online orders from your menu", "body": "Customers order from your menu for pickup or delivery and pay online or in person — however you set up each location." },
+    "locations": { "title": "Many locations, one program", "body": "All your locations in one console, even across cities. Points and rewards work at every one of them, while each location keeps its own hours, menu and team." },
+    "promotions": { "title": "Promotions, birthdays and referrals", "body": "Double points on chosen days and hours, birthday points and a bonus for inviting a friend. You decide whether to give points — and how many." },
+    "couriers": { "title": "Couriers and live tracking", "body": "Work with couriers you approve. Customers follow the delivery live on the map." },
+    "reports": { "title": "Reports per location and brand-wide", "body": "PDF reports on orders, points, deliveries and staff sign-ins for each location, plus order and points summaries for your whole brand." }
+  },
+  "roles": {
+    "title": "Your whole team, each in the right place",
+    "subtitle": "Everyone signs in with their own account and sees only what they need — at one location or several.",
+    "brandAdmin": { "title": "Brand admin", "scope": "The whole brand, every location", "body": "Sets up the brand, locations, rewards, promotions and team in the brand console. Sees brand-wide reports and can work at any location in the Loodly Spot app." },
+    "locationAdmin": { "title": "Location admin", "scope": "One or several locations", "body": "Runs their locations in the Loodly Spot app: menu, opening hours, orders, couriers and employees. Sees reports for their locations." },
+    "employee": { "title": "Employee", "scope": "One location", "body": "Takes orders, scans customer cards, adds points from ready-made templates and hands out rewards." },
+    "safety_title": "Points under control",
+    "safety1": "Employees add points only from set templates",
+    "safety2": "A cap on manually added points and an optional daily limit per person",
+    "safety3": "No one on your team can add points to their own account"
+  },
+  "rewards": {
+    "title": "Thank your regulars with rewards",
+    "body": "A product from your menu or merch with your logo — you decide what goes into the catalog, what it costs in points and how many are available.",
+    "note": "Below are examples with the Loodly logo — your catalog will carry yours."
+  },
+  "integration": {
+    "eyebrow": "Integration",
+    "title": "Works with what you already use",
+    "body": "You don't have to change how you issue receipts and invoices. As part of setup, we connect Loodly to the system you use every day for sales, receipts and invoices. We work out the scope with you — which is why we quote it individually.",
+    "p1": "Keep issuing receipts and invoices the way you do today",
+    "p2": "We agree on the integration scope with you before we quote",
+    "p3": "Tell us which system you use and we'll check the options",
+    "node_system": "Your sales, receipts and invoicing system",
+    "node_loodly": "Loodly",
+    "node_spots": "Your locations and customers",
+    "diagram_alt": "Diagram: your receipts and invoicing system connected to Loodly, and Loodly connected to the tablet at your location and your customer's phone.",
+    "hardware_title": "Hardware you already have",
+    "hardware_body": "A phone or tablet with the Loodly Spot app is all you need — scan customer codes with the camera. You can also plug in a barcode scanner; we'll test yours with you during setup."
+  },
+  "faq": {
+    "title": "Frequently asked questions",
+    "q1": "How long does it take to get started?",
+    "a1": "It mostly depends on the integration scope, the number of locations and the size of your menu. We agree on a start date with you and include it in the quote.",
+    "q2": "Do I need to change my register or invoicing software?",
+    "a2": "No. We connect Loodly to the system you already use for sales, receipts and invoices. Tell us what you use and we'll check the options and scope before quoting.",
+    "q3": "What hardware do I need?",
+    "a3": "A phone or tablet with the Loodly Spot app is enough — you scan customer cards with the camera. At a register with a computer, you can run Loodly Spot in the browser with a barcode scanner plugged in. For codes shown on a phone screen, image-based (2D) scanners work best, since laser scanners often can't read screens — we'll test yours during setup.",
+    "q4": "Can customers spend my points somewhere else?",
+    "a4": "No. Points collected with your brand can only be spent on your rewards — at any of your locations. Customers have one card, but each brand's points are kept separately.",
+    "q5": "I have several locations, some in different cities. Will it work?",
+    "a5": "Yes. A brand can have many locations across different cities. Each location has its own hours, menu and team; points and rewards are shared across the brand, and promotions can run at all locations or selected ones.",
+    "q6": "Will it be my own app?",
+    "a6": "Your locations appear in the Loodly app and on the Loodly website — with your logo, description, menu and your own points program. Customers use one app for every location on Loodly, but the points they collect with you can only be spent with you.",
+    "q7": "Who owns the customer data?",
+    "a7": "Data processing is covered by our agreement and the Loodly privacy policy. Day to day, you see your brand's orders, points and reports. We're happy to go through the details when we prepare your quote.",
+    "a7_link": "Privacy Policy",
+    "q8": "How long is the contract?",
+    "a8": "Contract length and notice terms are agreed individually. Get in touch and we'll walk you through them."
+  },
+  "pricing": {
+    "eyebrow": "Pricing",
+    "title": "Simple pricing",
+    "title_quote": "How pricing works",
+    "subtitle": "You pay once for setup, then monthly — only for active locations.",
+    "integration_label": "Setup and integration",
+    "integration_period": "one-time",
+    "integration_quote": "Individual quote",
+    "integration_from": "from {{amount}}",
+    "integration_body": "The price depends on the system we connect Loodly to and on the number of locations. We'll prepare a quote after a short call.",
+    "integration_inc1": "Integration with your receipts and invoicing system",
+    "integration_inc2": "Brand and admin account setup",
+    "spot_label": "Per-location fee",
+    "spot_period": "per month",
+    "spot_fallback": "A small monthly fee for each location",
+    "spot_amount": "{{amount}} / location / month",
+    "spot_body": "You pay for the locations that are active on Loodly. Opening another one? Just add it.",
+    "includes_title": "What Loodly includes",
+    "inc1": "Your locations and menu in the Loodly app and on the website",
+    "inc2": "The Loodly Spot app for your team",
+    "inc3": "The brand console in your browser",
+    "inc4": "Loyalty card, rewards, promotions, birthdays and referrals",
+    "inc5": "Order and points reports",
+    "vat_net": "Prices exclude VAT.",
+    "vat_gross": "Prices include VAT.",
+    "note_quote": "We'll give you exact amounts in the quote, after a short conversation about your locations.",
+    "cta": "Request a quote"
+  },
+  "contact": {
+    "title": "Let's talk about your locations",
+    "body": "Tell us how many locations you have and which system you use for receipts and invoices. We'll get back to you and prepare a quote.",
+    "mail_subject": "Loodly for business — quote request",
+    "or_email": "You can also write to us at",
+    "form": {
+      "optional": "(optional)",
+      "company": "Company or brand name",
+      "name": "Your name",
+      "email": "Email",
+      "phone": "Phone",
+      "city": "City",
+      "spots": "Number of locations",
+      "spots_note": "(1 to 500)",
+      "types": "Type of business",
+      "types_hint": "You can select more than one.",
+      "type": { "ICE_CREAM": "Ice cream shop", "BAKERY": "Bakery", "CAFE": "Café", "CONFECTIONERY": "Confectionery / pastry shop", "OTHER": "Other" },
+      "system": "System you use for receipts and invoices",
+      "system_hint": "For example, your cash register or invoicing software.",
+      "message": "Message",
+      "message_hint": "For example, when you'd like to start or what you'd like to ask.",
+      "consent_before": "I agree to Loodly contacting me about this request. Read more in our ",
+      "consent_link": "privacy policy",
+      "consent_after": ".",
+      "new_tab": "(opens in a new tab)",
+      "submit": "Send request",
+      "submitting": "Sending…"
+    },
+    "errors": {
+      "summary_title": "Please check the form",
+      "company_required": "Enter your company or brand name.",
+      "company_length": "The company or brand name must be 2 to 120 characters long.",
+      "name_required": "Enter your name.",
+      "name_length": "Your name must be 2 to 120 characters long.",
+      "email_required": "Enter your email address.",
+      "email_invalid": "Enter a valid email address, for example contact@yourcompany.com.",
+      "phone_required": "Enter your phone number.",
+      "phone_invalid": "Enter a phone number of 6 to 32 characters: digits, spaces and + ( ) -.",
+      "city_length": "The city name can be up to 80 characters long.",
+      "spots_required": "Enter the number of locations.",
+      "spots_range": "Enter a whole number from 1 to 500.",
+      "types_required": "Select at least one type of business.",
+      "system_length": "The system name can be up to 120 characters long.",
+      "message_length": "The message can be up to 2,000 characters long.",
+      "consent_required": "Tick the box so we can reply to your request.",
+      "invalid": "We couldn't accept your request. Check the details in the form and try again.",
+      "rate_limited": "Too many attempts in a short time. Please try again later.",
+      "network": "We couldn't send the form. Check your internet connection and try again.",
+      "server": "Something went wrong on our side. Please try again in a moment."
+    },
+    "success": {
+      "title": "Thank you!",
+      "body": "We've received your request. We'll get back to you soon.",
+      "again": "Send another request"
+    }
+  },
+  "a11y": {
+    "play": "Play animation",
+    "pause": "Pause animation"
+  }
+}

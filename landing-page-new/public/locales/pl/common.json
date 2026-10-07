@@ -1,104 +1,172 @@
 {
   "site": {
-    "title": "Loodly — Rzemieślnicze Lody i Kawa z Dostawą",
-    "description": "Zamów premium lody rzemieślnicze i kawę z lokalnych punktów. Szybka dostawa, śledzenie kuriera na żywo i program lojalnościowy w jednej aplikacji."
+    "title": "Loodly — lodziarnie, piekarnie, kawiarnie i cukiernie",
+    "description": "Zamawiaj z lokalnych lodziarni, piekarni, kawiarni i cukierni — z odbiorem lub dostawą. Jedna karta wszędzie: zbieraj punkty i wymieniaj je na nagrody."
   },
   "nav": {
     "home": "Start",
-    "spots": "Punkty",
+    "spots": "Lokale",
     "features": "Dlaczego my",
     "app": "Aplikacja",
     "contact": "Kontakt",
-    "order": "Zamów z dostawą"
+    "order": "Zamów z dostawą",
+    "how": "Jak to działa",
+    "rewards": "Nagrody",
+    "business": "Dla firm",
+    "menu_open": "Otwórz menu",
+    "menu_close": "Zamknij menu",
+    "skip": "Przejdź do treści",
+    "main_nav": "Menu główne"
   },
   "lang": {
+    "label": "Język",
     "pl": "Polski",
     "en": "English",
     "ua": "Українська"
   },
   "hero": {
-    "badge": "Nowe smaki każdego dnia",
-    "title": "Rzemieślnicze lody prosto pod Twoje drzwi",
-    "subtitle": "Odkryj najlepsze lody i sorbety z lokalnych punktów w Twoim mieście. Zamawiaj przez aplikację, śledź kuriera na żywo i zbieraj punkty na nagrody.",
+    "badge": "Nie tylko lody",
+    "title": "Lody, kawa i wypieki z okolicy — w jednej aplikacji",
+    "subtitle": "Zamawiaj z lodziarni, piekarni, kawiarni i cukierni w swoim mieście — z odbiorem w lokalu albo z dostawą. Przy kasie pokazujesz jedną kartę, zbierasz punkty i wymieniasz je na nagrody.",
+    "cta_find": "Znajdź lokal",
+    "cta_how": "Zobacz, jak to działa",
+    "cta_download": "Pobierz aplikację",
     "cta_order": "Zamów teraz",
-    "cta_download": "Pobierz aplikację"
+    "business_link": "Prowadzisz lokal? Zobacz Loodly dla firm"
   },
-  "stats": {
-    "flavors": "smaków lodów i sorbetów",
-    "spots": "punktów w Twoim mieście",
-    "delivery": "min średni czas dostawy",
-    "users": "zadowolonych użytkowników"
+  "categories": {
+    "title": "Od porannej kawy po lody na deser",
+    "subtitle": "Lokale z Twojej okolicy w jednej aplikacji. Sprawdź, co jest w Twoim mieście.",
+    "cta": "Zobacz lokale",
+    "icecream": {
+      "name": "Lodziarnie",
+      "desc": "Gałki, desery i lody na wynos"
+    },
+    "bakery": {
+      "name": "Piekarnie",
+      "desc": "Świeży chleb i drożdżówki — zamów wcześniej, odbierz po drodze"
+    },
+    "cafe": {
+      "name": "Kawiarnie",
+      "desc": "Kawa na wynos zamówiona z telefonu"
+    },
+    "confectionery": {
+      "name": "Cukiernie",
+      "desc": "Ciasta, torty i słodkości na każdą okazję"
+    }
+  },
+  "how": {
+    "title": "Jak to działa?",
+    "subtitle": "Od zamówienia do nagrody w czterech krokach.",
+    "step1": {
+      "title": "Wybierz lokal",
+      "description": "Wybierz miasto i lokal na mapie. Od razu zobaczysz menu, godziny otwarcia i to, czy jest odbiór albo dostawa."
+    },
+    "step2": {
+      "title": "Zamów albo pokaż kartę",
+      "description": "Zamów w aplikacji z odbiorem lub dostawą. Kupujesz na miejscu? Pokaż kartę Loodly przy kasie."
+    },
+    "step3": {
+      "title": "Zbieraj punkty",
+      "description": "Punkty dostajesz za zamówienia w aplikacji i za zakupy przy kasie — trafiają prosto na Twoją kartę."
+    },
+    "step4": {
+      "title": "Odbierz nagrodę",
+      "description": "Gdy uzbierasz dość punktów, wymień je na nagrodę w aplikacji albo przy kasie."
+    }
+  },
+  "loyalty": {
+    "badge": "Program lojalnościowy",
+    "title": "Jedna karta wszędzie",
+    "lead": "Jak dawna karta z pieczątkami — tylko że się nie gubi. Masz ją w telefonie i pokazujesz w każdym lokalu w Loodly.",
+    "r1_title": "Punkty zostają tam, gdzie je zbierasz",
+    "r1_body": "Każde logo w aplikacji ma swoje saldo. Punkty wymienisz w każdym lokalu pod tą samą nazwą — za rogiem albo w innym mieście.",
+    "r2_title": "Kod QR albo kod kreskowy",
+    "r2_body": "Wybierz, co wygodniejsze — obsługa zeskanuje kod przy kasie. Jednym dotknięciem powiększysz go i rozjaśnisz ekran.",
+    "r3_title": "Czasem punktów jest więcej",
+    "r3_body": "Na przykład podwójne punkty w czwartki od 10 do 14. Bywają też punkty na urodziny i za polecenie znajomego — wszystko zobaczysz w aplikacji.",
+    "cta": "Zobacz przykładowe nagrody",
+    "mock_title": "Twoje punkty",
+    "mock_card": "Twoja karta Loodly",
+    "mock_qr": "Kod QR",
+    "mock_barcode": "Kod kreskowy",
+    "mock_points_one": "{{n}} punkt",
+    "mock_points_few": "{{n}} punkty",
+    "mock_points_many": "{{n}} punktów",
+    "mock_caption": "Przykładowy widok aplikacji",
+    "mock_alt": "Przykładowy ekran aplikacji: karta z kodem i trzy osobne salda punktów."
+  },
+  "rewards": {
+    "title": "Na co wymienisz punkty?",
+    "subtitle": "Kilka przykładów: od kawy i croissanta po parasol z logo. Każdy katalog nagród jest inny — aktualne nagrody i ich cenę w punktach zobaczysz w aplikacji.",
+    "group_menu": "Z menu",
+    "group_merch": "Gadżety z logo",
+    "items": {
+      "coffee": "Kawa gratis",
+      "croissant": "Croissant gratis",
+      "scoop": "Gałka lodów gratis",
+      "umbrella": "Parasol",
+      "mug": "Kubek",
+      "tote": "Torba bawełniana",
+      "cap": "Czapka z daszkiem",
+      "thermal": "Kubek termiczny",
+      "tshirt": "Koszulka",
+      "cake": "Kawałek ciasta gratis"
+    },
+    "note": "Gadżety pokazujemy z logo Loodly — to tylko przykłady."
   },
   "features": {
     "title": "Dlaczego Loodly?",
-    "subtitle": "Bez sztucznego podkręcania smaku — tylko naturalne składniki i uczciwe podejście.",
-    "natural": {
-      "title": "Naturalne składniki",
-      "description": "Bez barwników, konserwantów i sztucznych wzmacniaczy smaku. Tylko to, co najlepsze."
+    "subtitle": "Wszystko, czego potrzebujesz, żeby wygodnie kupować w okolicy.",
+    "pickup": {
+      "title": "Odbiór w lokalu",
+      "description": "Zamów wcześniej w aplikacji i odbierz zamówienie, gdy będzie gotowe. Przy odbiorze pokazujesz kartę, a punkty trafiają na Twoje konto."
     },
-    "vegan": {
-      "title": "Opcje dla każdego",
-      "description": "Lody wegańskie, bez cukru, sorbety oraz opcje bezglutenowe — coś dla Ciebie."
+    "delivery": {
+      "title": "Dostawa z podglądem na mapie",
+      "description": "Jeśli lokal dowozi, zamówisz dostawę pod drzwi i zobaczysz kuriera na mapie."
     },
-    "fast": {
-      "title": "Szybka dostawa",
-      "description": "Świeże lody w loodboksie dostarczone w 30–60 minut, z zachowaniem temperatury."
+    "pay": {
+      "title": "Płać, jak wolisz",
+      "description": "Online — kartą, BLIK-iem, Apple Pay lub Google Pay — albo na miejscu przy odbiorze, jeśli lokal na to pozwala."
     },
-    "loyalty": {
-      "title": "Program lojalnościowy",
-      "description": "Za każde zamówienie zbierasz punkty, które wymieniasz na darmowe lody i nagrody."
+    "menu": {
+      "title": "Aktualne menu",
+      "description": "Ceny, opisy i alergeny w jednym miejscu. Gdy coś się skończy, obsługa od razu oznacza to w menu."
     },
-    "tracking": {
-      "title": "Śledzenie na żywo",
-      "description": "Obserwuj swojego kuriera na mapie w czasie rzeczywistym, aż do samych drzwi."
+    "map": {
+      "title": "Lokale na mapie",
+      "description": "Wybierz miasto i sprawdź, co jest teraz otwarte, gdzie zamówisz dostawę, a gdzie odbiór osobisty."
     },
-    "quality": {
-      "title": "Uczciwe porcje",
-      "description": "Ważone porcje i darmowe degustacje. Płacisz dokładnie za to, co dostajesz."
-    }
-  },
-  "flavor": {
-    "badge": "Smak dnia",
-    "title": "Codziennie coś nowego",
-    "name": "Belgijska czekolada z solonym karmelem",
-    "description": "Kremowa belgijska czekolada przełamana nutą solonego karmelu. Dostępna dziś w wybranych punktach i z dostawą.",
-    "cta_taste": "Znajdź w punkcie",
-    "cta_order": "Zamów z dostawą"
-  },
-  "how": {
-    "title": "Jak działa dostawa?",
-    "subtitle": "Cztery proste kroki od aplikacji do Twoich drzwi.",
-    "step1": {
-      "title": "Zamów w aplikacji",
-      "description": "Wybierz smaki i rozmiar loodboksu, dodaj adres i zapłać w kilka sekund."
-    },
-    "step2": {
-      "title": "Pakujemy loodboks",
-      "description": "Twoje lody trafiają do izotermicznego loodboksu 0,5 kg lub 1,0 kg."
-    },
-    "step3": {
-      "title": "Kurier w drodze",
-      "description": "Rowerem, hulajnogą lub autem — z podglądem trasy na żywo w aplikacji."
-    },
-    "step4": {
-      "title": "Dostawa pod drzwi",
-      "description": "Odbierasz zamówienie bezkontaktowo, prosto pod swoimi drzwiami."
+    "news": {
+      "title": "Nowości i promocje",
+      "description": "Wiadomości i promocje z lokali, które lubisz, w jednym miejscu w aplikacji."
     }
   },
   "app": {
-    "title": "Cały świat lodów w jednej aplikacji",
-    "subtitle": "Sprawdzaj dostępność smaków, zamawiaj z dostawą, zbieraj punkty i odbieraj nagrody.",
-    "point1": "Sprawdzaj dostępność smaków w punktach na żywo",
-    "point2": "Zamawiaj z dostawą i śledź kuriera na mapie",
-    "point3": "Zbieraj punkty za każde zamówienie",
-    "point4": "Wymieniaj punkty na darmowe lody i nagrody",
+    "title": "Wszystko w aplikacji Loodly",
+    "subtitle": "Menu, zamówienia, karta i nagrody — zawsze pod ręką.",
+    "point1": "Przeglądaj menu i godziny otwarcia lokali w swoim mieście",
+    "point2": "Zamawiaj z odbiorem lub dostawą i śledź zamówienie",
+    "point3": "Pokazuj przy kasie jedną kartę — kod QR albo kod kreskowy",
+    "point4": "Zbieraj punkty i wymieniaj je na nagrody",
     "ios": "Pobierz w App Store",
     "android": "Pobierz w Google Play",
-    "qr_hint": "Zeskanuj, aby pobrać"
+    "qr_hint": "Zeskanuj, aby pobrać",
+    "web_cta": "Zamów przez stronę",
+    "web_hint": "Możesz też zamawiać na loodly.pl — bez instalowania aplikacji.",
+    "mock_title": "Twoje zamówienie",
+    "mock_status": "Gotowe do odbioru"
+  },
+  "teaser": {
+    "title": "Prowadzisz lodziarnię, piekarnię, kawiarnię albo cukiernię?",
+    "body": "Przyjmuj zamówienia online, nagradzaj stałych klientów i współpracuj z kurierami — w jednym systemie, od jednego lokalu po kilka miast.",
+    "cta": "Poznaj Loodly dla firm"
   },
   "cta": {
-    "ready": "Gotowy na najlepsze lody w mieście?",
-    "subtitle": "Pobierz aplikację Loodly i zamów swój pierwszy loodboks już dziś.",
+    "ready": "Masz ochotę na coś dobrego?",
+    "subtitle": "Pobierz Loodly, znajdź lokal w swojej okolicy i zbieraj punkty od pierwszych zakupów.",
+    "subtitle_web": "Znajdź lokal w swojej okolicy, zamów i zbieraj punkty od pierwszych zakupów.",
     "download_now": "Pobierz aplikację"
   },
   "auth": {
@@ -217,22 +285,22 @@
     "back": "Wróć do nagród"
   },
   "spots": {
-    "title": "Nasze punkty",
-    "subtitle": "Wybierz miasto i znajdź najbliższy punkt Loodly na mapie.",
+    "title": "Lokale w Twoim mieście",
+    "subtitle": "Wybierz miasto i znajdź najbliższy lokal na mapie.",
     "all_cities": "Wszystkie miasta",
     "select_city": "Wybierz miasto",
-    "count_one": "{{count}} punkt",
-    "count_few": "{{count}} punkty",
-    "count_many": "{{count}} punktów",
-    "loading": "Ładowanie punktów…",
-    "none": "Brak punktów w tym mieście — sprawdź wkrótce!",
-    "error": "Nie udało się załadować punktów. Spróbuj ponownie później.",
+    "count_one": "{{count}} lokal",
+    "count_few": "{{count}} lokale",
+    "count_many": "{{count}} lokali",
+    "loading": "Ładowanie lokali…",
+    "none": "W tym mieście nie ma jeszcze lokali — zajrzyj wkrótce!",
+    "error": "Nie udało się załadować lokali. Spróbuj ponownie później.",
     "open_now": "Otwarte teraz",
     "closed": "Zamknięte",
-    "view_spot": "Zobacz punkt",
+    "view_spot": "Zobacz lokal",
     "map_list_view": "Lista",
     "map_map_view": "Mapa",
-    "map_unavailable": "Mapa niedostępna — brak klucza Google Maps. Punkty poniżej.",
+    "map_unavailable": "Mapa niedostępna — brak klucza Google Maps. Lokale poniżej.",
     "delivery_available": "Dostawa dostępna",
     "pickup_available": "Odbiór osobisty",
     "delivery_radius": "Promień dostawy: {{km}} km",
@@ -240,11 +308,11 @@
     "locate_me": "Pokaż moją lokalizację"
   },
   "spot": {
-    "back": "Wróć do punktów",
+    "back": "Wróć do lokali",
     "directions": "Wyznacz trasę",
     "call": "Zadzwoń",
     "email": "Napisz e-mail",
-    "order_here": "Zamów z tego punktu",
+    "order_here": "Zamów z tego lokalu",
     "address": "Adres",
     "contact": "Kontakt",
     "opening_hours": "Godziny otwarcia",
@@ -262,7 +330,7 @@
     "reviews": "Opinie",
     "no_reviews": "Brak opinii.",
     "menu": "Menu",
-    "menu_empty": "Ten punkt nie dodał jeszcze żadnych produktów.",
+    "menu_empty": "Ten lokal nie dodał jeszcze żadnych produktów.",
     "add": "Dodaj",
     "from": "od",
     "category": {
@@ -277,7 +345,7 @@
       "MERCHANDISE": "Produkty",
       "OTHER": "Inne"
     },
-    "not_found": "Nie znaleziono punktu.",
+    "not_found": "Nie znaleziono lokalu.",
     "weekday": {
       "monday": "Poniedziałek",
       "tuesday": "Wtorek",
@@ -300,16 +368,16 @@
     "box_configure": "Wybierz gałki"
   },
   "footer": {
-    "tagline": "Rzemieślnicze lody i kawa z dostawą — prosto z lokalnych punktów.",
+    "tagline": "Lodziarnie, piekarnie, kawiarnie i cukiernie z Twojej okolicy — zamówienia, dostawa i jedna karta na punkty.",
     "company": "Firma",
-    "about": "O nas",
     "contact": "Kontakt",
-    "careers": "Kariera",
     "legal": "Informacje prawne",
     "privacy": "Polityka prywatności",
     "terms": "Regulamin",
-    "made": "Zrobione z ❤️ dla miłośników lodów",
-    "copyright": "© 2026 Loodly. Wszelkie prawa zastrzeżone."
+    "made": "Zrobione z ❤️ dla lokalnych smaków",
+    "copyright": "© 2026 Loodly. Wszelkie prawa zastrzeżone.",
+    "business": "Dla firm",
+    "email_label": "Napisz do nas"
   },
   "checkout": {
     "pay_now": "Zapłać",

@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Spot } from "../lib/types";
 import { isSpotOpenNow } from "../lib/spot-utils";
 import { useI18n } from "../i18n/I18nProvider";
+import { LoodlyMark } from "./brand/LoodlyMark";
 
 type Props = {
   spot: Spot;
@@ -35,14 +36,14 @@ export function SpotCard({ spot, active, onHover }: Props) {
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-cream-soft to-cream-deep text-5xl">
-            <span aria-hidden>🍦</span>
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-cream-soft to-cream-deep">
+            <LoodlyMark className="h-14 w-14" />
           </div>
         )}
         {open !== null && (
           <span
-            className={`absolute bottom-3 left-3 rounded-full px-3 py-1 text-xs font-semibold text-white ${
-              open ? "bg-pistachio" : "bg-espresso/80"
+            className={`absolute bottom-3 left-3 rounded-full px-3 py-1 text-xs font-semibold ${
+              open ? "bg-pistachio text-espresso" : "bg-espresso/80 text-white"
             }`}
           >
             {open ? t("spots.open_now") : t("spots.closed")}
@@ -76,7 +77,7 @@ export function SpotCard({ spot, active, onHover }: Props) {
           )}
           <div className="min-w-0">
             <h3 className="truncate text-lg font-bold text-espresso">{spot.name}</h3>
-            <p className="mt-0.5 truncate text-sm text-espresso/60">📍 {spot.address}</p>
+            <p className="mt-0.5 truncate text-sm text-espresso/70">📍 {spot.address}</p>
           </div>
         </div>
 

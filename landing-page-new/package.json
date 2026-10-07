@@ -5,17 +5,25 @@
   "scripts": {
     "dev": "next dev",
     "dev:prod": "NEXT_PUBLIC_API_URL=https://loodly-be-production.up.railway.app/graphql next dev",
+    "prebuild": "node scripts/check-i18n.mjs && node scripts/lottie/validate.mjs",
     "build": "next build",
     "build:prod": "next build",
     "start": "next start",
     "start:prod": "npx --yes serve out -p 3000",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lottie": "node scripts/lottie/build.mjs",
+    "lottie:build": "node scripts/lottie/build.mjs",
+    "lottie:check": "node scripts/lottie/validate.mjs",
+    "lottie:render": "node scripts/lottie/render-check.mjs",
+    "check:i18n": "node scripts/check-i18n.mjs",
+    "check:locales": "node scripts/check-i18n.mjs"
   },
   "dependencies": {
     "@react-google-maps/api": "^2.20.8",
     "@stripe/react-stripe-js": "^6.7.0",
     "@stripe/stripe-js": "^9.10.0",
     "i18next": "^26.3.0",
+    "lottie-web": "^5.13.0",
     "next": "14.2.35",
     "next-i18next": "^16.0.7",
     "qrcode.react": "^4.2.0",

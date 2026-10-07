@@ -8,6 +8,7 @@ import { fetchSpot, fetchSpotReviews } from "../lib/api";
 import { publicConfig } from "../lib/public-config";
 import { isSpotOpenNow, WEEKDAYS, localizedCityName } from "../lib/spot-utils";
 import { useI18n } from "../i18n/I18nProvider";
+import { LoodlyMark } from "./brand/LoodlyMark";
 import { SpotMenu } from "./SpotMenu";
 
 const SpotsMap = dynamic(() => import("./SpotsMap").then((m) => m.SpotsMap), {
@@ -53,7 +54,7 @@ export function SpotDetail({ spotId }: { spotId: string }) {
   if (notFound || !spot) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-5 text-center">
-        <div className="text-6xl">🍦</div>
+        <LoodlyMark className="h-16 w-16" />
         <p className="text-lg text-espresso/70">{t("spot.not_found")}</p>
         <Link
           href="/spots"
@@ -78,8 +79,8 @@ export function SpotDetail({ spotId }: { spotId: string }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={spot.coverUrl} alt={spot.name} className="h-full w-full object-cover" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-strawberry/30 to-berry/20 text-7xl">
-            <span aria-hidden>🍦</span>
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-strawberry/30 to-berry/20">
+            <LoodlyMark className="h-24 w-24" />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-espresso/50 to-transparent" />
@@ -94,8 +95,8 @@ export function SpotDetail({ spotId }: { spotId: string }) {
         </div>
         {open !== null && (
           <span
-            className={`absolute bottom-4 left-5 rounded-full px-4 py-1.5 text-sm font-semibold text-white ${
-              open ? "bg-pistachio" : "bg-espresso/80"
+            className={`absolute bottom-4 left-5 rounded-full px-4 py-1.5 text-sm font-semibold ${
+              open ? "bg-pistachio text-espresso" : "bg-espresso/80 text-white"
             }`}
           >
             {open ? t("spots.open_now") : t("spots.closed")}
@@ -128,7 +129,7 @@ export function SpotDetail({ spotId }: { spotId: string }) {
                   <span className="text-sm font-semibold text-espresso">
                     {spot.averageRating.toFixed(1)}
                   </span>
-                  <span className="text-sm text-espresso/50">({spot.reviewCount})</span>
+                  <span className="text-sm text-espresso/70">({spot.reviewCount})</span>
                 </div>
               )}
               {spot.city && (
@@ -166,7 +167,10 @@ export function SpotDetail({ spotId }: { spotId: string }) {
               href="#menu"
               className="inline-flex items-center gap-2 rounded-full bg-berry px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-berry/25 transition-transform hover:scale-105"
             >
-              <span aria-hidden>🍨</span>
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 20 20" fill="none" className="h-4 w-4">
+                <path d="M4.5 7h11l-.8 9.2a1 1 0 0 1-1 .8H6.3a1 1 0 0 1-1-.8L4.5 7Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+                <path d="M7.5 7V5.5a2.5 2.5 0 0 1 5 0V7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
               {t("spot.order_here")}
             </a>
           </div>
@@ -191,7 +195,7 @@ export function SpotDetail({ spotId }: { spotId: string }) {
                 <div key={r.id} className="rounded-3xl border border-berry/10 bg-white p-5">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-espresso">{r.authorName}</span>
-                    <span className="text-xs text-espresso/50">
+                    <span className="text-xs text-espresso/70">
                       {new Date(r.createdAt).toLocaleDateString()}
                     </span>
                   </div>
@@ -233,7 +237,7 @@ export function SpotDetail({ spotId }: { spotId: string }) {
                 {WEEKDAYS.map((day) =>
                   hours[day] ? (
                     <div key={day} className="flex justify-between text-sm">
-                      <dt className="text-espresso/60">{t(`spot.weekday.${day}`)}</dt>
+                      <dt className="text-espresso/70">{t(`spot.weekday.${day}`)}</dt>
                       <dd className="font-medium text-espresso">{hours[day]}</dd>
                     </div>
                   ) : null,
@@ -276,15 +280,15 @@ export function SpotDetail({ spotId }: { spotId: string }) {
               {spot.deliveryEnabled ? (
                 <>
                   <div className="flex justify-between">
-                    <dt className="text-espresso/60">{t("spot.delivery_radius")}</dt>
+                    <dt className="text-espresso/70">{t("spot.delivery_radius")}</dt>
                     <dd className="font-medium text-espresso">{spot.deliveryRadiusKm} km</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-espresso/60">{t("spot.delivery_fee")}</dt>
+                    <dt className="text-espresso/70">{t("spot.delivery_fee")}</dt>
                     <dd className="font-medium text-espresso">{spot.deliveryFee} zł</dd>
                   </div>
                   {spot.freeDeliveryThreshold ? (
-                    <p className="pt-1 text-pistachio">
+                    <p className="pt-1 text-pistachio-dark">
                       {t("spot.free_delivery", { amount: spot.freeDeliveryThreshold })}
                     </p>
                   ) : null}
@@ -294,7 +298,7 @@ export function SpotDetail({ spotId }: { spotId: string }) {
                 <p className="pt-1 text-espresso/80">{t("spot.pickup_available")}</p>
               ) : null}
               {!spot.deliveryEnabled && !spot.pickupEnabled ? (
-                <p className="text-espresso/60">—</p>
+                <p className="text-espresso/70">—</p>
               ) : null}
             </dl>
             {(spot.hasSeating || spot.accessibilityFeatures) && (

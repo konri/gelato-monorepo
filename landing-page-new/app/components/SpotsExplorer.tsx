@@ -6,6 +6,7 @@ import type { City, Spot } from "../lib/types";
 import { fetchCities, fetchAllSpots, fetchSpotsByCity } from "../lib/api";
 import { publicConfig } from "../lib/public-config";
 import { useI18n } from "../i18n/I18nProvider";
+import { LoodlyMark } from "./brand/LoodlyMark";
 import { CitySelector } from "./CitySelector";
 import { SpotCard } from "./SpotCard";
 
@@ -94,7 +95,7 @@ export function SpotsExplorer() {
 
         {/* Count + view toggle */}
         <div className="mt-8 flex items-center justify-between">
-          <span className="text-sm font-medium text-espresso/60">
+          <span className="text-sm font-medium text-espresso/70">
             {loading ? t("spots.loading") : error ? "" : countLabel}
           </span>
           {hasMapsKey && (
@@ -117,7 +118,7 @@ export function SpotsExplorer() {
 
         {error ? (
           <div className="mt-10 rounded-3xl border border-berry/10 bg-white p-12 text-center">
-            <div className="text-5xl">🍦</div>
+            <LoodlyMark className="mx-auto h-14 w-14" />
             <p className="mt-4 text-espresso/65">{t("spots.error")}</p>
           </div>
         ) : loading ? (
@@ -126,7 +127,7 @@ export function SpotsExplorer() {
           </div>
         ) : spots.length === 0 ? (
           <div className="mt-10 rounded-3xl border border-berry/10 bg-white p-12 text-center">
-            <div className="text-5xl">🍨</div>
+            <LoodlyMark className="mx-auto h-14 w-14" />
             <p className="mt-4 text-espresso/65">{t("spots.none")}</p>
           </div>
         ) : (

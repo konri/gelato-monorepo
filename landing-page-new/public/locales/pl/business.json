@@ -1,0 +1,244 @@
+{
+  "meta": {
+    "title": "Loodly dla firm — zamówienia, punkty i dostawy",
+    "description": "Zamówienia online, karta z punktami, nagrody, kurierzy i raporty dla lodziarni, piekarni, kawiarni i cukierni — połączone z Twoim systemem paragonów i faktur."
+  },
+  "hero": {
+    "eyebrow": "Loodly dla firm",
+    "title": "Zamówienia, punkty i dostawy — jeden system dla Twoich lokali",
+    "subtitle": "Dla lodziarni, piekarni, kawiarni i cukierni — od jednego lokalu po sieć w kilku miastach.",
+    "subtitle_more": "Klienci zamawiają w aplikacji Loodly i zbierają u Ciebie punkty jedną kartą, a my łączymy Loodly z systemem, w którym wystawiasz paragony i faktury.",
+    "chips": {
+      "orders": "Zamówienia online",
+      "card": "Karta z punktami",
+      "couriers": "Kurierzy",
+      "locations": "Wiele lokali, jeden program",
+      "integration": "Połączenie z Twoim systemem"
+    },
+    "cta_contact": "Porozmawiajmy",
+    "cta_story": "Zobacz, jak to działa",
+    "cta_pricing": "Cennik",
+    "visual_alt": "Ilustracja: panel marki na laptopie, tablet z zamówieniami w lokalu, telefon klienta z kartą i kurier na skuterze."
+  },
+  "story": {
+    "eyebrow": "Krok po kroku",
+    "title": "Od założenia konta do pierwszej dostawy",
+    "subtitle": "Zobacz, jak wygląda start i zwykły dzień z Loodly — tak samo w piekarni, kawiarni, lodziarni i cukierni.",
+    "step": "Krok {{n}} z {{total}}",
+    "acts": {
+      "setup": { "title": "Zanim otworzysz drzwi", "subtitle": "Markę i lokale ustawiasz w panelu marki w przeglądarce, a menu — w aplikacji Loodly Spot." },
+      "counter": { "title": "Przy ladzie", "subtitle": "Zespół pracuje w aplikacji Loodly Spot — na telefonie, tablecie albo w przeglądarce przy kasie." },
+      "beyond": { "title": "Poza ladą", "subtitle": "Zamówienia z aplikacji i dostawy trafiają tam, gdzie reszta pracy." }
+    },
+    "scenes": {
+      "account": {
+        "kicker": "Panel marki",
+        "title": "Zakładamy konto Twojej marki",
+        "body": "Tworzymy Twoją markę w Loodly i wysyłamy e-mailem zaproszenie do pierwszego administratora. Ustawiasz własne hasło i wchodzisz do panelu marki.",
+        "alt": "Animacja: koperta z zaproszeniem trafia do laptopa, pojawia się formularz logowania i zielony znak potwierdzenia."
+      },
+      "brand": {
+        "kicker": "Panel marki",
+        "title": "Pokazujesz, kim jesteś",
+        "body": "Dodajesz logo, zdjęcie w tle, opis w kilku językach i miasta, w których działasz. Tak klienci zobaczą Cię w aplikacji i na stronie Loodly.",
+        "alt": "Animacja: w panelu marki pojawiają się baner, logo, linie opisu i trzy etykiety miast, a na końcu znak zapisu."
+      },
+      "spots": {
+        "kicker": "Panel marki",
+        "title": "Dodajesz swoje lokale",
+        "body": "Każdy lokal ma adres, godziny otwarcia, zespół oraz własne ustawienia odbioru, dostawy i płatności. Nowy lokal zaczyna jako szkic — aktywujesz go, gdy jest gotowy.",
+        "alt": "Animacja: na mapie miasta pojawiają się trzy lokale połączone z logo marki, a ich znaczniki zmieniają kolor na zielony."
+      },
+      "menu": {
+        "kicker": "Loodly Spot",
+        "title": "Uzupełniasz menu",
+        "body": "W aplikacji Loodly Spot dodajesz produkty ze zdjęciami, cenami i alergenami — i ustalasz, ile punktów daje każdy z nich. Gdy coś się skończy, zespół jednym dotknięciem oznacza to w menu.",
+        "alt": "Animacja: na tablecie pojawiają się karty produktów — kawa, croissant, lody i ciasto — a jeden produkt zostaje na chwilę wyłączony."
+      },
+      "scan": {
+        "kicker": "7:30",
+        "title": "Skanujesz kartę klienta",
+        "body": "Klient pokazuje w aplikacji kod QR albo kod kreskowy. Skanujesz go aparatem albo czytnikiem kodów i od razu widzisz, ile ma u Ciebie punktów i które nagrody może odebrać.",
+        "alt": "Animacja: czytnik skanuje kod kreskowy na telefonie klienta, pojawia się zielone potwierdzenie i moneta z punktami."
+      },
+      "points": {
+        "kicker": "Czwartek, 10:00",
+        "title": "Punkty za zakupy — czasem podwójne",
+        "body": "Pracownik dodaje punkty z gotowych szablonów, a za zamówienia w aplikacji punkty naliczają się same. Chcesz ożywić spokojniejsze godziny? Ustaw promocję, np. podwójne punkty w czwartki od 10 do 14 — w jednym lokalu albo we wszystkich.",
+        "alt": "Animacja: wskazówka zegara wchodzi w wyróżnione godziny 10–14, pojawia się znak „razy dwa”, a monety wpadają na kartę parami."
+      },
+      "rewards": {
+        "kicker": "13:00",
+        "title": "Zadowoleni klienci, którzy wracają",
+        "body": "Klienci wymieniają punkty na Twoje nagrody: kawę, ciastko, gałkę lodów albo gadżet z Twoim logo — w aplikacji albo od razu przy ladzie. Punkty zebrane u Ciebie wydają tylko u Ciebie, w każdym Twoim lokalu.",
+        "alt": "Animacja: z pudełka z prezentem wyskakuje kubek z logo, dwoje klientów się uśmiecha, a w górę lecą serduszka."
+      },
+      "moreOrders": {
+        "kicker": "15:00",
+        "title": "Zamówienia także wtedy, gdy klienta nie ma w lokalu",
+        "body": "Klienci zamawiają w aplikacji i na stronie Loodly — z domu, z pracy albo po drodze, z odbiorem lub dostawą. Aktualności z Twojego lokalu, punkty na urodziny i polecenia przypominają o Tobie między wizytami.",
+        "alt": "Animacja: z domu, biura i parku lecą zamówienia do lokalu, a na ladzie rośnie stos bonów."
+      },
+      "onlineOrders": {
+        "kicker": "17:30",
+        "title": "Zamówienie online prosto na tablet",
+        "body": "Nowe zamówienie pojawia się w aplikacji Loodly Spot z sygnałem dźwiękowym. Przyjmujesz je, przygotowujesz i oznaczasz jako gotowe, a klient widzi każdy krok.",
+        "alt": "Animacja: zamówienie leci z telefonu klienta na tablet w lokalu, dzwoni dzwonek, zamówienie zostaje przyjęte, a status zmienia się na gotowe."
+      },
+      "couriers": {
+        "kicker": "18:00",
+        "title": "Kurier w drodze, klient widzi go na mapie",
+        "body": "Kurierzy z aplikacji Loodly Courier zgłaszają się do Twojego lokalu, a Ty decydujesz, z kim współpracujesz, i ustalasz stawkę za kurs. Przypisujesz zamówienie, a klient śledzi dostawę na żywo.",
+        "alt": "Animacja: kurier jedzie trasą z lokalu do domu klienta, a na końcu pojawia się znacznik i zielone potwierdzenie."
+      }
+    }
+  },
+  "benefits": {
+    "title": "Co zyskujesz z Loodly",
+    "subtitle": "Narzędzia do codziennej pracy — dla Ciebie, Twojego zespołu i Twoich klientów.",
+    "loyalty": { "title": "Program lojalnościowy bez papieru", "body": "Zamiast kart z pieczątkami — jedna karta w telefonie klienta. Ty ustalasz nagrody i ich cenę w punktach, a klient ma powód, żeby wracać właśnie do Ciebie." },
+    "orders": { "title": "Zamówienia online z Twojego menu", "body": "Klienci zamawiają z Twojego menu z odbiorem lub dostawą i płacą online albo na miejscu — tak, jak ustawisz w każdym lokalu." },
+    "locations": { "title": "Wiele lokali, jeden program", "body": "Wszystkie lokale w jednym panelu, także w różnych miastach. Punkty i nagrody działają w każdym z nich, a każdy lokal ma własne godziny, menu i zespół." },
+    "promotions": { "title": "Promocje, urodziny i polecenia", "body": "Podwójne punkty w wybrane dni i godziny, punkty na urodziny i bonus za polecenie znajomego. Ty decydujesz, czy i ile punktów przyznajesz." },
+    "couriers": { "title": "Kurierzy i śledzenie dostawy", "body": "Współpracujesz z kurierami, których akceptujesz. Klient widzi dostawę na mapie na żywo." },
+    "reports": { "title": "Raporty dla lokalu i całej marki", "body": "Raporty PDF z zamówień, punktów, dostaw i logowań zespołu dla każdego lokalu, a zestawienia zamówień i punktów — dla całej marki." }
+  },
+  "roles": {
+    "title": "Cały zespół, każdy na swoim miejscu",
+    "subtitle": "Każda osoba loguje się na własne konto i widzi tylko to, czego potrzebuje do pracy — w jednym lokalu albo w kilku.",
+    "brandAdmin": { "title": "Administrator marki", "scope": "Cała marka, wszystkie lokale", "body": "Ustawia markę, lokale, nagrody, promocje i zespół w panelu marki. Widzi raporty całej marki i może pracować w każdym lokalu w aplikacji Loodly Spot." },
+    "locationAdmin": { "title": "Administrator lokalu", "scope": "Jeden lub kilka lokali", "body": "Prowadzi swoje lokale w aplikacji Loodly Spot: menu, godziny otwarcia, zamówienia, kurierów i pracowników. Widzi raporty swoich lokali." },
+    "employee": { "title": "Pracownik", "scope": "Jeden lokal", "body": "Przyjmuje zamówienia, skanuje karty klientów, dodaje punkty z gotowych szablonów i wydaje nagrody." },
+    "safety_title": "Punkty pod kontrolą",
+    "safety1": "Pracownicy dodają punkty tylko z ustalonych szablonów",
+    "safety2": "Limit punktów przyznawanych ręcznie i opcjonalny dzienny limit na osobę",
+    "safety3": "Nikt z zespołu nie doda punktów na własne konto"
+  },
+  "rewards": {
+    "title": "Podziękuj stałym klientom nagrodą",
+    "body": "Produkt z Twojego menu albo gadżet z Twoim logo — Ty decydujesz, co trafia do katalogu, ile kosztuje w punktach i ile sztuk jest dostępnych.",
+    "note": "Poniżej przykłady z logo Loodly — w Twoim katalogu będzie Twoje logo."
+  },
+  "integration": {
+    "eyebrow": "Integracja",
+    "title": "Działa z tym, czego już używasz",
+    "body": "Nie musisz zmieniać sposobu, w jaki wystawiasz paragony i faktury. W ramach wdrożenia łączymy Loodly z systemem, którego używasz na co dzień do sprzedaży, paragonów i faktur. Zakres integracji ustalamy razem — dlatego wyceniamy ją indywidualnie.",
+    "p1": "Paragony i faktury wystawiasz tak jak dziś",
+    "p2": "Zakres integracji ustalamy razem, przed wyceną",
+    "p3": "Napisz, z jakiego systemu korzystasz — sprawdzimy możliwości",
+    "node_system": "Twój system sprzedaży, paragonów i faktur",
+    "node_loodly": "Loodly",
+    "node_spots": "Twoje lokale i klienci",
+    "diagram_alt": "Schemat: Twój system paragonów i faktur połączony z Loodly, a Loodly z tabletem w lokalu i telefonem klienta.",
+    "hardware_title": "Sprzęt, który już masz",
+    "hardware_body": "Wystarczy telefon lub tablet z aplikacją Loodly Spot — kody klientów skanujesz aparatem. Możesz też podłączyć czytnik kodów kreskowych; sprawdzimy go razem podczas wdrożenia."
+  },
+  "faq": {
+    "title": "Częste pytania",
+    "q1": "Ile trwa uruchomienie?",
+    "a1": "To zależy głównie od zakresu integracji, liczby lokali i wielkości menu. Termin startu ustalamy razem i podajemy go w wycenie.",
+    "q2": "Czy muszę zmienić kasę albo program do faktur?",
+    "a2": "Nie. Łączymy Loodly z systemem, którego już używasz do sprzedaży, paragonów i faktur. Napisz, z czego korzystasz — sprawdzimy możliwości i zakres integracji przed wyceną.",
+    "q3": "Jakiego sprzętu potrzebuję?",
+    "a3": "Wystarczy telefon lub tablet z aplikacją Loodly Spot — karty klientów skanujesz aparatem. Przy kasie z komputerem możesz używać Loodly Spot w przeglądarce z podłączonym czytnikiem kodów kreskowych. Do kodów na ekranie telefonu najlepiej nadają się czytniki obrazowe (2D), bo laserowe często ich nie odczytują — Twój czytnik sprawdzimy podczas wdrożenia.",
+    "q4": "Czy klienci wydadzą moje punkty gdzie indziej?",
+    "a4": "Nie. Punkty zebrane w Twojej marce klienci wymieniają tylko na Twoje nagrody — w każdym Twoim lokalu. Karta jest jedna, ale salda punktów każdej marki są osobne.",
+    "q5": "Mam kilka lokali, także w różnych miastach. Czy to zadziała?",
+    "a5": "Tak. Marka może mieć wiele lokali w różnych miastach. Każdy lokal ma własne godziny, menu i zespół; punkty i nagrody są wspólne dla całej marki, a promocje możesz włączyć we wszystkich lokalach albo w wybranych.",
+    "q6": "Czy to będzie moja własna aplikacja?",
+    "a6": "Twoje lokale działają w aplikacji i na stronie Loodly — z Twoim logo, opisem, menu i własnym programem punktów. Klienci mają jedną aplikację do wszystkich lokali w Loodly, ale punkty zebrane u Ciebie wymieniają tylko u Ciebie.",
+    "q7": "Do kogo należą dane klientów?",
+    "a7": "Zasady przetwarzania danych opisują umowa i polityka prywatności Loodly. Na co dzień widzisz zamówienia, punkty i raporty swojej marki. Szczegóły chętnie omówimy przy wycenie.",
+    "a7_link": "Polityka prywatności",
+    "q8": "Na jak długo jest umowa?",
+    "a8": "Okres umowy i warunki wypowiedzenia ustalamy indywidualnie. Napisz do nas — wszystko wyjaśnimy."
+  },
+  "pricing": {
+    "eyebrow": "Cennik",
+    "title": "Prosty cennik",
+    "title_quote": "Jak liczymy cenę",
+    "subtitle": "Płacisz raz za wdrożenie, a potem co miesiąc — tylko za aktywne lokale.",
+    "integration_label": "Wdrożenie i integracja",
+    "integration_period": "jednorazowo",
+    "integration_quote": "Wycena indywidualna",
+    "integration_from": "od {{amount}}",
+    "integration_body": "Cena zależy od systemu, z którym łączymy Loodly, i od liczby lokali. Wycenę przygotujemy po krótkiej rozmowie.",
+    "integration_inc1": "Integracja z Twoim systemem paragonów i faktur",
+    "integration_inc2": "Założenie marki i konta administratora",
+    "spot_label": "Opłata za lokal",
+    "spot_period": "miesięcznie",
+    "spot_fallback": "Niewielka miesięczna opłata za każdy lokal",
+    "spot_amount": "{{amount}} / lokal / miesiąc",
+    "spot_body": "Płacisz za lokale aktywne w Loodly. Otwierasz kolejny? Po prostu go dodajesz.",
+    "includes_title": "Co obejmuje Loodly",
+    "inc1": "Twoje lokale i menu w aplikacji i na stronie Loodly",
+    "inc2": "Aplikacja Loodly Spot dla zespołu",
+    "inc3": "Panel marki w przeglądarce",
+    "inc4": "Karta z punktami, nagrody, promocje, urodziny i polecenia",
+    "inc5": "Raporty zamówień i punktów",
+    "vat_net": "Ceny netto (+ VAT).",
+    "vat_gross": "Ceny brutto (z VAT).",
+    "note_quote": "Dokładne kwoty podamy w wycenie, po krótkiej rozmowie o Twoich lokalach.",
+    "cta": "Poproś o wycenę"
+  },
+  "contact": {
+    "title": "Porozmawiajmy o Twoich lokalach",
+    "body": "Napisz, ile masz lokali i z jakiego systemu korzystasz do paragonów i faktur. Odezwiemy się i przygotujemy wycenę.",
+    "mail_subject": "Loodly dla firm — prośba o wycenę",
+    "or_email": "Możesz też napisać do nas na adres",
+    "form": {
+      "optional": "(opcjonalnie)",
+      "company": "Nazwa firmy lub marki",
+      "name": "Imię i nazwisko",
+      "email": "E-mail",
+      "phone": "Telefon",
+      "city": "Miasto",
+      "spots": "Liczba lokali",
+      "spots_note": "(od 1 do 500)",
+      "types": "Rodzaj działalności",
+      "types_hint": "Możesz zaznaczyć kilka.",
+      "type": { "ICE_CREAM": "Lodziarnia", "BAKERY": "Piekarnia", "CAFE": "Kawiarnia", "CONFECTIONERY": "Cukiernia", "OTHER": "Inna" },
+      "system": "System do paragonów i faktur",
+      "system_hint": "Na przykład program kasowy albo program do wystawiania faktur.",
+      "message": "Wiadomość",
+      "message_hint": "Na przykład kiedy chcesz zacząć albo o co chcesz zapytać.",
+      "consent_before": "Zgadzam się na kontakt ze strony Loodly w sprawie tego zgłoszenia. Szczegóły znajdziesz w ",
+      "consent_link": "polityce prywatności",
+      "consent_after": ".",
+      "new_tab": "(otwiera się w nowej karcie)",
+      "submit": "Wyślij zgłoszenie",
+      "submitting": "Wysyłanie…"
+    },
+    "errors": {
+      "summary_title": "Sprawdź formularz",
+      "company_required": "Podaj nazwę firmy lub marki.",
+      "company_length": "Nazwa firmy lub marki musi mieć od 2 do 120 znaków.",
+      "name_required": "Podaj imię i nazwisko.",
+      "name_length": "Imię i nazwisko musi mieć od 2 do 120 znaków.",
+      "email_required": "Podaj adres e-mail.",
+      "email_invalid": "Podaj poprawny adres e-mail, na przykład kontakt@twojafirma.pl.",
+      "phone_required": "Podaj numer telefonu.",
+      "phone_invalid": "Podaj numer telefonu od 6 do 32 znaków: cyfry, spacje i znaki + ( ) -.",
+      "city_length": "Nazwa miasta może mieć najwyżej 80 znaków.",
+      "spots_required": "Podaj liczbę lokali.",
+      "spots_range": "Wpisz liczbę całkowitą od 1 do 500.",
+      "types_required": "Zaznacz co najmniej jeden rodzaj działalności.",
+      "system_length": "Nazwa systemu może mieć najwyżej 120 znaków.",
+      "message_length": "Wiadomość może mieć najwyżej 2000 znaków.",
+      "consent_required": "Zaznacz zgodę na kontakt, żebyśmy mogli odpowiedzieć na zgłoszenie.",
+      "invalid": "Nie udało się przyjąć zgłoszenia. Sprawdź dane w formularzu i spróbuj ponownie.",
+      "rate_limited": "Za dużo prób w krótkim czasie. Spróbuj ponownie później.",
+      "network": "Nie udało się wysłać formularza. Sprawdź połączenie z internetem i spróbuj ponownie.",
+      "server": "Coś poszło nie tak po naszej stronie. Spróbuj ponownie za chwilę."
+    },
+    "success": {
+      "title": "Dziękujemy!",
+      "body": "Otrzymaliśmy Twoje zgłoszenie. Odezwiemy się wkrótce.",
+      "again": "Wyślij kolejne zgłoszenie"
+    }
+  },
+  "a11y": {
+    "play": "Odtwórz animację",
+    "pause": "Wstrzymaj animację"
+  }
+}
