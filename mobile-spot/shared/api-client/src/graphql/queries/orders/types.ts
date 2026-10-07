@@ -56,6 +56,8 @@ export type OrderReview = {
 };
 
 export type OrderDetail = OrderListEntry & {
+  fulfillmentType?: 'DELIVERY' | 'PICKUP';
+  customerName?: string | null;
   subtotal: number;
   discount: number;
   deliveryFee: number;
@@ -71,6 +73,10 @@ export type OrderDetail = OrderListEntry & {
   pickupCode?: string | null;
   terminationReason?: string | null;
   apologyPoints?: number | null;
+  invoiceRequested?: boolean;
+  invoiceNIP?: string | null;
+  invoiceCompanyName?: string | null;
+  invoiceAddress?: string | null;
   review?: OrderReview | null;
 };
 

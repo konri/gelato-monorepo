@@ -827,6 +827,17 @@ export default {
     reviewCourier: 'Courier',
     reviewComment: 'Comment',
   },
+  CollectManual: {
+    button: 'Hand over without QR',
+    title: 'Hand over without QR code',
+    warning:
+      'Use this only when the customer can’t show their QR code (e.g. no phone). Order #{{number}} will be marked as collected and the customer will receive loyalty points. This can’t be undone.',
+    customer: 'Ordered by',
+    amountDue: 'Take payment at the counter',
+    agree: 'I confirmed the customer’s identity and I’m handing over this order.',
+    confirm: 'Confirm hand-over',
+    back: 'Go back',
+  },
   CancelOrder: {
     title: 'Cancel order',
     body: 'The customer will be refunded and notified. They keep their loyalty points for this order. This cannot be undone.',
@@ -1241,6 +1252,7 @@ export default {
     nip: 'NIP (tax ID)',
     companyName: 'Company name',
     companyAddress: 'Company address',
+    invoiceRequested: 'Invoice requested',
     notes: 'Notes',
     noteCourier: 'Note for the courier (e.g. how to deliver)',
     noteSpot: 'Note for the spot (e.g. more of one flavor)',

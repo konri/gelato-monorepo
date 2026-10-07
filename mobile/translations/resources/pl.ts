@@ -771,6 +771,7 @@ export default {
     nip: 'NIP',
     companyName: 'Nazwa firmy',
     companyAddress: 'Adres firmy',
+    invoiceRequested: 'Zamówiono fakturę',
     notes: 'Uwagi',
     noteCourier: 'Uwaga dla kuriera (np. jak dostarczyć)',
     noteSpot: 'Uwaga dla lokalu (np. więcej jednego smaku)',

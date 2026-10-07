@@ -47,6 +47,10 @@ export const ORDER_DETAIL_QUERY = gql`
       deliveryPin
       terminationReason
       apologyPoints
+      invoiceRequested
+      invoiceNIP
+      invoiceCompanyName
+      invoiceAddress
       spot {
         id
         name

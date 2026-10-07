@@ -9,7 +9,7 @@
     "run-ios": "node ./scripts/show-api-info.js && expo run:ios",
     "start-ios": "node ./scripts/show-api-info.js && expo start:ios",
     "ios:prod": "node ./scripts/with-prod-env.js expo run:ios",
-    "start:prod": "node ./scripts/with-prod-env.js expo start --ios",
+    "start:prod": "node ./scripts/with-prod-env.js expo start",
     "prebuild": "expo prebuild --clean",
     "web": "expo start --web",
     "lint": "expo lint",

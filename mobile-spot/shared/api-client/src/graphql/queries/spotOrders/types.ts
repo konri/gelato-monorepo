@@ -33,6 +33,7 @@ export type SpotOrder = {
   deliveryAddress?: string | null;
   noteForSpot?: string | null;
   noteForCourier?: string | null;
+  invoiceRequested?: boolean;
   // Customer-requested ready time (null = ASAP).
   scheduledFor?: string | null;
   customerName?: string | null;

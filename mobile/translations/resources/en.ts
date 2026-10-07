@@ -768,6 +768,7 @@ export default {
     nip: 'NIP (tax ID)',
     companyName: 'Company name',
     companyAddress: 'Company address',
+    invoiceRequested: 'Invoice requested',
     notes: 'Notes',
     noteCourier: 'Note for the courier (e.g. how to deliver)',
     noteSpot: 'Note for the spot (e.g. more of one flavor)',

@@ -2,13 +2,14 @@ import { Typography } from '@/components/atoms/Typography';
 import { ResponsiveContainer } from '@/components/atoms/ResponsiveContainer';
 import { StarRating } from '@/components/atoms/StarRating';
 import { CancelOrderModal } from '@/components/molecules/CancelOrderModal';
+import { CollectWithoutQrModal } from '@/components/molecules/CollectWithoutQrModal';
 import { ScreenHeader } from '@/components/molecules/ScreenHeader';
 import { ReadyByRow } from '@/components/molecules/ReadyByRow';
 import { OrderChat } from '@/components/organisms/OrderChat';
 import { useToast } from '@/components/organisms/ToastProvider';
 import { staticMapUrl } from '@/services/googlePlaces';
 import { terminateOrder } from '@/hooks/useSpotOrders';
-import { getOrderById, type OrderDetail } from '@repo/api-client';
+import { collectPickupOrder, getOrderById, type OrderDetail } from '@repo/api-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
@@ -27,6 +28,9 @@ import {
 // Statuses where a courier is en route → keep polling for its position.
 const LIVE_STATUSES = ['COURIER_ASSIGNED', 'PICKED_UP', 'IN_TRANSIT'];
 const WAITING_FOR_REVIEW = ['DELIVERED', 'COLLECTED'];
+const FINISHED_STATUSES = ['DELIVERED', 'COLLECTED', 'CANCELLED', 'FAILED', 'TERMINATED'];
+
+const zl = (n: number) => `${n.toFixed(2).replace(/\.00$/, '')} zł`;
 
 export default function OrderTrackScreen() {
   const { t } = useTranslation();
@@ -36,6 +40,7 @@ export default function OrderTrackScreen() {
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [collectOpen, setCollectOpen] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const load = useCallback(async () => {
@@ -47,9 +52,20 @@ export default function OrderTrackScreen() {
   }, [id]);
 
   // Orders that can still be terminated (not already finished).
-  const canTerminate =
-    !!order &&
-    !['DELIVERED', 'COLLECTED', 'CANCELLED', 'FAILED', 'TERMINATED'].includes(String(order.status));
+  const canTerminate = !!order && !FINISHED_STATUSES.includes(String(order.status));
+  const canCollectManually = canTerminate && order?.fulfillmentType === 'PICKUP';
+
+  const doCollect = useCallback(async () => {
+    if (!id) return;
+    const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
+    const res = await collectPickupOrder(id, { token });
+    if (res.error || !res.data) {
+      throw new Error(res.error?.message || t('Scan.collectError'));
+    }
+    const pts = res.data.pointsAwarded;
+    toast.success(pts > 0 ? t('Scan.collectedWithPoints', { points: pts }) : t('Scan.collectedDone'));
+    await load();
+  }, [id, load, t, toast]);
 
   const doCancel = useCallback(async (reason: string, points: number) => {
     if (!id) return;
@@ -179,6 +195,20 @@ export default function OrderTrackScreen() {
               )}
             </View>
 
+            {order.invoiceRequested && (
+              <View className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
+                <View className="flex-row items-center">
+                  <Ionicons name="document-text-outline" size={18} color="#92400E" />
+                  <Typography variant="body-base-bold" className="ml-2 text-text-primary">
+                    {t('Checkout.invoiceRequested')}
+                  </Typography>
+                </View>
+                <InvoiceField label={t('Checkout.companyName')} value={order.invoiceCompanyName} />
+                <InvoiceField label={t('Checkout.nip')} value={order.invoiceNIP} />
+                <InvoiceField label={t('Checkout.companyAddress')} value={order.invoiceAddress} />
+              </View>
+            )}
+
             {/* Assigned courier — name + photo. */}
             {order.courierName && (
               <View className="mt-4 flex-row items-center rounded-2xl bg-white p-4 shadow-sm">
@@ -266,6 +296,19 @@ export default function OrderTrackScreen() {
             {/* Cancel — refunds the customer, awards apology points, keeps
                 their loyalty points. Only while the order is still in progress.
                 Uses a modal (not Alert) so it works on web too. */}
+            {canCollectManually && (
+              <Pressable
+                onPress={() => setCollectOpen(true)}
+                className="mt-4 flex-row items-center justify-center rounded-xl py-3.5"
+                style={{ backgroundColor: '#EC2828' }}
+              >
+                <Ionicons name="bag-check-outline" size={18} color="#fff" />
+                <Typography variant="body-base-semibold" className="ml-2 text-white">
+                  {t('CollectManual.button')}
+                </Typography>
+              </Pressable>
+            )}
+
             {canTerminate && (
               <Pressable
                 onPress={() => setCancelOpen(true)}
@@ -285,9 +328,32 @@ export default function OrderTrackScreen() {
               onClose={() => setCancelOpen(false)}
               onConfirm={doCancel}
             />
+
+            <CollectWithoutQrModal
+              visible={collectOpen}
+              orderNumber={order.orderNumber}
+              customerName={order.customerName}
+              amountDue={order.paymentStatus !== 'paid' ? zl(order.total) : null}
+              onClose={() => setCollectOpen(false)}
+              onConfirm={doCollect}
+            />
           </ResponsiveContainer>
         </ScrollView>
       )}
+    </View>
+  );
+}
+
+function InvoiceField({ label, value }: { label: string; value?: string | null }) {
+  if (!value) return null;
+  return (
+    <View className="mt-3">
+      <Typography variant="body-very-small-medium" className="text-gray-500">
+        {label}
+      </Typography>
+      <Typography variant="body-base-semibold" className="text-text-primary" selectable>
+        {value}
+      </Typography>
     </View>
   );
 }

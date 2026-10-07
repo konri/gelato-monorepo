@@ -258,6 +258,26 @@ export default function OrderTrackingScreen() {
           </View>
         </View>
 
+        {order.invoiceRequested ? (
+          <View className="mt-4 bg-background-secondary rounded-2xl p-4">
+            <View className="flex-row items-center mb-3">
+              <Ionicons name="document-text-outline" size={18} color="#EC2828" />
+              <Text className="ml-2 font-urbanist-bold text-text-primary">
+                {t('Checkout.invoiceRequested')}
+              </Text>
+            </View>
+            <InfoRow icon="business-outline" iconColor="#212121" label={t('Checkout.companyName')} value={order.invoiceCompanyName} />
+            <View className="h-px bg-gray-200 my-3" />
+            <InfoRow icon="card-outline" iconColor="#212121" label={t('Checkout.nip')} value={order.invoiceNIP} />
+            {order.invoiceAddress ? (
+              <>
+                <View className="h-px bg-gray-200 my-3" />
+                <InfoRow icon="location-outline" iconColor="#212121" label={t('Checkout.companyAddress')} value={order.invoiceAddress} />
+              </>
+            ) : null}
+          </View>
+        ) : null}
+
         {/* Rate the order (shown once delivered, hidden after reviewing). */}
         <OrderReviewSection
           orderId={order.id}

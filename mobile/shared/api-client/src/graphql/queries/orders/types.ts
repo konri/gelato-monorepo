@@ -66,6 +66,10 @@ export type OrderDetail = OrderListEntry & {
   deliveryPin?: string | null;
   terminationReason?: string | null;
   apologyPoints?: number | null;
+  invoiceRequested?: boolean;
+  invoiceNIP?: string | null;
+  invoiceCompanyName?: string | null;
+  invoiceAddress?: string | null;
 };
 
 export type MyOrdersResponse = { myOrders: OrderListEntry[] };

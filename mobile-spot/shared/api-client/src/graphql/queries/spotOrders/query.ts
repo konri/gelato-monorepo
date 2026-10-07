@@ -12,6 +12,7 @@ const ORDER_FIELDS = `
   deliveryAddress
   noteForSpot
   noteForCourier
+  invoiceRequested
   scheduledFor
   customerName
   preparedById

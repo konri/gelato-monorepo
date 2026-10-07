@@ -79,6 +79,21 @@ export function SpotOrderCard({ order, currentUserId, onClaim, onMarkReady, onCa
               {t(isPickup ? 'Spot.pickup' : 'Spot.delivery')}
             </Typography>
           </View>
+          {order.invoiceRequested && (
+            <View
+              className="ml-2 flex-row items-center rounded-full px-2 py-0.5"
+              style={{ backgroundColor: '#FEF3C7' }}
+            >
+              <Ionicons name="document-text-outline" size={12} color="#92400E" />
+              <Typography
+                variant="body-very-small-medium"
+                className="ml-1"
+                style={{ color: '#92400E' }}
+              >
+                {t('Checkout.invoice')}
+              </Typography>
+            </View>
+          )}
         </View>
 
         <ReadyByRow scheduledFor={order.scheduledFor} className="mt-1" />

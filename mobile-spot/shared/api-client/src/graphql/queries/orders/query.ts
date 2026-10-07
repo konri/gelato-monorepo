@@ -29,6 +29,8 @@ export const ORDER_DETAIL_QUERY = gql`
       id
       orderNumber
       status
+      fulfillmentType
+      customerName
       subtotal
       discount
       deliveryFee
@@ -45,6 +47,10 @@ export const ORDER_DETAIL_QUERY = gql`
       pickupCode
       terminationReason
       apologyPoints
+      invoiceRequested
+      invoiceNIP
+      invoiceCompanyName
+      invoiceAddress
       review {
         id
         spotRating

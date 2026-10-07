@@ -828,6 +828,17 @@ export default {
     terminateConfirmCta: 'Anuluj i zwróć',
     terminateFailed: 'Nie udało się anulować zamówienia.',
   },
+  CollectManual: {
+    button: 'Wydaj bez kodu QR',
+    title: 'Wydanie zamówienia bez kodu QR',
+    warning:
+      'Używaj tylko wtedy, gdy klient nie może pokazać kodu QR (np. nie ma telefonu). Zamówienie #{{number}} zostanie oznaczone jako odebrane, a klient otrzyma punkty lojalnościowe. Tej operacji nie można cofnąć.',
+    customer: 'Zamawiający',
+    amountDue: 'Pobierz płatność przy kasie',
+    agree: 'Potwierdziłem/am tożsamość klienta i wydaję to zamówienie.',
+    confirm: 'Potwierdź wydanie',
+    back: 'Wróć',
+  },
   CancelOrder: {
     title: 'Anuluj zamówienie',
     body: 'Klient otrzyma zwrot pieniędzy i powiadomienie. Punkty lojalnościowe za to zamówienie zostają. Tej operacji nie można cofnąć.',
@@ -1244,6 +1255,7 @@ export default {
     nip: 'NIP',
     companyName: 'Nazwa firmy',
     companyAddress: 'Adres firmy',
+    invoiceRequested: 'Klient prosi o fakturę',
     notes: 'Uwagi',
     noteCourier: 'Uwaga dla kuriera (np. jak dostarczyć)',
     noteSpot: 'Uwaga dla lokalu (np. więcej jednego smaku)',
