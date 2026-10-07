@@ -3,31 +3,15 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import { useTranslation } from 'react-i18next';
 import { CITIES, type City } from '../graphql/spots';
 import { CREATE_NEWS, BROADCAST_TO_CLIENTS, BROADCAST_TO_CITY } from '../graphql/admin';
-import { API_ORIGIN, ACCESS_TOKEN_KEY } from '../lib/config';
-import i18n from '../translations';
+import { uploadNewsImage } from '../lib/upload';
+import { errorText } from '../lib/errors';
+import { cityName } from '../lib/format';
 
 const input =
   'w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-1 focus:ring-brand';
 const label = 'block text-sm font-medium text-gray-700 mb-1';
 
 type Tab = 'news' | 'notification';
-
-async function uploadNewsImage(newsId: string, file: File): Promise<string> {
-  const body = new FormData();
-  body.append('image', file);
-  const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-  const res = await fetch(`${API_ORIGIN}/upload/news/${newsId}`, {
-    method: 'POST',
-    headers: token ? { authorization: `Bearer ${token}` } : {},
-    body,
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || i18n.t('News.imageUploadFailed'));
-  }
-  const data = await res.json();
-  return data.imageUrl;
-}
 
 export function NewsPage() {
   const { t } = useTranslation();
@@ -114,7 +98,7 @@ function NewsForm() {
       setFiles([]);
     } catch (err) {
       setUploading(false);
-      setError(err instanceof Error ? err.message : t('News.failedPublish'));
+      setError(errorText(err, t('News.failedPublish')));
     }
   };
 
@@ -181,7 +165,7 @@ function NewsForm() {
                     : 'border-gray-300 text-gray-600 hover:border-gray-400'
                 }`}
               >
-                {c.name}
+                {cityName(c)}
               </button>
             ))}
             {cities.length === 0 && <p className="text-sm text-gray-400">{t('News.noCitiesYet')}</p>}
@@ -231,7 +215,7 @@ function NotificationForm() {
       setTitle('');
       setBody('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('News.failedSendNotif'));
+      setError(errorText(err, t('News.failedSendNotif')));
     }
   };
 
@@ -271,7 +255,7 @@ function NotificationForm() {
             <option value="">{t('News.selectCity')}</option>
             {cities.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.name}
+                {cityName(c)}
               </option>
             ))}
           </select>

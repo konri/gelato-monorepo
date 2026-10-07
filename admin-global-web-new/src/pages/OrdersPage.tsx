@@ -1,10 +1,16 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MY_ADMIN_SPOTS, type AdminSpot } from '../graphql/spots';
+import { useOptionalBrandScope } from '../brand/BrandScope';
+import { BRAND_SPOTS, MY_ADMIN_SPOTS, type AdminSpot } from '../graphql/spots';
 import { SPOT_ORDERS, type SpotOrder } from '../graphql/orders';
 import { SpotPicker } from '../components/SpotPicker';
+import { PageHeader } from '../components/ui/Card';
+import { Alert } from '../components/ui/Alert';
+import { EmptyState } from '../components/ui/EmptyState';
+import { errorText } from '../lib/errors';
+import { fmtDateTime, fmtMoney } from '../lib/format';
 
 const STATUS_STYLE: Record<string, string> = {
   PENDING: 'bg-gray-100 text-gray-700',
@@ -14,55 +20,45 @@ const STATUS_STYLE: Record<string, string> = {
   PICKED_UP: 'bg-indigo-100 text-indigo-700',
   IN_TRANSIT: 'bg-purple-100 text-purple-700',
   DELIVERED: 'bg-green-100 text-green-700',
+  COLLECTED: 'bg-green-100 text-green-700',
   CANCELLED: 'bg-red-100 text-red-700',
   FAILED: 'bg-red-100 text-red-700',
+  TERMINATED: 'bg-red-100 text-red-700',
 };
 
-const fmtDate = (iso: string) =>
-  new Date(iso).toLocaleString('pl-PL', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-
-const fmtMoney = (v: number) =>
-  new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(v);
-
+/**
+ * Order history per spot (BRANDS_SPEC §3.3). In a brand scope the picker lists
+ * the brand's spots; on the platform tree every spot, grouped by brand.
+ */
 export function OrdersPage() {
   const { t } = useTranslation();
-  const { data: spotsData } = useQuery<{ myAdminSpots: AdminSpot[] }>(MY_ADMIN_SPOTS);
-  const spots = spotsData?.myAdminSpots ?? [];
+  const scope = useOptionalBrandScope();
+  const brandSpots = useQuery<{ brandSpots: AdminSpot[] }>(BRAND_SPOTS, {
+    variables: { brandId: scope?.brandId ?? '' },
+    skip: !scope,
+  });
+  const allSpots = useQuery<{ myAdminSpots: AdminSpot[] }>(MY_ADMIN_SPOTS, { skip: !!scope });
+  const spots = (scope ? brandSpots.data?.brandSpots : allSpots.data?.myAdminSpots) ?? [];
   const [searchParams, setSearchParams] = useSearchParams();
-  const [spotId, setSpotId] = useState<string>(searchParams.get('spot') ?? '');
-
-  // If arriving with ?spot=id (from the Spots page), preselect it.
-  useEffect(() => {
-    const param = searchParams.get('spot');
-    if (param && param !== spotId) setSpotId(param);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  const spotId = searchParams.get('spot') ?? '';
 
   const selectSpot = (id: string) => {
-    setSpotId(id);
     setSearchParams(id ? { spot: id } : {}, { replace: true });
   };
 
   return (
     <div className="mx-auto w-full max-w-5xl p-6 sm:p-8">
-      <h1 className="mb-1 text-2xl font-bold text-gray-900">{t('Orders.title')}</h1>
-      <p className="mb-6 text-sm text-gray-500">{t('Orders.subtitle')}</p>
+      <PageHeader title={t('Orders.title')} subtitle={t('Orders.subtitle')} />
 
       <div className="mb-6 max-w-sm">
         <label className="mb-1 block text-sm font-medium text-gray-700">{t('Orders.spot')}</label>
-        <SpotPicker spots={spots} value={spotId} onChange={selectSpot} />
+        <SpotPicker spots={spots} value={spotId} onChange={selectSpot} groupBy={scope ? 'city' : 'brand'} />
       </div>
 
-      {spotId ? <OrderList spotId={spotId} /> : (
-        <div className="rounded-xl border border-dashed border-gray-300 p-10 text-center text-gray-500">
-          {t('Orders.selectSpotToView')}
-        </div>
+      {spotId ? (
+        <OrderList spotId={spotId} />
+      ) : (
+        <EmptyState title={t('Orders.selectSpotToView')} />
       )}
     </div>
   );
@@ -77,27 +73,20 @@ function OrderList({ spotId }: { spotId: string }) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   // Fall back to the raw status if the backend ever sends one we don't map.
-  const statusLabel = (status: string) =>
-    t(`Orders.statuses.${status}`, { defaultValue: status });
+  const statusLabel = (status: string) => t(`Orders.statuses.${status}`, { defaultValue: status });
 
   if (loading && !data) return <p className="text-sm text-gray-500">{t('Common.loading')}</p>;
-  if (error)
-    return <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error.message}</div>;
+  if (error && !data) return <Alert tone="error">{errorText(error)}</Alert>;
 
   const orders = [...(data?.spotOrders ?? [])].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 
-  if (orders.length === 0)
-    return (
-      <div className="rounded-xl border border-dashed border-gray-300 p-10 text-center text-gray-500">
-        {t('Orders.noOrdersYet')}
-      </div>
-    );
+  if (orders.length === 0) return <EmptyState title={t('Orders.noOrdersYet')} />;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <table className="w-full min-w-[720px] text-sm">
         <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
           <tr>
             <th className="px-5 py-3">{t('Orders.order')}</th>
@@ -115,12 +104,15 @@ function OrderList({ spotId }: { spotId: string }) {
                 className="cursor-pointer hover:bg-gray-50"
                 onClick={() => setExpanded(expanded === o.id ? null : o.id)}
               >
-                <td className="px-5 py-3 font-medium text-gray-900">{o.orderNumber}</td>
+                <td className="px-5 py-3 font-medium text-gray-900">
+                  {o.orderNumber}
+                  <span className="block text-xs font-normal text-gray-400">
+                    {t(`Orders.fulfillment.${o.fulfillmentType}`, { defaultValue: o.fulfillmentType })}
+                  </span>
+                </td>
                 <td className="px-5 py-3 text-gray-600">
                   {o.customerName || '—'}
-                  {o.customerPhone && (
-                    <span className="block text-xs text-gray-400">{o.customerPhone}</span>
-                  )}
+                  {o.customerPhone && <span className="block text-xs text-gray-400">{o.customerPhone}</span>}
                 </td>
                 <td className="px-5 py-3">
                   <span
@@ -133,19 +125,28 @@ function OrderList({ spotId }: { spotId: string }) {
                 </td>
                 <td className="px-5 py-3 text-gray-600">{o.courierName || '—'}</td>
                 <td className="px-5 py-3 font-medium text-gray-900">{fmtMoney(o.total)}</td>
-                <td className="px-5 py-3 text-gray-500">{fmtDate(o.createdAt)}</td>
+                <td className="px-5 py-3 text-gray-500">{fmtDateTime(o.createdAt)}</td>
               </tr>
               {expanded === o.id && (
                 <tr className="bg-gray-50/60">
                   <td colSpan={6} className="px-5 py-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
-                        <p className="mb-1 text-xs font-semibold uppercase text-gray-400">{t('Orders.delivery')}</p>
-                        <p className="text-sm text-gray-700">{o.deliveryAddress}</p>
+                        <p className="mb-1 text-xs font-semibold uppercase text-gray-400">
+                          {o.fulfillmentType === 'PICKUP' ? t('Orders.pickup') : t('Orders.delivery')}
+                        </p>
+                        {o.deliveryAddress && <p className="text-sm text-gray-700">{o.deliveryAddress}</p>}
                         <p className="mt-1 text-xs text-gray-500">
                           {t('Orders.payment', { status: o.paymentStatus })}
-                          {o.deliveredAt && ` · ${t('Orders.deliveredAt', { date: fmtDate(o.deliveredAt) })}`}
+                          {o.deliveredAt && ` · ${t('Orders.deliveredAt', { date: fmtDateTime(o.deliveredAt) })}`}
+                          {o.collectedAt && ` · ${t('Orders.collectedAt', { date: fmtDateTime(o.collectedAt) })}`}
                         </p>
+                        {o.status === 'TERMINATED' && (
+                          <p className="mt-1 text-xs text-red-600">
+                            {t('Orders.terminatedAt', { date: fmtDateTime(o.terminatedAt) })}
+                            {o.terminationReason ? ` · ${o.terminationReason}` : ''}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <p className="mb-1 text-xs font-semibold uppercase text-gray-400">{t('Orders.items')}</p>
@@ -153,7 +154,7 @@ function OrderList({ spotId }: { spotId: string }) {
                           {o.items.map((it) => (
                             <li key={it.id} className="flex justify-between">
                               <span>
-                                {it.quantity}× {it.tasteId ? t('Orders.iceCream') : it.productId ? t('Orders.product') : t('Orders.item')}
+                                {it.quantity}× {it.tasteId ? t('Orders.taste') : it.productId ? t('Orders.product') : t('Orders.item')}
                               </span>
                               <span className="text-gray-500">{fmtMoney(it.total)}</span>
                             </li>

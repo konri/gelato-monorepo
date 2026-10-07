@@ -1,16 +1,24 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContext';
-import { adminForgotPassword, adminResetPassword } from '../lib/authApi';
-import { LanguageSwitcher } from '../components/LanguageSwitcher';
+import { homeFor } from '../auth/scope';
+import { adminForgotPassword, adminResetPassword, type AuthFailure } from '../lib/authApi';
+import { passwordProblems } from '../lib/constants';
+import { codeText } from '../lib/errors';
+import { AuthShell } from '../components/AuthShell';
+import { PasswordRules } from '../components/PasswordRules';
+import { Alert } from '../components/ui/Alert';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Field';
 
 type Mode = 'login' | 'forgot' | 'reset';
 
 export function LoginPage() {
   const { t } = useTranslation();
-  const { login } = useAuth();
+  const { login, status, user, scope } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
 
   // An invite email links here with ?mode=reset&email=… so the new admin
@@ -23,175 +31,229 @@ export function LoginPage() {
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    searchParams.get('reason') === 'no_membership' ? t('Errors.NO_MEMBERSHIP') : null,
+  );
+  // The session-ended note is informational; reset / update notes are successes.
+  const [info, setInfo] = useState<string | null>(
+    searchParams.get('expired') === '1' ? t('Errors.SESSION_EXPIRED') : null,
+  );
   const [notice, setNotice] = useState<string | null>(null);
+  const [needsReload, setNeedsReload] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  if (status === 'authenticated' && user) {
+    return <Navigate to={homeFor(scope)} replace />;
+  }
+
+  const failureText = (failure: AuthFailure, fallbackKey: string) => {
+    if (failure.code === 'RATE_LIMITED' && failure.retryAfter) {
+      return t('Errors.RATE_LIMITED_WAIT', { minutes: Math.max(1, Math.ceil(failure.retryAfter / 60)) });
+    }
+    return codeText(failure.code) ?? failure.error ?? t(fallbackKey);
+  };
+
+  const resetMessages = () => {
+    setError(null);
+    setNotice(null);
+    setInfo(null);
+    setNeedsReload(false);
+  };
 
   const submitLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    resetMessages();
     setLoading(true);
-    const res = await login(email, password);
+    const res = await login(email.trim(), password);
     setLoading(false);
-    if (!res.ok) return setError(res.error || t('Login.loginFailed'));
-    navigate('/spots', { replace: true });
+    if (res.ok) {
+      const from = (location.state as { from?: string } | null)?.from;
+      const home = homeFor(res.user.staffKind);
+      navigate(from && from !== '/login' && from !== '/' ? from : home, { replace: true });
+      return;
+    }
+    if (res.code === 'USE_SPOT_APP') {
+      navigate('/use-spot-app', { replace: true, state: { name: res.name ?? '' } });
+      return;
+    }
+    if (res.code === 'UPGRADE_REQUIRED') setNeedsReload(true);
+    setError(failureText(res, 'Login.loginFailed'));
   };
 
   const submitForgot = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    resetMessages();
     setLoading(true);
-    await adminForgotPassword(email);
+    const res = await adminForgotPassword(email.trim());
     setLoading(false);
+    if (!res.ok && (res.code === 'RATE_LIMITED' || res.code === 'NETWORK')) {
+      setError(failureText(res, 'Login.resetFailed'));
+      return;
+    }
     setNotice(t('Login.resetCodeEmailed'));
     setMode('reset');
   };
 
   const submitReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    resetMessages();
+    if (passwordProblems(newPassword).length > 0) {
+      setError(t('Errors.PASSWORD_WEAK'));
+      return;
+    }
     setLoading(true);
-    const res = await adminResetPassword(email, code, newPassword);
+    const res = await adminResetPassword(email.trim(), code.trim(), newPassword);
     setLoading(false);
-    if (!res.ok) return setError(res.error || t('Login.resetFailed'));
+    if (!res.ok) {
+      if (res.code === 'UPGRADE_REQUIRED') setNeedsReload(true);
+      setError(failureText(res, 'Login.resetFailed'));
+      return;
+    }
     setNotice(t('Login.passwordUpdated'));
     setMode('login');
     setPassword('');
+    setCode('');
+    setNewPassword('');
   };
 
-  const input =
-    'w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-1 focus:ring-brand';
-  const btn =
-    'w-full rounded-lg bg-brand py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60';
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="absolute right-4 top-4">
-        <LanguageSwitcher />
-      </div>
-      <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-sm">
-        <div className="mb-6 text-center">
-          <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-brand text-lg font-bold text-white">
-            G
-          </div>
-          <h1 className="text-xl font-bold text-gray-900">{t('Login.title')}</h1>
-          <p className="text-sm text-gray-500">
-            {mode === 'login'
-              ? t('Login.signInToManage')
-              : mode === 'forgot'
-              ? t('Login.resetYourPassword')
-              : t('Login.enterCodeSetPassword')}
-          </p>
-        </div>
+    <AuthShell
+      title={t('Login.title')}
+      subtitle={
+        mode === 'login'
+          ? t('Login.signInToManage')
+          : mode === 'forgot'
+            ? t('Login.resetYourPassword')
+            : t('Login.enterCodeSetPassword')
+      }
+    >
+      {error && (
+        <Alert
+          tone="error"
+          className="mb-4"
+          action={
+            needsReload ? (
+              <Button size="sm" variant="secondary" onClick={() => window.location.reload()}>
+                {t('Upgrade.reload')}
+              </Button>
+            ) : undefined
+          }
+        >
+          {error}
+        </Alert>
+      )}
+      {info && <Alert tone="info" className="mb-4">{info}</Alert>}
+      {notice && <Alert tone="success" className="mb-4">{notice}</Alert>}
 
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-        {notice && (
-          <div className="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
-            {notice}
-          </div>
-        )}
+      {mode === 'login' && (
+        <form onSubmit={submitLogin} className="space-y-3">
+          <Input
+            type="email"
+            autoComplete="username"
+            placeholder={t('Login.emailPlaceholder')}
+            aria-label={t('Login.emailPlaceholder')}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <Input
+            type="password"
+            autoComplete="current-password"
+            placeholder={t('Login.passwordPlaceholder')}
+            aria-label={t('Login.passwordPlaceholder')}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <Button type="submit" className="w-full" loading={loading} loadingText={t('Login.signingIn')}>
+            {t('Login.signIn')}
+          </Button>
+          <button
+            type="button"
+            className="w-full text-center text-sm text-gray-500 hover:text-brand"
+            onClick={() => {
+              setMode('forgot');
+              resetMessages();
+            }}
+          >
+            {t('Login.forgotPassword')}
+          </button>
+        </form>
+      )}
 
-        {mode === 'login' && (
-          <form onSubmit={submitLogin} className="space-y-3">
-            <input
-              className={input}
-              type="email"
-              placeholder={t('Login.emailPlaceholder')}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <input
-              className={input}
-              type="password"
-              placeholder={t('Login.passwordPlaceholder')}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <button className={btn} disabled={loading}>
-              {loading ? t('Login.signingIn') : t('Login.signIn')}
-            </button>
-            <button
-              type="button"
-              className="w-full text-center text-sm text-gray-500 hover:text-brand"
-              onClick={() => {
-                setMode('forgot');
-                setError(null);
-                setNotice(null);
-              }}
-            >
-              {t('Login.forgotPassword')}
-            </button>
-          </form>
-        )}
+      {mode === 'forgot' && (
+        <form onSubmit={submitForgot} className="space-y-3">
+          <Input
+            type="email"
+            autoComplete="username"
+            placeholder={t('Login.emailPlaceholder')}
+            aria-label={t('Login.emailPlaceholder')}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <Button type="submit" className="w-full" loading={loading} loadingText={t('Common.sending')}>
+            {t('Login.sendResetCode')}
+          </Button>
+          <button
+            type="button"
+            className="w-full text-center text-sm text-gray-500 hover:text-brand"
+            onClick={() => {
+              setMode('login');
+              resetMessages();
+            }}
+          >
+            {t('Login.backToSignIn')}
+          </button>
+        </form>
+      )}
 
-        {mode === 'forgot' && (
-          <form onSubmit={submitForgot} className="space-y-3">
-            <input
-              className={input}
-              type="email"
-              placeholder={t('Login.emailPlaceholder')}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <button className={btn} disabled={loading}>
-              {loading ? t('Common.sending') : t('Login.sendResetCode')}
-            </button>
-            <button
-              type="button"
-              className="w-full text-center text-sm text-gray-500 hover:text-brand"
-              onClick={() => setMode('login')}
-            >
-              {t('Login.backToSignIn')}
-            </button>
-          </form>
-        )}
-
-        {mode === 'reset' && (
-          <form onSubmit={submitReset} className="space-y-3">
-            <input
-              className={input}
-              type="email"
-              placeholder={t('Login.emailPlaceholder')}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <input
-              className={input}
-              type="text"
-              placeholder={t('Login.codeFromEmail')}
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              required
-            />
-            <input
-              className={input}
-              type="password"
-              placeholder={t('Login.newPassword')}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-            />
-            <button className={btn} disabled={loading}>
-              {loading ? t('Login.updating') : t('Login.setNewPassword')}
-            </button>
-            <button
-              type="button"
-              className="w-full text-center text-sm text-gray-500 hover:text-brand"
-              onClick={() => setMode('login')}
-            >
-              {t('Login.backToSignIn')}
-            </button>
-          </form>
-        )}
-      </div>
-    </div>
+      {mode === 'reset' && (
+        <form onSubmit={submitReset} className="space-y-3">
+          <Input
+            type="email"
+            autoComplete="username"
+            placeholder={t('Login.emailPlaceholder')}
+            aria-label={t('Login.emailPlaceholder')}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <Input
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            placeholder={t('Login.codeFromEmail')}
+            aria-label={t('Login.codeFromEmail')}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            required
+          />
+          <Input
+            type="password"
+            autoComplete="new-password"
+            placeholder={t('Login.newPassword')}
+            aria-label={t('Login.newPassword')}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+          />
+          <PasswordRules password={newPassword} />
+          <Button type="submit" className="w-full" loading={loading} loadingText={t('Login.updating')}>
+            {t('Login.setNewPassword')}
+          </Button>
+          <button
+            type="button"
+            className="w-full text-center text-sm text-gray-500 hover:text-brand"
+            onClick={() => {
+              setMode('login');
+              resetMessages();
+            }}
+          >
+            {t('Login.backToSignIn')}
+          </button>
+        </form>
+      )}
+    </AuthShell>
   );
 }

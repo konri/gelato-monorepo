@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useTranslation } from 'react-i18next';
+import { Alert } from '../components/ui/Alert';
+import { errorText } from '../lib/errors';
 import {
   QUESTS,
   CREATE_QUEST,
@@ -28,25 +30,21 @@ export function QuestsPage() {
   const { data, loading } = useQuery<{ quests: Quest[] }>(QUESTS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Quest | null>(null);
 
   const quests = data?.quests ?? [];
 
   return (
     <div className="mx-auto w-full max-w-4xl p-6 sm:p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('Quests.title')}</h1>
-          <p className="text-sm text-gray-500">{t('Quests.subtitle')}</p>
-        </div>
-        <button
-          onClick={() => setCreating(true)}
-          className="rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark"
-        >
-          {t('Quests.createQuest')}
-        </button>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">{t('Quests.title')}</h1>
+        <p className="text-sm text-gray-500">{t('Quests.subtitle')}</p>
       </div>
+
+      {/* Quests are frozen (E21): no new ones, no points; kept for history. */}
+      <Alert tone="warning" className="mb-6">
+        {t('Quests.legacyBanner')}
+      </Alert>
 
       {loading && !data && <p className="text-sm text-gray-500">{t('Common.loading')}</p>}
 
@@ -61,15 +59,7 @@ export function QuestsPage() {
         )}
       </div>
 
-      {(creating || editing) && (
-        <QuestModal
-          quest={editing}
-          onClose={() => {
-            setCreating(false);
-            setEditing(null);
-          }}
-        />
-      )}
+      {editing && <QuestModal quest={editing} onClose={() => setEditing(null)} />}
     </div>
   );
 }
@@ -167,19 +157,19 @@ function QuestModal({ quest, onClose }: { quest: Quest | null; onClose: () => vo
       }
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('Quests.failedSave'));
+      setError(errorText(err, t('Quests.failedSave')));
       setBusy(false);
     }
   };
 
   const remove = async () => {
-    if (!quest || !confirm(t('Prizes.confirmDelete', { title: quest.title }))) return;
+    if (!quest || !confirm(t('Quests.confirmDelete', { title: quest.title }))) return;
     setBusy(true);
     try {
       await deleteQuest({ variables: { id: quest.id } });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('Prizes.failedDelete'));
+      setError(errorText(err, t('Quests.failedDelete')));
       setBusy(false);
     }
   };

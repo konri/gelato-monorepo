@@ -1,424 +1,331 @@
-import { useCallback, useRef, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client/react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useMutation } from '@apollo/client/react';
 import { useTranslation } from 'react-i18next';
-import {
-  CITIES,
-  CREATE_SPOT,
-  CREATE_CITY,
-  MY_ADMIN_SPOTS,
-  type City,
-} from '../graphql/spots';
-import {
-  fetchPlacePredictions,
-  geocodePlaceId,
-  placesConfigured,
-  type PlacePrediction,
-} from '../lib/places';
+import { useBrandScope } from '../brand/BrandScope';
+import { CREATE_SPOT, type AdminSpot, type City } from '../graphql/spots';
+import { SET_BRAND_CITIES } from '../graphql/brands';
+import { evictRoot } from '../lib/cachePolicies';
+import { errorCode, errorField, errorText } from '../lib/errors';
+import { cityName } from '../lib/format';
+import { AddressAutocomplete } from '../components/AddressAutocomplete';
+import { CreateCityModal } from '../components/CreateCityModal';
+import { Card, PageHeader } from '../components/ui/Card';
+import { Button, ButtonLink } from '../components/ui/Button';
+import { Alert } from '../components/ui/Alert';
+import { Field, Input, Select, Textarea } from '../components/ui/Field';
+import { Toggle } from '../components/ui/Toggle';
+import { EmptyState } from '../components/ui/EmptyState';
 
-// Slug + short random suffix → a stable, human-ish spot id.
-function makeSpotId(name: string) {
-  const slug =
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
-      .slice(0, 32) || 'spot';
-  const suffix = Math.random().toString(36).slice(2, 8);
-  return `${slug}-${suffix}`;
-}
+type Errors = Partial<Record<'name' | 'cityId' | 'address' | 'coords' | 'phone' | 'radius' | 'threshold', string>>;
 
-const input =
-  'w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-1 focus:ring-brand';
-const label = 'block text-sm font-medium text-gray-700 mb-1';
-
+/**
+ * New spot of the brand, created as a draft with a server-generated id
+ * (BRANDS_SPEC §3.3). Only the brand's cities can be chosen; PLATFORM can add
+ * a city (it joins the brand's list).
+ */
 export function CreateSpotPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { data: citiesData, refetch: refetchCities } = useQuery<{ cities: City[] }>(CITIES);
-  const [createSpot, { loading }] = useMutation(CREATE_SPOT, {
-    refetchQueries: [{ query: MY_ADMIN_SPOTS }],
+  const { brand, brandId, brandActive, isPlatform, quota, totalCap, paths } = useBrandScope();
+  const [createSpot, { loading }] = useMutation<{ createSpot: AdminSpot }>(CREATE_SPOT, {
+    update: (cache) => evictRoot(cache, ['brandSpots', 'myAdminSpots']),
+    refetchQueries: ['AdminBrand'],
   });
+  const [setBrandCities] = useMutation(SET_BRAND_CITIES);
+
+  const cities = useMemo(
+    () =>
+      brand.cities
+        .filter((c) => c.isActive !== false)
+        .sort((a, b) => cityName(a).localeCompare(cityName(b))),
+    [brand.cities],
+  );
 
   const [form, setForm] = useState({
     name: '',
+    cityId: cities.length === 1 ? cities[0].id : '',
     address: '',
-    cityId: '',
     latitude: '',
     longitude: '',
     phone: '',
     description: '',
     deliveryRadiusKm: '5',
+    freeDeliveryThreshold: '',
   });
   const [deliveryEnabled, setDeliveryEnabled] = useState(true);
+  const [pickupEnabled, setPickupEnabled] = useState(false);
+  const [onlinePaymentEnabled, setOnlinePaymentEnabled] = useState(true);
+  const [errors, setErrors] = useState<Errors>({});
   const [error, setError] = useState<string | null>(null);
+  const [created, setCreated] = useState<AdminSpot | null>(null);
   const [cityModalOpen, setCityModalOpen] = useState(false);
-  const [addressPredictions, setAddressPredictions] = useState<PlacePrediction[]>([]);
-  const [addressResolved, setAddressResolved] = useState(false);
-  const addressDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const set =
-    (k: keyof typeof form) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
-      setForm((f) => ({ ...f, [k]: e.target.value }));
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+    setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  const onAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((f) => ({ ...f, address: e.target.value }));
-    setAddressResolved(false);
-    if (!placesConfigured) return;
-    if (addressDebounce.current) clearTimeout(addressDebounce.current);
-    const query = e.target.value;
-    addressDebounce.current = setTimeout(async () => {
-      setAddressPredictions(await fetchPlacePredictions(query));
-    }, 350);
+  const atTotalCap = quota.totalSpots >= totalCap;
+  const blocked = !brandActive
+    ? t('Spots.createBlockedInactive')
+    : atTotalCap
+      ? t('Errors.SPOT_LIMIT_TOTAL', { total: totalCap })
+      : cities.length === 0 && !isPlatform
+        ? t('CreateSpot.noCities')
+        : null;
+
+  const validate = (): Errors => {
+    const errs: Errors = {};
+    if (!form.name.trim()) errs.name = t('CreateSpot.required');
+    if (!form.cityId) errs.cityId = t('CreateSpot.required');
+    if (!form.address.trim()) errs.address = t('CreateSpot.required');
+    const lat = parseFloat(form.latitude);
+    const lng = parseFloat(form.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+      errs.coords = t('CreateSpot.coordsRequired');
+    }
+    if (!form.phone.trim()) errs.phone = t('CreateSpot.required');
+    if (deliveryEnabled) {
+      const r = parseFloat(form.deliveryRadiusKm);
+      if (!Number.isFinite(r) || r < 0 || r > 100) errs.radius = t('CreateSpot.radiusRule');
+      if (form.freeDeliveryThreshold.trim() !== '') {
+        const th = parseFloat(form.freeDeliveryThreshold);
+        if (!Number.isFinite(th) || th < 0) errs.threshold = t('CreateSpot.thresholdRule');
+      }
+    }
+    return errs;
   };
-
-  const pickAddressPrediction = useCallback(async (p: PlacePrediction) => {
-    setAddressPredictions([]);
-    setForm((f) => ({ ...f, address: p.description }));
-    const place = await geocodePlaceId(p.placeId);
-    if (!place) return;
-    setForm((f) => ({
-      ...f,
-      address: place.address,
-      latitude: String(place.latitude),
-      longitude: String(place.longitude),
-    }));
-    setAddressResolved(true);
-  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    // Coordinates & radius are only required when the spot delivers.
-    if (deliveryEnabled && (!form.latitude || !form.longitude)) {
-      setError(t('CreateSpot.latLongRequired'));
-      return;
-    }
+    const errs = validate();
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
     try {
-      await createSpot({
+      const res = await createSpot({
         variables: {
-          id: makeSpotId(form.name),
-          name: form.name,
-          address: form.address,
+          brandId,
+          name: form.name.trim(),
+          address: form.address.trim(),
           cityId: form.cityId,
-          latitude: parseFloat(form.latitude || '0'),
-          longitude: parseFloat(form.longitude || '0'),
-          phone: form.phone,
-          description: form.description || null,
+          latitude: parseFloat(form.latitude),
+          longitude: parseFloat(form.longitude),
+          phone: form.phone.trim(),
+          description: form.description.trim() || null,
           deliveryEnabled,
-          deliveryRadiusKm: deliveryEnabled ? parseFloat(form.deliveryRadiusKm) || 5 : 0,
+          deliveryRadiusKm: deliveryEnabled ? parseFloat(form.deliveryRadiusKm) : 0,
+          freeDeliveryThreshold:
+            deliveryEnabled && form.freeDeliveryThreshold.trim() !== '' ? parseFloat(form.freeDeliveryThreshold) : null,
+          pickupEnabled,
+          onlinePaymentEnabled,
         },
       });
-      navigate('/spots');
+      if (res.data) setCreated(res.data.createSpot);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('CreateSpot.failedCreate'));
+      const field = errorField(err);
+      if (errorCode(err) === 'CITY_NOT_IN_BRAND' || field === 'cityId') setErrors({ cityId: errorText(err) });
+      else if (field === 'name' || field === 'address' || field === 'phone') setErrors({ [field]: errorText(err) });
+      else if (field === 'latitude' || field === 'longitude') setErrors({ coords: errorText(err) });
+      else setError(errorText(err, t('CreateSpot.failedCreate')));
     }
   };
 
+  const back = (
+    <Link to={paths.spots} className="text-sm text-gray-500 hover:text-brand">
+      {t('Common.backToSpots')}
+    </Link>
+  );
+
+  if (created) {
+    return (
+      <div className="mx-auto w-full max-w-2xl p-6 sm:p-8">
+        <PageHeader title={t('CreateSpot.title')} back={back} />
+        <Card>
+          <Alert tone="success" title={t('CreateSpot.createdTitle')}>
+            {t('CreateSpot.created', { name: created.name })}
+          </Alert>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <ButtonLink to={paths.editSpot(created.id)}>{t('CreateSpot.openSpot')}</ButtonLink>
+            <ButtonLink to={paths.spots} variant="secondary">
+              {t('Common.backToSpots')}
+            </ButtonLink>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (blocked) {
+    return (
+      <div className="mx-auto w-full max-w-2xl p-6 sm:p-8">
+        <PageHeader title={t('CreateSpot.title')} back={back} />
+        <EmptyState
+          title={t('CreateSpot.blockedTitle')}
+          description={blocked}
+          action={
+            <ButtonLink to={cities.length === 0 ? `${paths.home}#cities` : paths.spots} variant="secondary">
+              {cities.length === 0 ? t('CreateSpot.goToCities') : t('Common.backToSpots')}
+            </ButtonLink>
+          }
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-2xl p-6 sm:p-8">
-      <button
-        onClick={() => navigate('/spots')}
-        className="mb-4 text-sm text-gray-500 hover:text-brand"
-      >
-        {t('Common.backToSpots')}
-      </button>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">{t('CreateSpot.title')}</h1>
+      <PageHeader title={t('CreateSpot.title')} subtitle={t('CreateSpot.subtitle', { brand: brand.name })} back={back} />
 
-      {error && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
-      )}
+      {error && <Alert tone="error" className="mb-4">{error}</Alert>}
 
-      <form onSubmit={submit} className="space-y-4 rounded-xl border border-gray-200 bg-white p-6">
-        <div>
-          <label className={label}>{t('Common.name')}</label>
-          <input className={input} value={form.name} onChange={set('name')} required />
-        </div>
-
-        <div>
-          <div className="mb-1 flex items-center justify-between">
-            <label className={label + ' mb-0'}>{t('CreateSpot.city')}</label>
-            <button
-              type="button"
-              onClick={() => setCityModalOpen(true)}
-              className="text-xs font-semibold text-brand hover:underline"
-            >
-              {t('CreateSpot.addCity')}
-            </button>
-          </div>
-          <select className={input} value={form.cityId} onChange={set('cityId')} required>
-            <option value="">{t('CreateSpot.selectCity')}</option>
-            {citiesData?.cities.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="relative">
-          <label className={label}>{t('Common.address')}</label>
-          <input
-            className={input}
-            value={form.address}
-            onChange={onAddressChange}
-            autoComplete="off"
-            required
-          />
-          {addressPredictions.length > 0 && (
-            <ul className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg">
-              {addressPredictions.map((p) => (
-                <li key={p.placeId}>
+      <form onSubmit={submit} className="space-y-6" noValidate>
+        <Card title={t('EditSpot.basics')}>
+          <div className="space-y-4">
+            <Field label={t('Common.name')} error={errors.name}>
+              {(id, invalid) => <Input id={id} invalid={invalid} value={form.name} onChange={set('name')} maxLength={100} />}
+            </Field>
+            <Field
+              label={t('CreateSpot.city')}
+              error={errors.cityId}
+              hint={t('CreateSpot.cityHint')}
+              action={
+                isPlatform ? (
                   <button
                     type="button"
-                    onClick={() => pickAddressPrediction(p)}
-                    className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
+                    onClick={() => setCityModalOpen(true)}
+                    className="text-xs font-semibold text-brand hover:underline"
                   >
-                    {p.description}
+                    {t('CreateSpot.addCity')}
                   </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          {addressResolved && (
-            <p className="mt-1 text-xs text-green-600">{t('CreateSpot.coordsFromAddress')}</p>
-          )}
-        </div>
-
-        <div>
-          <label className={label}>{t('Common.phone')}</label>
-          <input className={input} value={form.phone} onChange={set('phone')} required />
-        </div>
-
-        {/* Delivery toggle */}
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-          <label className="flex cursor-pointer items-center justify-between">
-            <span className="text-sm font-medium text-gray-800">{t('CreateSpot.canDeliver')}</span>
-            <input
-              type="checkbox"
-              checked={deliveryEnabled}
-              onChange={(e) => setDeliveryEnabled(e.target.checked)}
-              className="h-5 w-9 cursor-pointer appearance-none rounded-full bg-gray-300 transition-colors checked:bg-brand relative before:absolute before:top-0.5 before:left-0.5 before:h-4 before:w-4 before:rounded-full before:bg-white before:transition-transform checked:before:translate-x-4"
-            />
-          </label>
-
-          {deliveryEnabled && (
-            <div className="mt-4 space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className={label}>{t('Common.latitude')}</label>
-                  <input
-                    className={input}
-                    type="number"
-                    step="any"
-                    value={form.latitude}
-                    onChange={set('latitude')}
-                  />
-                </div>
-                <div>
-                  <label className={label}>{t('Common.longitude')}</label>
-                  <input
-                    className={input}
-                    type="number"
-                    step="any"
-                    value={form.longitude}
-                    onChange={set('longitude')}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className={label}>{t('CreateSpot.deliveryRadius')}</label>
-                <input
-                  className={input}
-                  type="number"
-                  step="any"
-                  value={form.deliveryRadiusKm}
-                  onChange={set('deliveryRadiusKm')}
+                ) : undefined
+              }
+            >
+              {(id, invalid) => (
+                <Select id={id} invalid={invalid} value={form.cityId} onChange={set('cityId')}>
+                  <option value="">{t('CreateSpot.selectCity')}</option>
+                  {cities.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {cityName(c)}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+            <Field label={t('Common.address')} error={errors.address}>
+              {(id, invalid) => (
+                <AddressAutocomplete
+                  id={id}
+                  invalid={invalid}
+                  value={form.address}
+                  onChange={(address) => setForm((f) => ({ ...f, address }))}
+                  onResolved={(place) =>
+                    setForm((f) => ({
+                      ...f,
+                      address: place.address || f.address,
+                      latitude: String(place.latitude),
+                      longitude: String(place.longitude),
+                    }))
+                  }
                 />
-              </div>
+              )}
+            </Field>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label={t('Common.latitude')} error={errors.coords}>
+                {(id, invalid) => (
+                  <Input id={id} invalid={invalid} type="number" step="any" value={form.latitude} onChange={set('latitude')} />
+                )}
+              </Field>
+              <Field label={t('Common.longitude')}>
+                {(id) => <Input id={id} type="number" step="any" value={form.longitude} onChange={set('longitude')} />}
+              </Field>
             </div>
-          )}
-        </div>
+            <Field label={t('Common.phone')} error={errors.phone}>
+              {(id, invalid) => (
+                <Input id={id} invalid={invalid} type="tel" value={form.phone} onChange={set('phone')} maxLength={40} />
+              )}
+            </Field>
+            <Field label={t('CreateSpot.descriptionOptional')}>
+              {(id) => <Textarea id={id} rows={3} value={form.description} onChange={set('description')} maxLength={2000} />}
+            </Field>
+          </div>
+        </Card>
 
-        <div>
-          <label className={label}>{t('CreateSpot.descriptionOptional')}</label>
-          <textarea className={input} rows={3} value={form.description} onChange={set('description')} />
-        </div>
+        <Card title={t('EditSpot.ordering')} description={t('EditSpot.orderingHint')}>
+          <div className="space-y-3">
+            <Toggle checked={deliveryEnabled} onChange={setDeliveryEnabled} label={t('CreateSpot.canDeliver')} />
+            {deliveryEnabled && (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label={t('CreateSpot.deliveryRadius')} error={errors.radius}>
+                  {(id, invalid) => (
+                    <Input
+                      id={id}
+                      invalid={invalid}
+                      type="number"
+                      step="any"
+                      min={0}
+                      max={100}
+                      value={form.deliveryRadiusKm}
+                      onChange={set('deliveryRadiusKm')}
+                    />
+                  )}
+                </Field>
+                <Field label={t('EditSpot.freeDeliveryThreshold')} error={errors.threshold} hint={t('EditSpot.freeDeliveryHint')}>
+                  {(id, invalid) => (
+                    <Input
+                      id={id}
+                      invalid={invalid}
+                      type="number"
+                      step="any"
+                      min={0}
+                      value={form.freeDeliveryThreshold}
+                      onChange={set('freeDeliveryThreshold')}
+                    />
+                  )}
+                </Field>
+              </div>
+            )}
+            <Toggle
+              checked={pickupEnabled}
+              onChange={setPickupEnabled}
+              label={t('EditSpot.pickup')}
+              description={t('EditSpot.pickupHint')}
+            />
+            <Toggle
+              checked={onlinePaymentEnabled}
+              onChange={setOnlinePaymentEnabled}
+              label={t('EditSpot.onlinePayment')}
+              description={t('EditSpot.onlinePaymentHint')}
+            />
+          </div>
+        </Card>
 
-        <button
-          className="w-full rounded-lg bg-brand py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
-          disabled={loading}
-        >
-          {loading ? t('Common.creating') : t('CreateSpot.createSpot')}
-        </button>
+        <Alert tone="info">{t('CreateSpot.draftNote')}</Alert>
+
+        <div className="flex justify-end gap-3">
+          <Button variant="secondary" onClick={() => navigate(paths.spots)} disabled={loading}>
+            {t('Common.cancel')}
+          </Button>
+          <Button type="submit" loading={loading} loadingText={t('Common.creating')}>
+            {t('CreateSpot.createSpot')}
+          </Button>
+        </div>
       </form>
 
       {cityModalOpen && (
         <CreateCityModal
           onClose={() => setCityModalOpen(false)}
-          onCreated={async (newCityId) => {
-            await refetchCities();
-            setForm((f) => ({ ...f, cityId: newCityId }));
+          onCreated={async (city: City) => {
+            // A new city joins the brand's list before a spot can use it.
+            try {
+              await setBrandCities({ variables: { brandId, cityIds: [...new Set([...brand.cityIds, city.id])] } });
+              setForm((f) => ({ ...f, cityId: city.id }));
+            } catch (err) {
+              setError(errorText(err));
+            }
             setCityModalOpen(false);
           }}
         />
       )}
-    </div>
-  );
-}
-
-function CreateCityModal({
-  onClose,
-  onCreated,
-}: {
-  onClose: () => void;
-  onCreated: (cityId: string) => void;
-}) {
-  const { t } = useTranslation();
-  const [createCity, { loading }] = useMutation<{ createCity: { id: string } }>(CREATE_CITY);
-  const [form, setForm] = useState({
-    name: '',
-    pl: '',
-    en: '',
-    ua: '',
-    latitude: '',
-    longitude: '',
-    country: 'Poland',
-  });
-  const [error, setError] = useState<string | null>(null);
-  const [namePredictions, setNamePredictions] = useState<PlacePrediction[]>([]);
-  const [coordsResolved, setCoordsResolved] = useState(false);
-  const nameDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const set =
-    (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
-      setForm((f) => ({ ...f, [k]: e.target.value }));
-
-  const onNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((f) => ({ ...f, name: e.target.value }));
-    setCoordsResolved(false);
-    if (!placesConfigured) return;
-    if (nameDebounce.current) clearTimeout(nameDebounce.current);
-    const query = e.target.value;
-    nameDebounce.current = setTimeout(async () => {
-      setNamePredictions(await fetchPlacePredictions(query, '(cities)'));
-    }, 350);
-  };
-
-  const pickNamePrediction = useCallback(async (p: PlacePrediction) => {
-    setNamePredictions([]);
-    const cityName = p.description.split(',')[0]?.trim() || p.description;
-    setForm((f) => ({ ...f, name: cityName }));
-    const place = await geocodePlaceId(p.placeId);
-    if (!place) return;
-    setForm((f) => ({ ...f, latitude: String(place.latitude), longitude: String(place.longitude) }));
-    setCoordsResolved(true);
-  }, []);
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    try {
-      const res = await createCity({
-        variables: {
-          name: form.name,
-          latitude: parseFloat(form.latitude),
-          longitude: parseFloat(form.longitude),
-          nameLocal: {
-            pl: form.pl || form.name,
-            en: form.en || form.name,
-            ua: form.ua || form.name,
-          },
-          country: form.country,
-        },
-      });
-      const id = res.data?.createCity.id;
-      if (id) onCreated(id);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('City.failedCreate'));
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-        <h2 className="mb-4 text-lg font-bold text-gray-900">{t('City.addCity')}</h2>
-        {error && (
-          <div className="mb-3 rounded-lg bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>
-        )}
-        <form onSubmit={submit} className="space-y-3">
-          <div className="relative">
-            <label className={label}>{t('City.nameCanonical')}</label>
-            <input
-              className={input}
-              value={form.name}
-              onChange={onNameChange}
-              autoComplete="off"
-              required
-              placeholder="Gdansk"
-            />
-            {namePredictions.length > 0 && (
-              <ul className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg">
-                {namePredictions.map((p) => (
-                  <li key={p.placeId}>
-                    <button
-                      type="button"
-                      onClick={() => pickNamePrediction(p)}
-                      className="block w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
-                    >
-                      {p.description}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {coordsResolved && (
-              <p className="mt-1 text-xs text-green-600">{t('CreateSpot.coordsFromAddress')}</p>
-            )}
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className={label}>PL</label>
-              <input className={input} value={form.pl} onChange={set('pl')} placeholder="Gdańsk" />
-            </div>
-            <div>
-              <label className={label}>EN</label>
-              <input className={input} value={form.en} onChange={set('en')} placeholder="Gdansk" />
-            </div>
-            <div>
-              <label className={label}>UA</label>
-              <input className={input} value={form.ua} onChange={set('ua')} placeholder="Ґданськ" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={label}>{t('Common.latitude')}</label>
-              <input className={input} type="number" step="any" value={form.latitude} onChange={set('latitude')} required />
-            </div>
-            <div>
-              <label className={label}>{t('Common.longitude')}</label>
-              <input className={input} type="number" step="any" value={form.longitude} onChange={set('longitude')} required />
-            </div>
-          </div>
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-            >
-              {t('Common.cancel')}
-            </button>
-            <button
-              disabled={loading}
-              className="flex-1 rounded-lg bg-brand py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
-            >
-              {loading ? t('City.adding') : t('City.addCity')}
-            </button>
-          </div>
-        </form>
-      </div>
     </div>
   );
 }

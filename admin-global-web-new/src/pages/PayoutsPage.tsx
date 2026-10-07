@@ -8,13 +8,21 @@ import {
   type SpotPayoutSummary,
   type SpotPayout,
 } from '../graphql/payouts';
+import { ADMIN_BRANDS, type BrandAdminView } from '../graphql/brands';
+import { errorText } from '../lib/errors';
+import { fmtDate, fmtMoney } from '../lib/format';
+import { Select } from '../components/ui/Field';
 
-const currency = (n: number) => `${n.toFixed(2)} zł`;
+const currency = (n: number) => fmtMoney(n);
 
 export function PayoutsPage() {
   const { t } = useTranslation();
+  const [brandId, setBrandId] = useState('');
+  const { data: brandsData } = useQuery<{ adminBrands: BrandAdminView[] }>(ADMIN_BRANDS);
+  const brands = [...(brandsData?.adminBrands ?? [])].sort((a, b) => a.brand.name.localeCompare(b.brand.name));
   const { data, loading, refetch } = useQuery<{ spotPayoutSummaries: SpotPayoutSummary[] }>(
     SPOT_PAYOUT_SUMMARIES,
+    { variables: { brandId: brandId || null }, fetchPolicy: 'cache-and-network' },
   );
   const [createPayout, { loading: paying }] = useMutation(CREATE_SPOT_PAYOUT);
   const [historySpotId, setHistorySpotId] = useState<string | null>(null);
@@ -31,7 +39,7 @@ export function PayoutsPage() {
       setConfirmSpot(null);
       await refetch();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('Payouts.failed'));
+      setError(errorText(err, t('Payouts.failed')));
     }
   };
 
@@ -39,6 +47,20 @@ export function PayoutsPage() {
     <div className="mx-auto w-full max-w-4xl p-6 sm:p-8">
       <h1 className="mb-1 text-2xl font-bold text-gray-900">{t('Payouts.title')}</h1>
       <p className="mb-6 text-sm text-gray-500">{t('Payouts.subtitle')}</p>
+
+      {brands.length > 0 && (
+        <div className="mb-4 max-w-xs">
+          <label className="mb-1 block text-sm font-medium text-gray-700">{t('Payouts.brandFilter')}</label>
+          <Select value={brandId} onChange={(e) => setBrandId(e.target.value)}>
+            <option value="">{t('Spots.allBrands')}</option>
+            {brands.map((b) => (
+              <option key={b.brand.id} value={b.brand.id}>
+                {b.brand.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
@@ -49,18 +71,19 @@ export function PayoutsPage() {
         <p className="mt-1 text-3xl font-bold text-gray-900">{currency(totalOwed)}</p>
       </div>
 
-      {loading ? (
+      {loading && !data ? (
         <p className="text-sm text-gray-500">{t('Common.loading')}</p>
       ) : summaries.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
           {t('Payouts.none')}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
               <tr>
                 <th className="px-4 py-3">{t('Payouts.spot')}</th>
+                <th className="px-4 py-3">{t('Payouts.brand')}</th>
                 <th className="px-4 py-3">{t('Payouts.orders')}</th>
                 <th className="px-4 py-3">{t('Payouts.amountOwed')}</th>
                 <th className="px-4 py-3">{t('Payouts.since')}</th>
@@ -71,13 +94,14 @@ export function PayoutsPage() {
               {summaries.map((s) => (
                 <tr key={s.spotId}>
                   <td className="px-4 py-3 font-medium text-gray-900">{s.spotName}</td>
+                  <td className="px-4 py-3 text-gray-600">{s.brandName ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-600">{s.orderCount}</td>
                   <td className="px-4 py-3 font-semibold text-gray-900">
                     {currency(s.amountOwed)}
                   </td>
                   <td className="px-4 py-3 text-gray-500">
                     {s.oldestUnpaidOrderAt
-                      ? new Date(s.oldestUnpaidOrderAt).toLocaleDateString()
+                      ? fmtDate(s.oldestUnpaidOrderAt)
                       : '—'}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -173,7 +197,7 @@ function PayoutHistoryModal({ spotId, onClose }: { spotId: string; onClose: () =
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
         <h2 className="mb-4 text-lg font-bold text-gray-900">{t('Payouts.historyTitle')}</h2>
-        {loading ? (
+        {loading && !data ? (
           <p className="text-sm text-gray-500">{t('Common.loading')}</p>
         ) : history.length === 0 ? (
           <p className="text-sm text-gray-500">{t('Payouts.noHistory')}</p>
@@ -184,7 +208,7 @@ function PayoutHistoryModal({ spotId, onClose }: { spotId: string; onClose: () =
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-gray-900">{currency(p.amount)}</span>
                   <span className="text-xs text-gray-500">
-                    {new Date(p.paidAt).toLocaleDateString()}
+                    {fmtDate(p.paidAt)}
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-gray-500">

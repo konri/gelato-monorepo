@@ -1,50 +1,47 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { AuthProvider } from './auth/AuthContext';
-import { ProtectedRoute } from './auth/ProtectedRoute';
-import { AppLayout } from './components/AppLayout';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { AuthProvider, useAuth } from './auth/AuthContext';
+import { RequireSession } from './auth/RequireSession';
+import { ScopedRoutes } from './routes';
 import { LoginPage } from './pages/LoginPage';
-import { SpotsPage } from './pages/SpotsPage';
-import { CreateSpotPage } from './pages/CreateSpotPage';
-import { EditSpotPage } from './pages/EditSpotPage';
-import { InviteSpotAdminPage } from './pages/InviteSpotAdminPage';
-import { AdminsPage } from './pages/AdminsPage';
-import { NewsPage } from './pages/NewsPage';
-import { OrdersPage } from './pages/OrdersPage';
-import { PrizesPage } from './pages/PrizesPage';
-import { QuestsPage } from './pages/QuestsPage';
-import { PayoutsPage } from './pages/PayoutsPage';
+import { UseSpotAppPage } from './pages/UseSpotAppPage';
+import { ChangePasswordPage } from './pages/ChangePasswordPage';
+import { UpgradeRequiredOverlay } from './components/UpgradeRequiredOverlay';
+
+function AppRoutes() {
+  const { upgradeRequired } = useAuth();
+  return (
+    <>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/use-spot-app" element={<UseSpotAppPage />} />
+        <Route
+          path="/change-password"
+          element={
+            <RequireSession allowRestricted>
+              <ChangePasswordPage />
+            </RequireSession>
+          }
+        />
+        {/* Authenticated console: one route tree per scope. */}
+        <Route
+          path="/*"
+          element={
+            <RequireSession>
+              <ScopedRoutes />
+            </RequireSession>
+          }
+        />
+      </Routes>
+      {upgradeRequired && <UpgradeRequiredOverlay />}
+    </>
+  );
+}
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-
-          {/* Authenticated area */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<AppLayout />}>
-              <Route path="/spots" element={<SpotsPage />} />
-              <Route path="/spots/new" element={<CreateSpotPage />} />
-              <Route path="/spots/:spotId/edit" element={<EditSpotPage />} />
-              <Route path="/spots/:spotId/invite" element={<InviteSpotAdminPage />} />
-              <Route path="/orders" element={<OrdersPage />} />
-              <Route path="/prizes" element={<PrizesPage />} />
-              <Route path="/news" element={<NewsPage />} />
-            </Route>
-          </Route>
-
-          {/* SUPER_ADMIN only */}
-          <Route element={<ProtectedRoute superAdminOnly />}>
-            <Route element={<AppLayout />}>
-              <Route path="/admins" element={<AdminsPage />} />
-              <Route path="/quests" element={<QuestsPage />} />
-              <Route path="/payouts" element={<PayoutsPage />} />
-            </Route>
-          </Route>
-
-          <Route path="*" element={<Navigate to="/spots" replace />} />
-        </Routes>
+        <AppRoutes />
       </BrowserRouter>
     </AuthProvider>
   );

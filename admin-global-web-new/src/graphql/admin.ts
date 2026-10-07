@@ -1,12 +1,19 @@
 import { gql } from '@apollo/client';
+import type { StaffKind } from '../lib/authApi';
 
 export type AdminAccount = {
   id: string;
   email: string;
   name?: string | null;
   roles: string[];
+  kind?: StaffKind | null;
+  brandId?: string | null;
+  spotIds?: string[] | null;
+  loginDisabled?: boolean | null;
+  createdAt: string;
 };
 
+/** Admin-namespace accounts (PLATFORM): a read-only directory. */
 export const ADMIN_ACCOUNTS = gql`
   query AdminAccounts {
     adminAccounts {
@@ -14,17 +21,11 @@ export const ADMIN_ACCOUNTS = gql`
       email
       name
       roles
-    }
-  }
-`;
-
-export const CREATE_ADMIN_ACCOUNT = gql`
-  mutation CreateAdminAccount($email: String!, $name: String!, $role: String!) {
-    createAdminAccount(email: $email, name: $name, role: $role) {
-      id
-      email
-      name
-      roles
+      kind
+      brandId
+      spotIds
+      loginDisabled
+      createdAt
     }
   }
 `;

@@ -1,59 +1,231 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client/react';
 import { Link } from 'react-router-dom';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useTranslation } from 'react-i18next';
-import { MY_ADMIN_SPOTS, type AdminSpot } from '../graphql/spots';
+import { useOptionalBrandScope, type BrandScopeValue } from '../brand/BrandScope';
+import { brandPaths } from '../brand/paths';
+import {
+  BRAND_SPOTS,
+  MY_ADMIN_SPOTS,
+  SET_SPOT_ACTIVE,
+  spotStatus,
+  type AdminSpot,
+  type SpotStatus,
+} from '../graphql/spots';
+import { errorText } from '../lib/errors';
+import { mountedQueries } from '../lib/cachePolicies';
+import { cityName } from '../lib/format';
+import { QuotaMeter } from '../components/QuotaMeter';
+import { ActivationChecklist } from '../components/ActivationChecklist';
+import { BrandLogo } from '../components/brand/BrandLogo';
+import { PageHeader } from '../components/ui/Card';
+import { Button, ButtonLink } from '../components/ui/Button';
+import { FilterChip } from '../components/ui/FilterChip';
+import { EmptyState } from '../components/ui/EmptyState';
+import { Alert } from '../components/ui/Alert';
+import { Badge, type BadgeTone } from '../components/ui/Badge';
+import { Input, Select } from '../components/ui/Field';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { FullPageSpinner } from '../components/ui/FullPageSpinner';
 
+type StatusFilter = 'ALL' | SpotStatus;
+
+const STATUS_TONE: Record<SpotStatus, BadgeTone> = { ACTIVE: 'green', DRAFT: 'blue', INACTIVE: 'gray' };
+
+/**
+ * Spots (BRANDS_SPEC §3.3). In a brand scope: the brand's spots with the plan
+ * usage and "+ Create spot". On the platform tree (/spots): every spot, with
+ * a brand filter; spots are created from their brand.
+ */
 export function SpotsPage() {
+  const scope = useOptionalBrandScope();
+  return scope ? <BrandSpots scope={scope} /> : <SpotDirectory />;
+}
+
+function BrandSpots({ scope }: { scope: BrandScopeValue }) {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery<{ myAdminSpots: AdminSpot[] }>(MY_ADMIN_SPOTS);
-  const spots = data?.myAdminSpots ?? [];
-
-  const [cityId, setCityId] = useState<string>('');
-  const [query, setQuery] = useState('');
-
-  // Distinct cities present among the spots, for the filter chips.
-  const cities = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const s of spots) if (s.city) map.set(s.city.id, s.city.name);
-    return Array.from(map, ([id, name]) => ({ id, name })).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
-  }, [spots]);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return spots.filter((s) => {
-      if (cityId && s.city?.id !== cityId) return false;
-      if (!q) return true;
-      return [s.name, s.address, s.phone ?? ''].some((f) => f.toLowerCase().includes(q));
-    });
-  }, [spots, cityId, query]);
+  const { brandId, brandActive, quota, totalCap, paths, brand, isPlatform } = scope;
+  const { data, loading, error, refetch } = useQuery<{ brandSpots: AdminSpot[] }>(BRAND_SPOTS, {
+    variables: { brandId },
+    fetchPolicy: 'cache-and-network',
+  });
+  const atTotalCap = quota.totalSpots >= totalCap;
+  const createBlocked = !brandActive || atTotalCap || brand.cityIds.length === 0;
+  const blockedReason = !brandActive
+    ? t('Spots.createBlockedInactive')
+    : atTotalCap
+      ? t('Errors.SPOT_LIMIT_TOTAL', { total: totalCap })
+      : brand.cityIds.length === 0
+        ? t('CreateSpot.noCities')
+        : null;
 
   return (
-    <div className="p-6 sm:p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('Spots.title')}</h1>
-          <p className="text-sm text-gray-500">{t('Spots.subtitle')}</p>
+    <div className="mx-auto w-full max-w-6xl p-6 sm:p-8">
+      <PageHeader
+        title={t('Spots.title')}
+        subtitle={isPlatform ? t('Spots.subtitlePlatform', { brand: brand.name }) : t('Spots.subtitle')}
+        actions={
+          createBlocked ? (
+            <Button disabled title={blockedReason ?? undefined}>
+              {t('Spots.createSpot')}
+            </Button>
+          ) : (
+            <ButtonLink to={paths.newSpot}>{t('Spots.createSpot')}</ButtonLink>
+          )
+        }
+      />
+      <div className="mb-5 flex flex-wrap items-start gap-3">
+        <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-4">
+          <QuotaMeter quota={quota} />
         </div>
-        <Link
-          to="/spots/new"
-          className="rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark"
-        >
-          {t('Spots.createSpot')}
-        </Link>
+        {blockedReason && (
+          <Alert tone="warning" className="min-w-[16rem] flex-1">
+            {blockedReason}
+          </Alert>
+        )}
       </div>
+      <SpotList
+        spots={data?.brandSpots}
+        loading={loading}
+        error={error}
+        onRetry={() => void refetch()}
+        canActivate={brandActive && quota.activeSpots < quota.maxSpots}
+        emptyAction={createBlocked ? undefined : <ButtonLink to={paths.newSpot}>{t('Spots.createFirstSpot')}</ButtonLink>}
+        pathsFor={() => paths}
+      />
+    </div>
+  );
+}
 
-      {/* Search + city filter */}
+function SpotDirectory() {
+  const { t } = useTranslation();
+  const { data, loading, error, refetch } = useQuery<{ myAdminSpots: AdminSpot[] }>(MY_ADMIN_SPOTS, {
+    fetchPolicy: 'cache-and-network',
+  });
+  const [brandId, setBrandId] = useState('');
+  const spots = data?.myAdminSpots;
+  const brands = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const s of spots ?? []) map.set(s.brand.id, s.brand.name);
+    return [...map].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [spots]);
+  const visible = useMemo(() => (spots && brandId ? spots.filter((s) => s.brandId === brandId) : spots), [spots, brandId]);
+
+  return (
+    <div className="mx-auto w-full max-w-6xl p-6 sm:p-8">
+      <PageHeader title={t('Spots.directoryTitle')} subtitle={t('Spots.directorySubtitle')} />
+      {brands.length > 1 && (
+        <div className="mb-4 max-w-xs">
+          <Select value={brandId} onChange={(e) => setBrandId(e.target.value)} aria-label={t('Spots.brandFilter')}>
+            <option value="">{t('Spots.allBrands')}</option>
+            {brands.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+      )}
+      <SpotList
+        spots={visible}
+        loading={loading}
+        error={error}
+        onRetry={() => void refetch()}
+        showBrand
+        canActivate
+        emptyAction={<ButtonLink to="/brands" variant="secondary">{t('Spots.goToBrands')}</ButtonLink>}
+        emptyHint={t('Spots.directoryEmptyHint')}
+        pathsFor={(spot) => ({ ...brandPaths('param', spot.brandId), ordersFor: (id: string) => `/orders?spot=${encodeURIComponent(id)}` })}
+      />
+    </div>
+  );
+}
+
+type SpotPaths = Pick<ReturnType<typeof brandPaths>, 'editSpot' | 'staffFor' | 'ordersFor'>;
+
+function SpotList({
+  spots,
+  loading,
+  error,
+  onRetry,
+  showBrand = false,
+  canActivate,
+  emptyAction,
+  emptyHint,
+  pathsFor,
+}: {
+  spots: AdminSpot[] | undefined;
+  loading: boolean;
+  error: unknown;
+  onRetry: () => void;
+  showBrand?: boolean;
+  /** False when the plan's active-spot limit is reached (brand scope). */
+  canActivate: boolean;
+  emptyAction?: React.ReactNode;
+  emptyHint?: string;
+  pathsFor: (spot: AdminSpot) => SpotPaths;
+}) {
+  const { t } = useTranslation();
+  const [query, setQuery] = useState('');
+  const [status, setStatus] = useState<StatusFilter>('ALL');
+  const [cityId, setCityId] = useState('');
+  const [activating, setActivating] = useState<AdminSpot | null>(null);
+  const [deactivating, setDeactivating] = useState<AdminSpot | null>(null);
+  const [deactivateError, setDeactivateError] = useState<string | null>(null);
+  const client = useApolloClient();
+  const [setActive, { loading: saving }] = useMutation(SET_SPOT_ACTIVE, {
+    refetchQueries: () => mountedQueries(client, ['AdminBrand', 'AdminBrands']),
+  });
+
+  const all = useMemo(() => spots ?? [], [spots]);
+  const counts = useMemo(() => {
+    const c: Record<StatusFilter, number> = { ALL: all.length, DRAFT: 0, ACTIVE: 0, INACTIVE: 0 };
+    for (const s of all) c[spotStatus(s)]++;
+    return c;
+  }, [all]);
+  const cities = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const s of all) if (s.city) map.set(s.city.id, cityName(s.city));
+    return [...map].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [all]);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return all
+      .filter((s) => status === 'ALL' || spotStatus(s) === status)
+      .filter((s) => !cityId || s.cityId === cityId)
+      .filter((s) => !q || [s.name, s.address, s.phone ?? '', s.brand.name].some((f) => f.toLowerCase().includes(q)))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [all, status, cityId, query]);
+
+  const deactivate = async () => {
+    if (!deactivating) return;
+    setDeactivateError(null);
+    try {
+      await setActive({ variables: { spotId: deactivating.id, isActive: false } });
+      setDeactivating(null);
+    } catch (err) {
+      setDeactivateError(errorText(err));
+    }
+  };
+
+  return (
+    <>
       <div className="mb-5 space-y-3">
-        <input
+        <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('Spots.searchPlaceholder')}
-          className="w-full max-w-md rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-1 focus:ring-brand"
+          aria-label={t('Spots.searchPlaceholder')}
+          className="max-w-md"
         />
-        {cities.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {(['ALL', 'DRAFT', 'ACTIVE', 'INACTIVE'] as StatusFilter[]).map((s) => (
+            <FilterChip key={s} active={status === s} onClick={() => setStatus(s)} count={counts[s]}>
+              {t(`Spots.filter_${s}`)}
+            </FilterChip>
+          ))}
+        </div>
+        {cities.length > 1 && (
           <div className="flex flex-wrap gap-2">
             <FilterChip active={cityId === ''} onClick={() => setCityId('')}>
               {t('Spots.allCities')}
@@ -67,80 +239,100 @@ export function SpotsPage() {
         )}
       </div>
 
-      {loading && <p className="text-sm text-gray-500">{t('Common.loading')}</p>}
-      {error && (
-        <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error.message}</div>
+      {Boolean(error) && (
+        <Alert
+          tone="error"
+          className="mb-4"
+          action={
+            <Button size="sm" variant="secondary" onClick={onRetry}>
+              {t('Common.retry')}
+            </Button>
+          }
+        >
+          {errorText(error)}
+        </Alert>
       )}
-
-      {!loading && spots.length === 0 && (
-        <div className="rounded-xl border border-dashed border-gray-300 p-10 text-center">
-          <p className="text-gray-500">{t('Spots.noSpotsYet')}</p>
-          <Link to="/spots/new" className="mt-2 inline-block text-sm font-semibold text-brand">
-            {t('Spots.createFirstSpot')}
-          </Link>
-        </div>
+      {loading && !spots && <FullPageSpinner inline />}
+      {spots && all.length === 0 && (
+        <EmptyState title={t('Spots.noSpotsYet')} description={emptyHint ?? t('Spots.noSpotsHint')} action={emptyAction} />
       )}
-
-      {!loading && spots.length > 0 && filtered.length === 0 && (
-        <div className="rounded-xl border border-dashed border-gray-300 p-10 text-center text-gray-500">
-          {t('Spots.noSpotsMatch')}
-        </div>
-      )}
+      {all.length > 0 && filtered.length === 0 && <EmptyState title={t('Spots.noSpotsMatch')} />}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((spot) => (
-          <div key={spot.id} className="rounded-xl border border-gray-200 bg-white p-5">
-            <div className="flex items-start justify-between">
-              <h3 className="font-semibold text-gray-900">{spot.name}</h3>
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                  spot.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                }`}
-              >
-                {spot.isActive ? t('Common.active') : t('Common.inactive')}
-              </span>
+        {filtered.map((spot) => {
+          const st = spotStatus(spot);
+          const p = pathsFor(spot);
+          return (
+            <div key={spot.id} className="flex flex-col rounded-xl border border-gray-200 bg-white p-5">
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="min-w-0 truncate font-semibold text-gray-900" title={spot.name}>
+                  {spot.name}
+                </h3>
+                <Badge tone={STATUS_TONE[st]}>{t(`Spots.status_${st}`)}</Badge>
+              </div>
+              {showBrand && (
+                <div className="mt-1 flex items-center gap-2 text-xs text-gray-600">
+                  <BrandLogo name={spot.brand.name} logoUrl={spot.brand.logoUrl} size="sm" />
+                  <span className="truncate font-medium">{spot.brand.name}</span>
+                  {!spot.brand.isActive && <Badge tone="amber">{t('Brands.inactiveBadge')}</Badge>}
+                </div>
+              )}
+              {spot.city && <p className="mt-1 text-xs font-medium text-brand">{cityName(spot.city)}</p>}
+              <p className="mt-1 text-sm text-gray-500">{spot.address}</p>
+              {spot.phone && <p className="mt-1 text-xs text-gray-400">{spot.phone}</p>}
+              {st === 'DRAFT' && <p className="mt-2 text-xs text-blue-700">{t('Spots.draftHint')}</p>}
+              <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 pt-4 text-sm font-semibold">
+                <Link to={p.editSpot(spot.id)} className="text-brand hover:text-brand-dark">
+                  {t('Common.edit')}
+                </Link>
+                <Link to={p.staffFor({ spotId: spot.id })} className="text-brand hover:text-brand-dark">
+                  {t('Spots.staff')}
+                </Link>
+                <Link to={p.ordersFor(spot.id)} className="text-brand hover:text-brand-dark">
+                  {t('Spots.orderHistory')}
+                </Link>
+                <span className="ml-auto">
+                  {spot.isActive ? (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        setDeactivateError(null);
+                        setDeactivating(spot);
+                      }}
+                    >
+                      {t('Spots.deactivate')}
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      disabled={!canActivate || !spot.brand.isActive}
+                      title={!canActivate ? t('Quota.limitReached') : undefined}
+                      onClick={() => setActivating(spot)}
+                    >
+                      {t('Spots.activate')}
+                    </Button>
+                  )}
+                </span>
+              </div>
             </div>
-            {spot.city && <p className="mt-0.5 text-xs font-medium text-brand">{spot.city.name}</p>}
-            <p className="mt-1 text-sm text-gray-500">{spot.address}</p>
-            {spot.phone && <p className="mt-1 text-xs text-gray-400">{spot.phone}</p>}
-            <div className="mt-4 flex flex-wrap gap-4 text-sm font-semibold">
-              <Link to={`/spots/${spot.id}/edit`} className="text-brand hover:text-brand-dark">
-                {t('Common.edit')}
-              </Link>
-              <Link to={`/spots/${spot.id}/invite`} className="text-brand hover:text-brand-dark">
-                {t('Spots.inviteAdmin')}
-              </Link>
-              <Link to={`/orders?spot=${spot.id}`} className="text-brand hover:text-brand-dark">
-                {t('Spots.orderHistory')}
-              </Link>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
-    </div>
-  );
-}
 
-function FilterChip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-        active
-          ? 'bg-brand text-white'
-          : 'border border-gray-300 text-gray-600 hover:border-gray-400'
-      }`}
-    >
-      {children}
-    </button>
+      {activating && <ActivationChecklist spot={activating} onClose={() => setActivating(null)} />}
+      {deactivating && (
+        <ConfirmDialog
+          title={t('Spots.deactivateTitle', { name: deactivating.name })}
+          body={t('Spots.deactivateBody')}
+          confirmLabel={t('Spots.deactivate')}
+          tone="danger"
+          busy={saving}
+          error={deactivateError}
+          onCancel={() => setDeactivating(null)}
+          onConfirm={() => void deactivate()}
+        />
+      )}
+    </>
   );
 }

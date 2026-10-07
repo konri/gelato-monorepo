@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:graphql": "node scripts/check-graphql.ts",
+    "smoke": "node scripts/smoke.ts"
   },
   "dependencies": {
     "@apollo/client": "^4.2.0",

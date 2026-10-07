@@ -12,16 +12,20 @@ export type SpotOrder = {
   id: string;
   orderNumber: string;
   status: string;
+  fulfillmentType: string;
   subtotal: number;
   deliveryFee: number;
   total: number;
   paymentStatus: string;
-  deliveryAddress: string;
+  deliveryAddress?: string | null;
   customerName?: string | null;
   customerPhone?: string | null;
   courierName?: string | null;
   createdAt: string;
   deliveredAt?: string | null;
+  collectedAt?: string | null;
+  terminatedAt?: string | null;
+  terminationReason?: string | null;
   items: OrderItem[];
 };
 
@@ -31,6 +35,7 @@ export const SPOT_ORDERS = gql`
       id
       orderNumber
       status
+      fulfillmentType
       subtotal
       deliveryFee
       total
@@ -41,6 +46,9 @@ export const SPOT_ORDERS = gql`
       courierName
       createdAt
       deliveredAt
+      collectedAt
+      terminatedAt
+      terminationReason
       items {
         id
         quantity

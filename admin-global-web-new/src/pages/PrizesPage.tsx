@@ -1,292 +1,222 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useTranslation } from 'react-i18next';
+import { useBrandScope } from '../brand/BrandScope';
 import {
-  PRIZES,
-  CREATE_PRIZE,
-  UPDATE_PRIZE,
+  ADMIN_PRIZES,
   DELETE_PRIZE,
+  UPDATE_PRIZE,
+  prizeStatus,
   type Prize,
+  type PrizeStatus,
 } from '../graphql/prizes';
-import { API_ORIGIN, ACCESS_TOKEN_KEY } from '../lib/config';
-import i18n from '../translations';
+import { errorText } from '../lib/errors';
+import { useNow } from '../lib/useNow';
+import { RewardCard } from '../components/rewards/RewardCard';
+import { RewardModal } from '../components/rewards/RewardModal';
+import { PageHeader } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { FilterChip } from '../components/ui/FilterChip';
+import { EmptyState } from '../components/ui/EmptyState';
+import { Alert } from '../components/ui/Alert';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { FullPageSpinner } from '../components/ui/FullPageSpinner';
 
-const input =
-  'w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-brand focus:ring-1 focus:ring-brand';
-const label = 'block text-sm font-medium text-gray-700 mb-1';
+type Filter = 'ALL' | PrizeStatus;
+const FILTERS: Filter[] = ['ALL', 'ACTIVE', 'DISABLED', 'ARCHIVED'];
 
-async function uploadPrizeImage(prizeId: string, file: File): Promise<string> {
-  const body = new FormData();
-  body.append('image', file);
-  const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-  const res = await fetch(`${API_ORIGIN}/upload/prize/${prizeId}`, {
-    method: 'POST',
-    headers: token ? { authorization: `Bearer ${token}` } : {},
-    body,
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || i18n.t('Prizes.imageUploadFailed'));
-  }
-  const data = await res.json();
-  return data.imageUrl;
-}
-
+/**
+ * Rewards of the brand (BRANDS_SPEC §3.3): every reward incl. disabled and
+ * archived ones, filters, create / edit, enable / disable, and Delete
+ * (never claimed) or Archive (claimed before; claimed codes stay redeemable).
+ */
 export function PrizesPage() {
   const { t } = useTranslation();
-  const { data, loading } = useQuery<{ prizes: Prize[] }>(PRIZES, {
+  const { brandId, brand, brandActive } = useBrandScope();
+  const now = useNow();
+  const { data, loading, error, refetch } = useQuery<{ brandPrizes: Prize[] }>(ADMIN_PRIZES, {
+    variables: { brandId, includeArchived: true },
     fetchPolicy: 'cache-and-network',
   });
-  const [editing, setEditing] = useState<Prize | null>(null);
-  const [creating, setCreating] = useState(false);
+  const [updatePrize] = useMutation<{ updatePrize: Prize }>(UPDATE_PRIZE, { refetchQueries: ['AdminBrand'] });
+  const [deletePrize] = useMutation(DELETE_PRIZE, { refetchQueries: ['AdminBrand'] });
 
-  const prizes = data?.prizes ?? [];
+  const [filter, setFilter] = useState<Filter>('ALL');
+  const [modal, setModal] = useState<{ prizeId: string | null } | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<Prize | null>(null);
+  const [removeError, setRemoveError] = useState<string | null>(null);
+  const [removing, setRemoving] = useState(false);
+  const [rowBusy, setRowBusy] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  return (
-    <div className="mx-auto w-full max-w-4xl p-6 sm:p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('Prizes.title')}</h1>
-          <p className="text-sm text-gray-500">{t('Prizes.subtitle')}</p>
-        </div>
-        <button
-          onClick={() => setCreating(true)}
-          className="rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark"
-        >
-          {t('Prizes.createPrize')}
-        </button>
-      </div>
+  const prizes = useMemo(() => data?.brandPrizes ?? [], [data]);
+  const counts = useMemo(() => {
+    const c: Record<Filter, number> = { ALL: prizes.length, ACTIVE: 0, DISABLED: 0, ARCHIVED: 0 };
+    for (const p of prizes) c[prizeStatus(p)]++;
+    return c;
+  }, [prizes]);
+  const visible = useMemo(() => {
+    const order: Record<PrizeStatus, number> = { ACTIVE: 0, DISABLED: 1, ARCHIVED: 2 };
+    return prizes
+      .filter((p) => filter === 'ALL' || prizeStatus(p) === filter)
+      .sort((a, b) => order[prizeStatus(a)] - order[prizeStatus(b)] || a.pointsCost - b.pointsCost);
+  }, [prizes, filter]);
+  const editing = modal?.prizeId ? prizes.find((p) => p.id === modal.prizeId) ?? null : null;
 
-      {loading && !data && <p className="text-sm text-gray-500">{t('Common.loading')}</p>}
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {prizes.map((p) => (
-          <PrizeCard key={p.id} prize={p} onEdit={() => setEditing(p)} />
-        ))}
-        {!loading && prizes.length === 0 && (
-          <div className="col-span-full rounded-xl border border-dashed border-gray-300 p-10 text-center text-gray-500">
-            {t('Prizes.noPrizesYet')}
-          </div>
-        )}
-      </div>
-
-      {(creating || editing) && (
-        <PrizeModal
-          prize={editing}
-          onClose={() => {
-            setCreating(false);
-            setEditing(null);
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
-function PrizeCard({ prize, onEdit }: { prize: Prize; onEdit: () => void }) {
-  const { t } = useTranslation();
-  const [updatePrize] = useMutation(UPDATE_PRIZE, { refetchQueries: [{ query: PRIZES }] });
-
-  const toggle = () =>
-    updatePrize({ variables: { id: prize.id, isActive: !prize.isActive } });
-
-  return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-      <div className="relative h-36 bg-gray-100">
-        {prize.imageUrl ? (
-          <img src={prize.imageUrl} alt={prize.title} className="h-full w-full object-cover" />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-4xl">🎁</div>
-        )}
-        <span
-          className={`absolute right-2 top-2 rounded-full px-2.5 py-1 text-xs font-semibold ${
-            prize.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'
-          }`}
-        >
-          {prize.isActive ? t('Common.active') : t('Common.disabled')}
-        </span>
-      </div>
-      <div className="p-4">
-        <p className="font-semibold text-gray-900">{prize.title}</p>
-        <p className="mt-0.5 text-sm text-brand">{t('Prizes.points', { count: prize.pointsCost })}</p>
-        <p className="mt-1 text-xs text-gray-500">
-          {prize.quantity != null
-            ? t('Prizes.claimedOf', { claimed: prize.claimed, quantity: prize.quantity })
-            : t('Prizes.claimed', { claimed: prize.claimed })}
-        </p>
-        <div className="mt-3 flex gap-2">
-          <button
-            onClick={onEdit}
-            className="flex-1 rounded-lg border border-gray-300 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-          >
-            {t('Common.edit')}
-          </button>
-          <button
-            onClick={toggle}
-            className={`flex-1 rounded-lg py-2 text-xs font-semibold ${
-              prize.isActive
-                ? 'border border-gray-300 text-gray-700 hover:bg-gray-50'
-                : 'bg-brand text-white hover:bg-brand-dark'
-            }`}
-          >
-            {prize.isActive ? t('Common.disable') : t('Common.enable')}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PrizeModal({ prize, onClose }: { prize: Prize | null; onClose: () => void }) {
-  const { t } = useTranslation();
-  const isEdit = !!prize;
-  const [createPrize] = useMutation<{ createPrize: { id: string } }>(CREATE_PRIZE);
-  const [updatePrize] = useMutation(UPDATE_PRIZE);
-  const [deletePrize] = useMutation(DELETE_PRIZE, { refetchQueries: [{ query: PRIZES }] });
-  const refetch = { refetchQueries: [{ query: PRIZES }] };
-
-  const [form, setForm] = useState({
-    title: prize?.title ?? '',
-    description: prize?.description ?? '',
-    pointsCost: String(prize?.pointsCost ?? ''),
-    quantity: prize?.quantity != null ? String(prize.quantity) : '',
-  });
-  const [file, setFile] = useState<File | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    setError(null);
+  const toggle = async (prize: Prize) => {
+    setActionError(null);
+    setNotice(null);
+    setRowBusy(prize.id);
     try {
-      const vars = {
-        title: form.title,
-        description: form.description || null,
-        pointsCost: parseInt(form.pointsCost, 10),
-        quantity: form.quantity ? parseInt(form.quantity, 10) : null,
-      };
-      let prizeId = prize?.id;
-      if (isEdit) {
-        await updatePrize({ variables: { id: prizeId, ...vars }, ...refetch });
-      } else {
-        const res = await createPrize({ variables: { ...vars, isActive: true }, ...refetch });
-        prizeId = res.data?.createPrize.id;
-      }
-      // Upload image after we have a prize id.
-      if (file && prizeId) {
-        await uploadPrizeImage(prizeId, file);
-      }
-      onClose();
+      await updatePrize({ variables: { id: prize.id, isActive: !prize.isActive } });
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('Prizes.failedSave'));
-      setBusy(false);
+      setActionError(errorText(err));
+    } finally {
+      setRowBusy(null);
     }
   };
 
   const remove = async () => {
-    if (!prize) return;
-    if (!confirm(t('Prizes.confirmDelete', { title: prize.title }))) return;
-    setBusy(true);
+    if (!removeTarget) return;
+    setRemoveError(null);
+    setRemoving(true);
     try {
-      await deletePrize({ variables: { id: prize.id } });
-      onClose();
+      await deletePrize({ variables: { id: removeTarget.id } });
+      // The server archives a reward that was ever claimed, so look at the result.
+      const res = await refetch();
+      const stillThere = res.data?.brandPrizes.some((p) => p.id === removeTarget.id);
+      setNotice(
+        stillThere
+          ? t('Prizes.archivedNotice', { title: removeTarget.title })
+          : t('Prizes.deletedNotice', { title: removeTarget.title }),
+      );
+      setRemoveTarget(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('Prizes.failedDelete'));
-      setBusy(false);
+      setRemoveError(errorText(err));
+    } finally {
+      setRemoving(false);
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
-        <h2 className="mb-4 text-lg font-bold text-gray-900">
-          {isEdit ? t('Prizes.editPrize') : t('Prizes.createPrizeTitle')}
-        </h2>
-        {error && (
-          <div className="mb-3 rounded-lg bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>
-        )}
-        <form onSubmit={submit} className="space-y-3">
-          <div>
-            <label className={label}>{t('Prizes.prizeTitle')}</label>
-            <input
-              className={input}
-              value={form.title}
-              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              required
-            />
-          </div>
-          <div>
-            <label className={label}>{t('Common.description')}</label>
-            <textarea
-              className={input}
-              rows={3}
-              value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={label}>{t('Prizes.pointsCost')}</label>
-              <input
-                className={input}
-                type="number"
-                value={form.pointsCost}
-                onChange={(e) => setForm((f) => ({ ...f, pointsCost: e.target.value }))}
-                required
-              />
-            </div>
-            <div>
-              <label className={label}>{t('Prizes.quantityInfinity')}</label>
-              <input
-                className={input}
-                type="number"
-                value={form.quantity}
-                onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))}
-              />
-            </div>
-          </div>
-          <div>
-            <label className={label}>{t('Prizes.photo')}</label>
-            {prize?.imageUrl && !file && (
-              <img src={prize.imageUrl} alt="" className="mb-2 h-24 w-full rounded-lg object-cover" />
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-light file:px-3 file:py-2 file:text-sm file:font-semibold file:text-brand"
-            />
-          </div>
+  const createButton = (
+    <Button
+      disabled={!brandActive}
+      title={!brandActive ? t('Prizes.createBlockedInactive') : undefined}
+      onClick={() => {
+        setNotice(null);
+        setModal({ prizeId: null });
+      }}
+    >
+      {t('Prizes.create')}
+    </Button>
+  );
 
-          <div className="flex gap-3 pt-2">
-            {isEdit && (
-              <button
-                type="button"
-                onClick={remove}
-                disabled={busy}
-                className="rounded-lg border border-red-300 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
-              >
-                {t('Common.delete')}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-            >
-              {t('Common.cancel')}
+  return (
+    <div className="mx-auto w-full max-w-6xl p-6 sm:p-8">
+      <PageHeader title={t('Prizes.title')} subtitle={t('Prizes.subtitle', { brand: brand.name })} actions={createButton} />
+
+      {!brandActive && (
+        <Alert tone="warning" className="mb-4">
+          {t('Prizes.createBlockedInactive')}
+        </Alert>
+      )}
+      {notice && (
+        <Alert
+          tone="success"
+          className="mb-4"
+          action={
+            <button type="button" className="text-xs font-semibold underline" onClick={() => setNotice(null)}>
+              {t('Common.close')}
             </button>
-            <button
-              disabled={busy}
-              className="flex-1 rounded-lg bg-brand py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
-            >
-              {busy ? t('Common.saving') : isEdit ? t('Common.save') : t('Common.create')}
-            </button>
-          </div>
-        </form>
+          }
+        >
+          {notice}
+        </Alert>
+      )}
+      {actionError && (
+        <Alert tone="error" className="mb-4">
+          {actionError}
+        </Alert>
+      )}
+      {error && (
+        <Alert
+          tone="error"
+          className="mb-4"
+          action={
+            <Button size="sm" variant="secondary" onClick={() => void refetch()}>
+              {t('Common.retry')}
+            </Button>
+          }
+        >
+          {errorText(error)}
+        </Alert>
+      )}
+
+      {prizes.length > 0 && (
+        <div className="mb-5 flex flex-wrap gap-2">
+          {FILTERS.map((f) => (
+            <FilterChip key={f} active={filter === f} onClick={() => setFilter(f)} count={counts[f]}>
+              {t(`Prizes.filter_${f}`)}
+            </FilterChip>
+          ))}
+        </div>
+      )}
+
+      {loading && !data && <FullPageSpinner inline />}
+      {data && prizes.length === 0 && (
+        <EmptyState
+          title={t('Prizes.empty')}
+          description={t('Prizes.emptyHint')}
+          action={brandActive ? createButton : undefined}
+        />
+      )}
+      {prizes.length > 0 && visible.length === 0 && <EmptyState title={t('Prizes.noMatch')} />}
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {visible.map((p) => (
+          <RewardCard
+            key={p.id}
+            prize={p}
+            now={now}
+            busy={rowBusy === p.id}
+            onEdit={() => {
+              setNotice(null);
+              setModal({ prizeId: p.id });
+            }}
+            onToggle={() => void toggle(p)}
+            onRemove={() => {
+              setRemoveError(null);
+              setRemoveTarget(p);
+            }}
+          />
+        ))}
       </div>
+
+      {modal && (modal.prizeId === null || editing) && (
+        <RewardModal
+          brandId={brandId}
+          prize={editing}
+          onClose={() => setModal(null)}
+          onSaved={(message) => setNotice(message)}
+        />
+      )}
+      {removeTarget && (
+        <ConfirmDialog
+          title={
+            removeTarget.claimed > 0
+              ? t('Prizes.archiveTitle', { title: removeTarget.title })
+              : t('Prizes.deleteTitle', { title: removeTarget.title })
+          }
+          body={removeTarget.claimed > 0 ? t('Prizes.archiveBody') : t('Prizes.deleteBody')}
+          confirmLabel={removeTarget.claimed > 0 ? t('Prizes.archive') : t('Common.delete')}
+          tone="danger"
+          busy={removing}
+          error={removeError}
+          onCancel={() => setRemoveTarget(null)}
+          onConfirm={() => void remove()}
+        />
+      )}
     </div>
   );
 }

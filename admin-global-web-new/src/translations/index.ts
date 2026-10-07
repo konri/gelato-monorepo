@@ -20,7 +20,6 @@ function initialLanguage(): Language {
   return 'en'
 }
 
-// eslint-disable-next-line import/no-named-as-default-member
 i18n.use(initReactI18next).init({
   resources: Object.entries(resources).reduce(
     (acc, [key, value]) => ({ ...acc, [key]: { translation: value } }),
