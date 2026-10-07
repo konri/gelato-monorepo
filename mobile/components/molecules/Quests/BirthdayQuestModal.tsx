@@ -99,8 +99,11 @@ export const BirthdayQuestModal = ({ visible, onClose, onCompleted }: BirthdayQu
       ]}
     >
       <View className="w-full pt-2 pb-4">
-        <Typography variant="body-small-regular" className="text-gray-700 mb-4">
+        <Typography variant="body-small-regular" className="text-gray-700 mb-2">
           {t('Tasks.birthdayModalDescription')}
+        </Typography>
+        <Typography variant="body-small-regular" className="text-gray-600 mb-4">
+          {t('Tasks.birthdayNote30')}
         </Typography>
 
         {/* Tappable field — opens the native picker */}

@@ -8,6 +8,7 @@ import { Typography } from '@/components/atoms/Typography';
 import { useCities } from '@/hooks/useTastes';
 import { updatePreferredCity } from '@repo/api-client';
 import type { City } from '@repo/api-client';
+import { emitCityChanged } from '@/shared/api-client/src/loyaltyEvents';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
 
 interface CitySelectorModalProps {
@@ -43,6 +44,7 @@ export const CitySelectorModal = ({
         throw new Error(result.error?.message || t('Common.saveDataFailed'));
       }
       await AsyncStorage.setItem('selectedCity', city);
+      emitCityChanged();
       onSelected(city);
       onClose();
     } catch (error) {

@@ -1,9 +1,43 @@
 import NotificationService from '@/services/notificationService';
+import { appVersion, CLIENT_APP } from '@/shared/api-client/src/clientInfo';
 import { executeGraphQLQuery } from '@/shared/api-client/src/graphql/client';
-import { REGISTER_DEVICE } from '@/shared/api-client/src/graphql/mutations/notifications/registerDevice';
+import {
+  REGISTER_DEVICE,
+  REMOVE_DEVICE,
+} from '@/shared/api-client/src/graphql/mutations/notifications/registerDevice';
 import { logger } from '@/utils/logger';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
+
+const UNREGISTER_TIMEOUT_MS = 3000;
+
+/**
+ * Logout: stop this device's pushes for the user who is leaving, BEFORE the
+ * tokens are cleared (the call needs them). Best effort and bounded: offline
+ * or a slow server never blocks the logout. No token refresh here (a late
+ * refresh would write the leaving user's token back after the logout); with an
+ * expired token the row stays until this device registers for the next user,
+ * which deactivates it on the server.
+ */
+export async function unregisterPushDevice(): Promise<void> {
+  try {
+    const token = await AsyncStorage.getItem('access_token');
+    if (!token) return;
+    const deviceId = await NotificationService.getDeviceId();
+    const call = executeGraphQLQuery(REMOVE_DEVICE, {
+      variables: { deviceId },
+      token,
+      silent: true,
+      noAuthRecovery: true,
+    });
+    await Promise.race([
+      call,
+      new Promise((resolve) => setTimeout(resolve, UNREGISTER_TIMEOUT_MS)),
+    ]);
+  } catch (error) {
+    logger.warn('Push unregister on logout failed', error);
+  }
+}
 
 export const useNotificationRegistration = () => {
   const [isRegistered, setIsRegistered] = useState(false);
@@ -22,6 +56,8 @@ export const useNotificationRegistration = () => {
           token: fcmToken,
           platform: deviceInfo.platform,
           deviceId: deviceInfo.deviceId,
+          clientApp: CLIENT_APP,
+          appVersion: appVersion(),
         },
         token,
       });

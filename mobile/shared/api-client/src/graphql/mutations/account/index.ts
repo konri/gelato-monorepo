@@ -1,3 +1,5 @@
+import { clearLoyaltyStorageOnLogout, readStoredUserId } from '@/utils/loyaltyStorage';
+import { notifyLoggedOut } from '../../../session';
 import { executeGraphQLQuery } from '../../client';
 import { ApolloServerConfig, GraphQLResult } from '../../types';
 import { DELETE_ACCOUNT_MUTATION, SEND_CONTACT_MESSAGE_MUTATION } from './account';
@@ -8,9 +10,15 @@ export type SendContactMessageResponse = { sendContactMessage: boolean };
 export const deleteAccount = async (
   options: ApolloServerConfig = {},
 ): Promise<GraphQLResult<boolean>> => {
+  const uid = await readStoredUserId();
   const result = await executeGraphQLQuery<DeleteAccountResponse>(DELETE_ACCOUNT_MUTATION, {
     ...options,
   });
+  if (result.success && result.data?.deleteAccount) {
+    // Everything this device kept for the account goes (brand choice included).
+    await clearLoyaltyStorageOnLogout(uid, 'deleted');
+    notifyLoggedOut('deleted');
+  }
   return { ...result, data: result.data ? result.data.deleteAccount : null };
 };
 

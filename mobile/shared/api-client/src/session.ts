@@ -1,3 +1,4 @@
+import { readStoredUserId, removeSnapshot } from '@/utils/loyaltyStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
@@ -34,6 +35,10 @@ export const handleSessionExpired = async (): Promise<void> => {
   if (expiring) return;
   expiring = true;
   try {
+    // The overview snapshot goes with the session; the last card stays so
+    // /welcome can still show it ("Show my card", BRANDS_SPEC §5.4).
+    const uid = await readStoredUserId();
+    if (uid) await removeSnapshot(uid);
     await AsyncStorage.multiRemove(AUTH_KEYS);
   } catch {
     /* ignore */
@@ -49,4 +54,26 @@ export const handleSessionExpired = async (): Promise<void> => {
   setTimeout(() => {
     expiring = false;
   }, 3000);
+};
+
+/**
+ * Explicit logout / account deletion (as opposed to an expired session).
+ * Emitted by `clearAuthState`; per-user state (BrandProvider) resets on it.
+ */
+type LoggedOutListener = (reason: 'logout' | 'deleted') => void;
+const loggedOutListeners = new Set<LoggedOutListener>();
+
+export const onLoggedOut = (listener: LoggedOutListener): (() => void) => {
+  loggedOutListeners.add(listener);
+  return () => loggedOutListeners.delete(listener);
+};
+
+export const notifyLoggedOut = (reason: 'logout' | 'deleted' = 'logout'): void => {
+  loggedOutListeners.forEach((l) => {
+    try {
+      l(reason);
+    } catch {
+      /* ignore */
+    }
+  });
 };

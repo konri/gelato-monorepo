@@ -1,4 +1,6 @@
 import { config } from '@/config';
+import { clientHeaders } from '../clientInfo';
+import { emitUpgradeRequired, upgradeInfoFrom } from '../upgradeEvents';
 import { safeGetItem, safeSetItem } from '../utils/safeAsyncStorage';
 
 // Inlined as a string (rather than a gql document) so we can POST it via raw
@@ -27,7 +29,7 @@ export const refreshAccessToken = async (apiUrl: string = config.API_URL): Promi
 
       const response = await fetch(`${apiUrl}/graphql`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...clientHeaders() },
         body: JSON.stringify({
           query: REFRESH_TOKEN_MUTATION,
           variables: { refreshToken },
@@ -35,6 +37,10 @@ export const refreshAccessToken = async (apiUrl: string = config.API_URL): Promi
       });
 
       const json = await response.json();
+      const upgrade = (json?.errors as { extensions?: Record<string, unknown> }[] | undefined)?.find(
+        (e) => e?.extensions?.code === 'UPGRADE_REQUIRED',
+      );
+      if (upgrade) emitUpgradeRequired(upgradeInfoFrom(upgrade.extensions));
       const newToken: string | undefined = json?.data?.refreshToken;
 
       if (!newToken) return null;

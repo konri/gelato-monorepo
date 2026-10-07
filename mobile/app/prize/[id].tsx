@@ -1,134 +1,206 @@
+import { BrandLogo } from '@/components/atoms/BrandLogo';
 import { Image } from '@/components/atoms/Image';
-import { usePointBalance } from '@/hooks/usePointBalance';
-import { usePrizeDetail, useRedeemPrize } from '@/hooks/usePrizes';
-import type { LocalizedText } from '@repo/api-client';
+import { BackHeader, COLORS, EmptyState, LText, PrimaryButton } from '@/components/molecules/Loyalty/ui';
+import { ConfirmRedeemSheet } from '@/components/molecules/Rewards/ConfirmRedeemSheet';
+import { rewardStatus } from '@/components/molecules/Rewards/RewardRow';
+import { useBrands } from '@/hooks/useBrands';
+import { brandRewardsKey, refreshQuery, useBrandBalance, usePrizeDetail } from '@/hooks/useRewards';
+import type { UserPrize } from '@/shared/api-client/src/graphql/queries/prizes/types';
+import { pointsText } from '@/utils/formatPoints';
+import { localizedText } from '@/utils/localizedText';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+/**
+ * Reward detail (BRANDS_SPEC §5.5). The brand comes from the reward and the
+ * points from THAT brand's wallet (`useBrandBalance(prize.brandId)`), never
+ * from the selected brand: a deep link to another brand's reward stays right.
+ * Opening a reward never changes the persisted brand selection.
+ */
 export default function PrizeDetailScreen() {
   const insets = useSafeAreaInsets();
   const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { data: prize, loading, error, refetch } = usePrizeDetail(id ?? null);
+  const balance = useBrandBalance(prize?.brandId ?? null);
+  const { refresh } = useBrands();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const { data: prize, loading } = usePrizeDetail(id ?? null);
-  const { data: balance, refetch: refetchBalance } = usePointBalance();
-  const { redeem, redeeming } = useRedeemPrize();
-
-  const points = balance?.availablePoints ?? 0;
-
-  const localized = (value: LocalizedText | undefined, fallback?: string | null): string => {
-    if (!value) return fallback ?? '';
-    if (typeof value === 'string') return value;
-    const lang = i18n.language.split('-')[0] as 'pl' | 'en' | 'ua';
-    return value[lang] || value.en || fallback || '';
-  };
-
-  if (loading) {
+  if (loading && !prize) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
-        <ActivityIndicator size="large" color="#EC2828" />
+      <View className="flex-1 bg-white">
+        <BackHeader topInset={insets.top} />
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color={COLORS.accent} />
+        </View>
       </View>
     );
   }
+
   if (!prize) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
-        <Text className="font-urbanist text-text-secondary">{t('Common.error')}</Text>
+      <View className="flex-1 bg-gray-50">
+        <BackHeader topInset={insets.top} />
+        {error ? (
+          <EmptyState
+            icon="cloud-offline-outline"
+            title={t('Prizes.loadFailed')}
+            action={{ label: t('Loyalty.retry'), onPress: () => void refetch(), secondary: true }}
+          />
+        ) : (
+          <EmptyState icon="gift-outline" title={t('Prizes.noLongerAvailable')} />
+        )}
       </View>
     );
   }
 
-  const title = localized(prize.titleLocal, prize.title);
-  const description = localized(prize.descriptionLocal, prize.description);
-  const affordable = points >= prize.pointsCost;
-  const outOfStock = prize.quantity != null && prize.claimed >= prize.quantity;
-  const pointsLeft = points - prize.pointsCost;
-  const canRedeem = affordable && !outOfStock && !redeeming;
+  const lang = i18n.language;
+  const title = localizedText(prize.titleLocal, lang) || prize.title;
+  const description = localizedText(prize.descriptionLocal, lang) || prize.description || '';
+  const brandName = prize.brand.name;
+  const brandPaused = !prize.brand.isActive || balance.paused;
+  const noLonger = !!prize.archivedAt || !prize.isActive || brandPaused;
+  const status = rewardStatus(prize, balance.points, brandPaused);
+  const canClaim = status.kind === 'affordable' && !balance.loading;
 
-  const onActivate = async () => {
-    const res = await redeem(prize.id);
-    if (res.success && res.data) {
-      await refetchBalance();
-      Alert.alert(t('Prizes.successTitle'), t('Prizes.successBody'), [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
-    } else {
-      Alert.alert(t('Prizes.redeemFailed'), res.error?.message ?? '');
-    }
+  const onClaimed = (claimed: UserPrize) => {
+    setConfirmOpen(false);
+    refreshQuery(brandRewardsKey(prize.brandId));
+    void refresh({ maxAgeMs: 0 });
+    router.replace(`/prize/mine/${claimed.id}?fresh=1` as never);
+  };
+
+  const onStale = () => {
+    refreshQuery(brandRewardsKey(prize.brandId));
+    void refetch();
+    void refresh({ maxAgeMs: 0 });
   };
 
   return (
     <View className="flex-1 bg-white">
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 140 }}>
-        <View className="relative">
-          <Image url={prize.imageUrl ?? undefined} className="w-full h-72" resizeMode="cover" fallbackLogoSize={72} />
-          <Pressable
-            onPress={() => router.back()}
-            className="absolute left-4 bg-white/90 rounded-full p-2"
-            style={{ top: insets.top + 8 }}
-            hitSlop={8}
-          >
-            <Ionicons name="arrow-back" size={22} color="#212121" />
-          </Pressable>
-        </View>
+      <BackHeader topInset={insets.top} />
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
+        <Image
+          url={prize.imageUrl ?? undefined}
+          resizeMode="cover"
+          style={{ width: '100%', height: 220 }}
+          fallbackLogoSize={72}
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+        />
 
-        <View className="px-6 pt-5">
-          <Text className="text-2xl font-urbanist-bold text-text-primary">{title}</Text>
-          <View className="flex-row items-center mt-2">
-            <View className="bg-accent/10 rounded-full px-3 py-1">
-              <Text className="text-sm font-urbanist-bold text-accent">
-                {t('Prizes.cost', { count: prize.pointsCost })}
-              </Text>
+        <View className="px-4 pt-4">
+          <LText size={28} lineHeight={34} weight="700" accessibilityRole="header" max={1.3}>
+            {title}
+          </LText>
+          <LText size={22} weight="700" color={COLORS.red} className="mt-1" max={1.3}>
+            {pointsText(t, prize.pointsCost)}
+          </LText>
+
+          <Pressable
+            onPress={() => router.push(`/brand/${prize.brandId}` as never)}
+            accessibilityRole="button"
+            accessibilityLabel={t('Prizes.validAtBrand', { brand: brandName })}
+            className="mt-3 flex-row items-center rounded-2xl border border-gray-200 bg-white px-3 active:opacity-80"
+            style={{ minHeight: 64 }}
+          >
+            <BrandLogo brand={prize.brand} size={40} />
+            <LText size={18} weight="600" className="ml-3 flex-1">
+              {t('Prizes.validAtBrand', { brand: brandName })}
+            </LText>
+            <Ionicons name="chevron-forward" size={22} color={COLORS.secondary} />
+          </Pressable>
+
+          {noLonger ? (
+            <View className="mt-3 flex-row items-start rounded-2xl bg-gray-100 p-3">
+              <Ionicons name="remove-circle-outline" size={22} color={COLORS.secondary} style={{ marginTop: 1 }} />
+              <LText size={18} weight="600" color={COLORS.secondary} className="ml-2 flex-1">
+                {brandPaused
+                  ? t('Brand.pausedTitle', { brand: brandName })
+                  : t('Prizes.noLongerAvailable')}
+              </LText>
             </View>
-            {outOfStock ? (
-              <Text className="ml-3 font-urbanist text-text-tertiary text-sm">
-                {t('Prizes.outOfStock')}
-              </Text>
-            ) : null}
-          </View>
+          ) : (
+            <View className="mt-3 rounded-2xl bg-gray-50 p-3">
+              <LText size={18} weight="600">
+                {balance.loading
+                  ? t('Common.loading')
+                  : t('Prizes.youHave', { pointsText: pointsText(t, balance.points), brand: brandName })}
+              </LText>
+              {status.kind === 'missing' ? (
+                <View className="mt-2">
+                  <View className="h-3 overflow-hidden rounded-full bg-gray-200">
+                    <View
+                      className="h-3 rounded-full"
+                      style={{ width: `${Math.round(status.progress * 100)}%`, backgroundColor: COLORS.accent }}
+                    />
+                  </View>
+                  <LText size={18} color="#374151" className="mt-1">
+                    {t('Prizes.morePoints', { count: status.missing })}
+                  </LText>
+                </View>
+              ) : status.kind === 'unavailable' ? (
+                <LText size={18} color={COLORS.secondary} className="mt-1">
+                  {t('Prizes.notAvailableNow')}
+                </LText>
+              ) : null}
+            </View>
+          )}
 
           {description ? (
-            <Text className="text-base font-urbanist text-text-secondary mt-4 leading-6">
+            <LText size={18} lineHeight={26} color="#374151" className="mt-4">
               {description}
-            </Text>
+            </LText>
+          ) : null}
+
+          <LText size={16} color={COLORS.secondary} className="mt-4">
+            {t('Loyalty.ruleLine', { brand: brandName })}
+          </LText>
+          {!noLonger ? (
+            <LText size={16} color={COLORS.secondary} className="mt-2">
+              {t('Prizes.counterHint')}
+            </LText>
           ) : null}
         </View>
       </ScrollView>
 
-      {/* Activate bar */}
-      <View className="border-t border-gray-200 bg-white px-6 pt-3" style={{ paddingBottom: insets.bottom + 12 }}>
-        {/* Eligibility line */}
-        {affordable ? (
-          <Text className="text-xs font-urbanist text-text-secondary text-center mb-2">
-            {t('Prizes.pointsLeftAfter', { count: pointsLeft })}
-          </Text>
-        ) : (
-          <Text className="text-xs font-urbanist text-accent text-center mb-2">
-            {t('Prizes.needMore', { count: prize.pointsCost - points })}
-          </Text>
-        )}
-        <Pressable
-          disabled={!canRedeem}
-          className={`rounded-2xl py-4 items-center ${canRedeem ? 'bg-accent' : 'bg-gray-200'}`}
-          onPress={onActivate}
-        >
-          {redeeming ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text className={`font-urbanist-bold text-base ${canRedeem ? 'text-white' : 'text-text-tertiary'}`}>
-              {outOfStock
-                ? t('Prizes.outOfStock')
-                : affordable
-                  ? t('Prizes.activate')
-                  : t('Prizes.notEnough')}
-            </Text>
-          )}
-        </Pressable>
-      </View>
+      {noLonger ? null : (
+        <View className="border-t border-gray-200 bg-white px-4 pt-3" style={{ paddingBottom: insets.bottom + 12 }}>
+          {status.kind === 'affordable' && !balance.loading ? (
+            <LText size={16} color={COLORS.secondary} className="mb-2 text-center">
+              {t('Prizes.confirmLeft', { leftText: pointsText(t, Math.max(0, balance.points - prize.pointsCost)) })}
+            </LText>
+          ) : null}
+          <PrimaryButton
+            label={
+              balance.loading
+                ? t('Common.loading')
+                : status.kind === 'affordable'
+                  ? t('Prizes.getIt')
+                  : status.kind === 'missing'
+                    ? t('Prizes.notEnough')
+                    : t('Prizes.notAvailableNow')
+            }
+            icon={canClaim ? 'gift' : undefined}
+            disabled={!canClaim}
+            onPress={() => setConfirmOpen(true)}
+          />
+        </View>
+      )}
+
+      <ConfirmRedeemSheet
+        visible={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        reward={{ id: prize.id, title, pointsCost: prize.pointsCost }}
+        brandName={brandName}
+        points={balance.points}
+        onSuccess={onClaimed}
+        onStale={onStale}
+      />
     </View>
   );
 }

@@ -28,8 +28,11 @@ export type ApolloServerConfig = {
 
 export type GraphQLError = {
   message: string;
+  /** `extensions.code` from the server (UNAUTHENTICATED, INSUFFICIENT_POINTS, …). */
   code?: string;
   statusCode?: number;
+  /** The server's `extensions` (e.g. `{ missingPoints, brandId, brandName }`). */
+  extensions?: Record<string, unknown>;
   details?: any;
 };
 

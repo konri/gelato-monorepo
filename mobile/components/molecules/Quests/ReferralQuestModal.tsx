@@ -5,7 +5,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { Modal } from '@/components/atoms/Modal';
 import { Button } from '@/components/atoms/Button';
 import { Typography } from '@/components/atoms/Typography';
+import { COLORS, LText } from '@/components/molecules/Loyalty/ui';
+import { useBrands } from '@/hooks/useBrands';
+import { useGraphQLQuery } from '@/hooks/useGraphQLQuery';
 import { useReferralCode } from '@/hooks/useReferralCode';
+import { getMyReferralStats } from '@/shared/api-client/src/graphql/queries/referralCode/getMyReferralCode';
+import type { ReferralStats } from '@/shared/api-client/src/graphql/queries/referralCode/types';
+import { pointsText } from '@/utils/formatPoints';
 
 interface ReferralQuestModalProps {
   visible: boolean;
@@ -14,8 +20,18 @@ interface ReferralQuestModalProps {
 
 export const ReferralQuestModal = ({ visible, onClose }: ReferralQuestModalProps) => {
   const { t } = useTranslation();
-  const { data: referral, loading, error, refetch } = useReferralCode();
+  const { data: referral, loading, refetch } = useReferralCode();
+  // Loaded when the modal opens (it stays mounted under the Tasks tab).
+  const { data: stats } = useGraphQLQuery<ReferralStats>(
+    (options) =>
+      visible ? getMyReferralStats(options) : Promise.resolve({ data: null, error: null, success: true }),
+    { silent: true },
+    [visible],
+  );
+  const { wallets } = useBrands();
   const code = referral?.code ?? '';
+  // A2: both sides get the brand's own bonus after the friend's first purchase there.
+  const referralBrands = wallets.filter((w) => !w.paused && w.brand.referralBonusPoints > 0);
 
   const handleCopy = () => {
     if (!code) return;
@@ -96,25 +112,48 @@ export const ReferralQuestModal = ({ visible, onClose }: ReferralQuestModalProps
           </View>
         )}
 
-        {/* Reward rules */}
+        {/* Reward rules: the brands' own numbers, never a fixed amount (A2). */}
         <View className="w-full bg-white rounded-2xl px-4 py-3 mb-3">
-          <View className="flex-row items-start mb-3">
-            <Typography variant="body-lg-bold" className="text-red-500 mr-3">
-              +700
-            </Typography>
-            <Typography variant="body-small-regular" className="text-gray-700 flex-1">
-              {t('Tasks.referralRuleReferee')}
-            </Typography>
-          </View>
-          <View className="flex-row items-start">
-            <Typography variant="body-lg-bold" className="text-red-500 mr-3">
-              +500
-            </Typography>
-            <Typography variant="body-small-regular" className="text-gray-700 flex-1">
-              {t('Tasks.referralRuleReferrer')}
-            </Typography>
-          </View>
+          <LText size={16} color="#374151">
+            {t('Tasks.referralRuleIntro')}
+          </LText>
+          {referralBrands.length > 0 ? (
+            referralBrands.map((w) => (
+              <View key={w.brand.id} className="flex-row items-start mt-2">
+                <Ionicons name="people-outline" size={20} color={COLORS.red} style={{ marginTop: 1 }} />
+                <LText size={16} weight="600" className="ml-2 flex-1">
+                  {t('Tasks.referralRuleBrand', {
+                    brand: w.brand.name,
+                    pointsText: pointsText(t, w.brand.referralBonusPoints),
+                  })}
+                </LText>
+              </View>
+            ))
+          ) : (
+            <LText size={16} color={COLORS.secondary} className="mt-2">
+              {t('Tasks.referralRuleNone')}
+            </LText>
+          )}
         </View>
+
+        {/* My invitations */}
+        {stats && stats.totalReferrals > 0 ? (
+          <View className="w-full bg-white rounded-2xl px-4 py-3 mb-3">
+            <LText size={16} weight="700">
+              {t('Tasks.referralStatsInvited', { count: stats.totalReferrals })}
+            </LText>
+            {stats.pendingReferrals > 0 ? (
+              <LText size={16} color={COLORS.secondary} className="mt-1">
+                {t('Tasks.referralStatsPending', { count: stats.pendingReferrals })}
+              </LText>
+            ) : null}
+            {stats.earnedByBrand.map((e) => (
+              <LText key={e.brandId} size={16} weight="600" color={COLORS.green} className="mt-1">
+                {t('Tasks.referralStatsEarned', { brand: e.brandName, pointsText: pointsText(t, e.points) })}
+              </LText>
+            ))}
+          </View>
+        ) : null}
       </View>
     </Modal>
   );

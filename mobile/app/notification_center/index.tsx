@@ -32,6 +32,12 @@ const typeIcon: Record<string, keyof typeof Ionicons.glyphMap> = {
   COURIER_ASSIGNED: 'person-outline',
   COURIER_NEARBY: 'navigate-outline',
   POINTS_EARNED: 'star-outline',
+  // Loyalty events (bell `type` = kind, BRANDS_SPEC §5.6).
+  BIRTHDAY_BONUS: 'balloon-outline',
+  REFERRAL_BONUS: 'people-outline',
+  REWARD_REFUNDED: 'arrow-undo-outline',
+  REWARD_EXPIRING: 'alarm-outline',
+  REWARD_EXCHANGED: 'gift-outline',
   POINTS_REDEEMED: 'star-outline',
   PRIZE_AVAILABLE: 'gift-outline',
   QUEST_COMPLETED: 'trophy-outline',

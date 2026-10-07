@@ -3,6 +3,7 @@ import { AuthHeader } from '@/components/molecules/AuthHeader';
 import { useCities } from '@/hooks/useTastes';
 import { getLocation } from '@/services/locationService';
 import { updatePreferredCity } from '@repo/api-client';
+import { emitCityChanged } from '@/shared/api-client/src/loyaltyEvents';
 import type { City } from '@repo/api-client';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
 import { Ionicons } from '@expo/vector-icons';
@@ -73,6 +74,7 @@ export default function CitySelectScreen() {
       // Persist to the backend profile too (best-effort).
       const token = await safeGetItem('access_token');
       await updatePreferredCity({ city: name, token: token ?? undefined }).catch(() => {});
+      emitCityChanged();
     } finally {
       setSaving(false);
       router.push('/(auth)/notifications');

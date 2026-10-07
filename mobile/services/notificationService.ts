@@ -1,4 +1,6 @@
 import { logger } from '@/utils/logger';
+import { newRequestId } from '@/utils/requestId';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import messaging from '@react-native-firebase/messaging';
@@ -16,6 +18,14 @@ Notifications.setNotificationHandler({
   }),
 });
 
+/**
+ * One id per app install, kept across launches and logins. The server keys
+ * device rows on (userId, deviceId), so register and the logout's
+ * `removeFCMToken` must send the same id: `Constants.sessionId` changed on
+ * every launch and left the previous launch's row behind (review #1).
+ */
+const DEVICE_ID_KEY = 'loodly.deviceId.v1';
+
 function flattenFcmData(data: unknown): Record<string, string | undefined> {
   if (!data || typeof data !== 'object') return {};
   const out: Record<string, string | undefined> = {};
@@ -30,6 +40,7 @@ function flattenFcmData(data: unknown): Record<string, string | undefined> {
 export class NotificationService {
   private static instance: NotificationService;
   private fcmToken: string | null = null;
+  private deviceId: Promise<string> | null = null;
 
   private constructor() {}
 
@@ -112,10 +123,28 @@ export class NotificationService {
     });
   }
 
+  /** The install's device id (created once, then read from storage). */
+  getDeviceId(): Promise<string> {
+    if (!this.deviceId) {
+      this.deviceId = (async () => {
+        try {
+          const stored = await AsyncStorage.getItem(DEVICE_ID_KEY);
+          if (stored) return stored;
+          const id = `${Platform.OS}-${newRequestId()}`;
+          await AsyncStorage.setItem(DEVICE_ID_KEY, id);
+          return id;
+        } catch {
+          return Constants.sessionId || 'unknown';
+        }
+      })();
+    }
+    return this.deviceId;
+  }
+
   async getDeviceInfo() {
     return {
       platform: Platform.OS,
-      deviceId: Constants.sessionId || 'unknown',
+      deviceId: await this.getDeviceId(),
       deviceName: Constants.deviceName || 'Unknown Device',
     };
   }

@@ -1,23 +1,17 @@
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import { View, Text, Pressable, ScrollView, StatusBar, RefreshControl, useWindowDimensions } from 'react-native';
+import { View, Text, Pressable, ScrollView, StatusBar, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useIsFocused } from '@react-navigation/native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import * as Haptics from 'expo-haptics';
-import ConfettiCannon from 'react-native-confetti-cannon';
 import Lockup from '@/assets/images/loodly_lockup.svg';
-import { AccountBalanceCard } from '@/components/molecules/AccountBalanceCard';
+import { MyCard } from '@/components/molecules/Loyalty/MyCard';
 import { NewsFeed, NewsFeedHandle } from '@/components/molecules/NewsFeed';
 import { TasksTabContent } from '@/components/molecules/Quests/TasksTabContent';
-import { usePointBalance } from '@/hooks/usePointBalance';
-import { useWhoAmI } from '@/hooks/useWhoAmI';
-import { useMyOrders } from '@/hooks/useOrders';
-import { usePrizes } from '@/hooks/usePrizes';
+import { useBrandContext } from '@/hooks/useBrands';
+import { useReturnToMyCardOnResume } from '@/hooks/useReturnToMyCard';
 import { useUnreadNotificationsCount } from '@/hooks/useUnreadNotificationsCount';
 import { TAB_BAR_TOTAL_HEIGHT } from '@/constants/tabBarStyles';
-import QRCodeSVG from 'react-native-qrcode-svg';
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 const Tab = createMaterialTopTabNavigator();
@@ -61,177 +55,9 @@ function NewsTab() {
   );
 }
 
-// Account Tab Component
+// My card (default tab, BRANDS_SPEC §5.4)
 function AccountTab() {
-  const { t } = useTranslation();
-  const { width } = useWindowDimensions();
-  const isFocused = useIsFocused();
-  const { data: pointBalance, refetch: refetchPoints } = usePointBalance();
-  const { data: me, refetch: refetchMe } = useWhoAmI();
-  const { data: myOrders, refetch: refetchOrders } = useMyOrders();
-  const { data: prizes, refetch: refetchPrizes } = usePrizes();
-  const [refreshing, setRefreshing] = useState(false);
-  const [confettiKey, setConfettiKey] = useState(0);
-
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await Promise.all([refetchPoints(), refetchMe(), refetchOrders(), refetchPrizes()]);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [refetchPoints, refetchMe, refetchOrders, refetchPrizes]);
-
-  useFocusEffect(
-    useCallback(() => {
-      void refetchPoints();
-    }, [refetchPoints]),
-  );
-
-  const handlePointsGain = useCallback((delta: number) => {
-    if (delta <= 0) return;
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setConfettiKey((k) => k + 1);
-  }, []);
-
-  // Real user identity. The QR encodes the user id (scanned at a spot to award
-  // points); the short loyalty code is shown as the human-readable account
-  // number that staff can also type in manually.
-  const userPoints = pointBalance?.availablePoints ?? 0;
-  const userId = me?.id ?? '';
-  const loyaltyCode = me?.loyaltyCode ?? '';
-  const userQRCode = JSON.stringify({
-    userId,
-    type: 'LOYALTY_USER',
-  });
-  const totalOrders = myOrders?.length ?? 0;
-  // Active prizes the user can currently afford with their point balance.
-  const availablePrizes = (prizes ?? []).filter(
-    (p) => p.isActive && p.pointsCost <= userPoints,
-  ).length;
-
-  const handleRedeemPoints = () => {
-    router.push('/prizes' as any);
-  };
-
-  const handleViewRewards = () => {
-    router.push('/prizes' as any);
-  };
-
-  const handleViewOrders = () => {
-    router.push('/orders' as any);
-  };
-
-  return (
-    <View className="flex-1 bg-gray-50">
-      <ScrollView
-        className="flex-1 bg-gray-50"
-        contentContainerStyle={{ paddingBottom: TAB_BAR_TOTAL_HEIGHT + 8 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor="#EC2828"
-            colors={['#EC2828']}
-          />
-        }
-      >
-        <AccountBalanceCard
-          points={userPoints}
-          ready={pointBalance != null}
-          animateGains={isFocused}
-          onGain={handlePointsGain}
-          onRedeem={handleRedeemPoints}
-        />
-
-        {/* QR Code Section with Sun Icon */}
-        <View className="bg-white mx-4 mt-4 rounded-3xl p-6 shadow-sm">
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-gray-900 text-xl font-urbanist-bold">
-              {t('Home.yourQrCode')}
-            </Text>
-            <View className="bg-amber-100 rounded-full p-2">
-              <Ionicons name="sunny" size={20} color="#F59E0B" />
-            </View>
-          </View>
-          <View className="items-center bg-white rounded-2xl p-6 border-4 border-red-600">
-            <QRCodeSVG
-              value={userQRCode}
-              size={200}
-              color="#000000"
-              backgroundColor="#FFFFFF"
-            />
-          </View>
-          <Text className="text-gray-600 text-sm font-urbanist text-center mt-4">
-            {t('Home.qrInstructions')}
-          </Text>
-
-          {/* Account Number */}
-          <View className="mt-4 bg-gray-50 rounded-xl py-3 px-4">
-            <Text className="text-xs text-gray-500 text-center font-urbanist mb-1">
-              {t('Home.accountNumber')}
-            </Text>
-            <Text className="text-sm font-mono font-urbanist-bold text-gray-900 text-center">
-              {loyaltyCode || '—'}
-            </Text>
-          </View>
-        </View>
-
-        {/* Clickable Stats Cards */}
-        <View className="mx-4 mt-4">
-          <View className="flex-row gap-3">
-            {/* Rewards Available */}
-            <Pressable
-              onPress={handleViewRewards}
-              className="flex-1 bg-white rounded-2xl p-4 shadow-sm active:opacity-70"
-            >
-              <View className="flex-row items-center justify-between mb-2">
-                <Ionicons name="gift-outline" size={24} color="#EC2828" />
-                <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
-              </View>
-              <Text className="text-gray-900 text-2xl font-urbanist-bold mt-2">
-                {availablePrizes}
-              </Text>
-              <Text className="text-gray-600 text-sm font-urbanist mt-1">
-                {t('Home.rewardsAvailable')}
-              </Text>
-            </Pressable>
-
-            {/* Total Orders */}
-            <Pressable
-              onPress={handleViewOrders}
-              className="flex-1 bg-white rounded-2xl p-4 shadow-sm active:opacity-70"
-            >
-              <View className="flex-row items-center justify-between mb-2">
-                <Ionicons name="ice-cream-outline" size={24} color="#EC2828" />
-                <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
-              </View>
-              <Text className="text-gray-900 text-2xl font-urbanist-bold mt-2">
-                {totalOrders}
-              </Text>
-              <Text className="text-gray-600 text-sm font-urbanist mt-1">
-                {t('Home.totalOrders')}
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-      </ScrollView>
-
-      {confettiKey > 0 ? (
-        <View pointerEvents="none" className="absolute inset-0">
-          <ConfettiCannon
-            key={confettiKey}
-            count={140}
-            origin={{ x: width / 2, y: -10 }}
-            autoStart
-            fadeOut
-            fallSpeed={2600}
-            colors={['#F59E0B', '#FCD34D', '#EC2828', '#F97316', '#16A34A', '#FFFFFF']}
-          />
-        </View>
-      ) : null}
-    </View>
-  );
+  return <MyCard />;
 }
 
 // Tasks Tab Component
@@ -239,18 +65,47 @@ function TasksTab() {
   return <TasksTabContent />;
 }
 
+type HomeSection = 'news' | 'account' | 'tasks';
+const handledBrandParams = new Set<string>();
+const ROUTE_FOR_SECTION: Record<HomeSection, string> = {
+  news: 'News',
+  account: 'Account',
+  tasks: 'Tasks',
+};
+
 export default function StartScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { data: unreadCount } = useUnreadNotificationsCount();
   const hasUnread = (unreadCount ?? 0) > 0;
 
+  // Deep links / push taps: /(tabs)?section=account&brandId=…&t=… opens My
+  // card (with that brand). A new `t` remounts the top tabs on that section.
+  const params = useLocalSearchParams<{ section?: string; brandId?: string; t?: string }>();
+  const section: HomeSection =
+    params.section === 'news' || params.section === 'tasks' ? params.section : 'account';
+  const { selectBrand } = useBrandContext();
+  useEffect(() => {
+    if (!params.brandId) return;
+    // Each push tap selects once (`t`), so a remount does not undo a later
+    // choice in the picker.
+    const key = `${params.brandId}:${params.t ?? ''}`;
+    if (handledBrandParams.has(key)) return;
+    handledBrandParams.add(key);
+    selectBrand(params.brandId, 'push');
+  }, [params.brandId, params.t, selectBrand]);
+
+  // The top tabs open on My card only when they mount; after ≥ 5 minutes in
+  // the background the app comes back there too (review #5).
+  useReturnToMyCardOnResume();
+
   return (
     <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
-      {/* Header with title and icons */}
-      <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-200">
+      {/* Header with title and icons. Compact: My card must fit above the
+          fold on small phones (BRANDS_SPEC §5.4). */}
+      <View className="flex-row items-center justify-between px-6 py-2 border-b border-gray-200">
         <View className="flex-1 flex-row items-center">
-          <Lockup width={88} height={61} />
+          <Lockup width={64} height={44} />
         </View>
 
         <View className="flex-row items-center gap-4">
@@ -279,11 +134,13 @@ export default function StartScreen() {
 
       {/* Material Top Tabs */}
       <Tab.Navigator
+        key={params.t ?? 'home'}
+        initialRouteName={ROUTE_FOR_SECTION[section]}
         screenOptions={{
           tabBarActiveTintColor: '#EC2828',
           tabBarInactiveTintColor: '#6B7280',
           tabBarLabelStyle: {
-            fontSize: 14,
+            fontSize: 16,
             fontWeight: '600',
             textTransform: 'none',
             fontFamily: 'Urbanist-SemiBold',

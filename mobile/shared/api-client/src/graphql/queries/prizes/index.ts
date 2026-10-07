@@ -1,34 +1,47 @@
-import { createGraphQLFunction } from '../../client';
-import { ApolloServerConfig, GraphQLResult } from '../../types';
-import { MY_PRIZES_QUERY, PRIZES_QUERY, PRIZE_DETAIL_QUERY } from './query';
+import { createGraphQLFunction, GraphQLOptions } from '../../client';
+import { GraphQLResult } from '../../types';
+import { MY_PRIZE_QUERY, MY_PRIZES_QUERY, PRIZE_DETAIL_QUERY } from './query';
 import {
+  MyPrizeResponse,
   MyPrizesResponse,
+  MyPrizesVariables,
   Prize,
   PrizeDetailResponse,
-  PrizesResponse,
   UserPrize,
 } from './types';
 
 export * from './types';
+export { REWARD_BRAND_FIELDS, USER_PRIZE_FIELDS } from './query';
 
-export const getPrizes = createGraphQLFunction<PrizesResponse, Prize[]>(
-  PRIZES_QUERY,
-  data => data.prizes,
-  'Failed to load prizes',
-);
+type Options = Omit<GraphQLOptions, 'variables'>;
 
-export const getMyPrizes = createGraphQLFunction<MyPrizesResponse, UserPrize[]>(
+const myPrizesFn = createGraphQLFunction<MyPrizesResponse, UserPrize[]>(
   MY_PRIZES_QUERY,
-  data => data.myPrizes,
-  'Failed to load your prizes',
+  (data) => data.myPrizes,
+  'Failed to load your rewards',
 );
 
-export const getPrizeById = async (
-  id: string,
-  options: ApolloServerConfig = {},
-): Promise<GraphQLResult<Prize | null>> =>
-  createGraphQLFunction<PrizeDetailResponse, Prize | null>(
-    PRIZE_DETAIL_QUERY,
-    data => data.prize,
-    'Failed to load prize',
-  )({ ...options, variables: { id } });
+/** Claimed rewards of every brand (or one brand), newest first. */
+export const getMyPrizes = (
+  variables: MyPrizesVariables = {},
+  options: Options = {},
+): Promise<GraphQLResult<UserPrize[]>> =>
+  myPrizesFn({ ...options, variables: { includeRedeemed: true, ...variables } });
+
+const myPrizeFn = createGraphQLFunction<MyPrizeResponse, UserPrize | null>(
+  MY_PRIZE_QUERY,
+  (data) => data.myPrize,
+  'Failed to load your reward',
+);
+
+export const getMyPrize = (id: string, options: Options = {}): Promise<GraphQLResult<UserPrize | null>> =>
+  myPrizeFn({ ...options, variables: { id } });
+
+const prizeDetailFn = createGraphQLFunction<PrizeDetailResponse, Prize | null>(
+  PRIZE_DETAIL_QUERY,
+  (data) => data.prize,
+  'Failed to load reward',
+);
+
+export const getPrizeById = (id: string, options: Options = {}): Promise<GraphQLResult<Prize | null>> =>
+  prizeDetailFn({ ...options, variables: { id } });

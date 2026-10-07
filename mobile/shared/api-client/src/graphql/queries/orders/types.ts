@@ -66,6 +66,8 @@ export type OrderDetail = OrderListEntry & {
   deliveryPin?: string | null;
   terminationReason?: string | null;
   apologyPoints?: number | null;
+  /** The brand of the order (snapshot at placement); names the apology points. */
+  brandId?: string | null;
   invoiceRequested?: boolean;
   invoiceNIP?: string | null;
   invoiceCompanyName?: string | null;

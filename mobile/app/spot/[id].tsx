@@ -1,9 +1,14 @@
+import { BrandLogo } from '@/components/atoms/BrandLogo';
 import { Image } from '@/components/atoms/Image';
+import { BrandPromotionBanner } from '@/components/molecules/Loyalty/BrandPromotionBanner';
+import { COLORS, LText } from '@/components/molecules/Loyalty/ui';
 import { StarRating } from '@/components/atoms/StarRating';
 import { SpotReviews } from '@/components/spots/SpotReviews';
+import { useBrands } from '@/hooks/useBrands';
 import { isSpotOpenNow, useFavoriteToggle } from '@/hooks/useSpots';
 import { useSpotDetail, useSpotTastes } from '@/hooks/useTastes';
 import type { Taste } from '@repo/api-client';
+import { pointsText } from '@/utils/formatPoints';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -31,6 +36,7 @@ export default function SpotDetailScreen() {
 
   const { data: spot, loading, refetch: refetchSpot } = useSpotDetail(id ?? null);
   const { data: tastes, refetch: refetchTastes } = useSpotTastes(id ?? null);
+  const { walletFor, overview, status } = useBrands();
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -66,6 +72,15 @@ export default function SpotDetailScreen() {
   const open = isSpotOpenNow(spot.openingHours);
   const favorited = fav.isFavorite(spot.id, spot.isFavorite);
   const gallery = (spot.photos ?? []).filter(Boolean);
+  // "Your points here" only once the wallets are known: while loading, or
+  // when loading failed with no data, "0 points" would be wrong (review #8).
+  // A loaded overview without this brand means no points there yet.
+  const pointsLine =
+    spot.brand && overview && status === 'ready'
+      ? t('Brand.yourPointsHere', {
+          pointsText: pointsText(t, walletFor(spot.brand.id)?.availablePoints ?? 0),
+        })
+      : null;
 
   return (
     <View className="flex-1 bg-white">
@@ -146,6 +161,33 @@ export default function SpotDetailScreen() {
               ) : null}
             </View>
           </View>
+
+          {/* The brand this location belongs to and the user's points there (§5.6). */}
+          {spot.brand ? (
+            <Pressable
+              onPress={() => router.push(`/brand/${spot.brand!.id}` as never)}
+              accessibilityRole="button"
+              accessibilityLabel={[t('Brand.partOf', { brand: spot.brand.name }), pointsLine]
+                .filter(Boolean)
+                .join('. ')}
+              className="mt-4 flex-row items-center rounded-2xl border border-gray-200 bg-white px-3 py-2 active:opacity-80"
+              style={{ minHeight: 72 }}
+            >
+              <BrandLogo brand={spot.brand} size={44} />
+              <View className="ml-3 flex-1">
+                <LText size={18} weight="700" numberOfLines={2}>
+                  {t('Brand.partOf', { brand: spot.brand.name })}
+                </LText>
+                {pointsLine ? (
+                  <LText size={16} weight="600" color={COLORS.red}>
+                    {pointsLine}
+                  </LText>
+                ) : null}
+              </View>
+              <Ionicons name="chevron-forward" size={22} color={COLORS.secondary} />
+            </Pressable>
+          ) : null}
+          {spot.activePromotion ? <BrandPromotionBanner promotion={spot.activePromotion} flush /> : null}
 
           {/* Quick actions */}
           <View className="flex-row mt-5">

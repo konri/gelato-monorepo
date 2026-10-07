@@ -1,4 +1,5 @@
 import { getWhoAmI } from '@/shared/api-client/src/graphql/queries/user/getWhoAmI';
+import { saveLastCard } from '@/utils/loyaltyStorage';
 import { logger } from '@/utils/logger';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthState } from './useAuthState';
@@ -15,6 +16,8 @@ export const useUserSync = () => {
           ['locationPermissionGranted', result.data.locationPermission ? 'true' : 'false'],
           ['userData', JSON.stringify(result.data)]
         ]);
+        // The card must render offline and after a session expiry (§5.4).
+        await saveLastCard(result.data);
         
         return result.data;
       }

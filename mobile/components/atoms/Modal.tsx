@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal as RNModal, View, Pressable } from 'react-native';
 import { Typography } from '@/components/atoms/Typography';
 import { CloseModalButton } from '@/components/atoms/CloseModalButton';
+import { useOverlayOpen } from '@/hooks/useOverlayOpen';
 
 interface ModalProps {
   visible: boolean;
@@ -15,6 +16,7 @@ interface ModalProps {
 }
 
 export function Modal({ visible, onClose, headerTitle, title, descriptionTitle, description, buttons, children }: ModalProps) {
+  useOverlayOpen(visible);
   return (
     <RNModal
       visible={visible}

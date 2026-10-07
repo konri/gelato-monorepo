@@ -40,6 +40,11 @@ export const config = {
   STRIPE_MERCHANT_IDENTIFIER: 'merchant.com.konradhopek.gelato.client',
   STRIPE_URL_SCHEME: 'gelato',
 
+  // App Store page for the "update the app" screen (UPGRADE_REQUIRED). Android
+  // derives the Play Store link from the package name; iOS needs the App Store
+  // id, so it is configured here (empty = tell the user to open the store).
+  IOS_APP_STORE_URL: process.env.EXPO_PUBLIC_IOS_APP_STORE_URL || '',
+
   // Legal pages (landing-page-new, static export)
   TERMS_URL: 'https://loodly.pl/terms',
   PRIVACY_POLICY_URL: 'https://loodly.pl/policy',

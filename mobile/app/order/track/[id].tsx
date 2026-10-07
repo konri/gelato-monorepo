@@ -2,6 +2,8 @@ import { STATUS_STYLE, trackingSteps, trackingStepIndex, isTerminal } from '@/co
 import { OrderReviewSection } from '@/components/ordering/OrderReviewSection';
 import { OrderChat } from '@/components/ordering/OrderChat';
 import { useOrderTracking } from '@/hooks/useOrders';
+import { useBrandLabel } from '@/hooks/useRewards';
+import { pointsText } from '@/utils/formatPoints';
 import { staticMapUrl } from '@/services/googlePlaces';
 import { createComplaint } from '@repo/api-client';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
@@ -31,6 +33,8 @@ export default function OrderTrackingScreen() {
   const { width } = useWindowDimensions();
   const { id, messageId } = useLocalSearchParams<{ id: string; messageId?: string }>();
   const { order, loading } = useOrderTracking(id ?? null);
+  // Apology points are credited at the order's brand: name it (BRANDS_SPEC §5.6).
+  const orderBrand = useBrandLabel(order?.apologyPoints ? order.brandId : null);
   const [complaintOpen, setComplaintOpen] = useState(false);
 
   // Scroll-to-chat when deep-linked from an order-message notification.
@@ -124,7 +128,12 @@ export default function OrderTrackingScreen() {
             )}
             {!!order.apologyPoints && (
               <Text className="font-urbanist-semibold text-red-700 leading-5 mt-2">
-                {t('Ordering.terminated.points', { points: order.apologyPoints })}
+                {orderBrand
+                  ? t('Ordering.terminated.pointsBrand', {
+                      brand: orderBrand.name,
+                      pointsText: pointsText(t, order.apologyPoints),
+                    })
+                  : t('Ordering.terminated.points', { pointsText: pointsText(t, order.apologyPoints) })}
               </Text>
             )}
           </View>

@@ -7,6 +7,7 @@ import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useOverlayOpen } from '@/hooks/useOverlayOpen';
 
 const zl = (n: number) => `${n.toFixed(2).replace(/\.00$/, '')} zł`;
 
@@ -27,6 +28,7 @@ export const BoxPickerModal = ({
 }) => {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  useOverlayOpen(visible);
   const { data: tastes, loading } = useSpotTastes(visible ? product.spotId : null);
   const max = product.maxTastes ?? 0;
 

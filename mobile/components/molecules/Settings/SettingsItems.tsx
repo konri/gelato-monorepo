@@ -9,6 +9,7 @@ import { useAuthState } from '@/hooks/useAuthState';
 import { useWhoAmI } from '@/hooks/useWhoAmI';
 import { deleteAccount } from '@repo/api-client';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
+import { leaveToWelcome } from '@/utils/sessionNavigation';
 import { LanguageSelectorModal } from './LanguageSelectorModal';
 import { CitySelectorModal } from './CitySelectorModal';
 import { ContactFormModal } from './ContactFormModal';
@@ -54,7 +55,7 @@ export const SettingsItems = () => {
         style: 'destructive',
         onPress: async () => {
           await clearAuthState();
-          router.replace('/welcome');
+          leaveToWelcome();
         },
       },
     ]);
@@ -87,7 +88,7 @@ export const SettingsItems = () => {
             }
             await clearAuthState();
             Alert.alert(t('Common.success'), t('Settings.accountDeleted'));
-            router.replace('/welcome');
+            leaveToWelcome();
           } catch (error) {
             const err = error as { message?: string };
             Alert.alert(t('Common.error'), err?.message || t('Settings.deleteAccountFailed'));

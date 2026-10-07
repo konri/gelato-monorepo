@@ -1,16 +1,19 @@
 import { useAppInitialization } from '@/hooks/useAppInitialization'
 import { useGoogleSignInConfig } from '@/hooks/useGoogleSignInConfig'
 import { useFonts } from 'expo-font'
-import { router, Stack } from 'expo-router'
+import { Stack } from 'expo-router'
 import { useEffect } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import 'react-native-reanimated'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { StripeProvider } from '@stripe/stripe-react-native'
 import { onSessionExpired } from '@/shared/api-client/src/session'
+import { leaveToWelcome } from '@/utils/sessionNavigation'
 import { CartProvider } from '@/hooks/useCart'
 import { ToastProvider } from '@/components/organisms/ToastProvider'
+import { UpgradeRequiredGate } from '@/components/organisms/UpgradeRequiredGate'
 import { NotificationBridge } from '@/components/NotificationBridge'
+import { BrandProvider } from '@/hooks/useBrands'
 import { config } from '@/config'
 import '../translations'
 import './global.css'
@@ -20,10 +23,11 @@ export default function RootLayout() {
   useAppInitialization()
 
   // When a request can't be authorized (token expired + refresh failed), the
-  // session module clears storage and fires this — send the user to login.
+  // session module clears storage and fires this — send the user to login,
+  // unmounting the tabs (their socket and in-memory card go with them).
   useEffect(() => {
     const unsubscribe = onSessionExpired(() => {
-      router.replace('/welcome')
+      leaveToWelcome()
     })
     return unsubscribe
   }, [])
@@ -49,6 +53,11 @@ export default function RootLayout() {
         >
           <CartProvider>
           <ToastProvider>
+          {/* Root, not a tab layout: NativeTabs must stay mounted and root
+              screens (prize/[id], orders, …) need the brands too. Always
+              renders its children; loads lazily (BRANDS_SPEC §5.2). */}
+          <BrandProvider>
+          <UpgradeRequiredGate />
           <NotificationBridge />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
@@ -66,8 +75,11 @@ export default function RootLayout() {
             <Stack.Screen name="order/track/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="prize/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="prize/mine/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="brand/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="brands/index" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" options={{ headerShown: true }} />
           </Stack>
+          </BrandProvider>
           </ToastProvider>
           </CartProvider>
         </StripeProvider>

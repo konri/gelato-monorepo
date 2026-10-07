@@ -1,3 +1,6 @@
+import { unregisterPushDevice } from '@/hooks/useNotificationRegistration';
+import { notifyLoggedOut } from '@/shared/api-client/src/session';
+import { clearLoyaltyStorageOnLogout, readStoredUserId } from '@/utils/loyaltyStorage';
 import { logger } from '@/utils/logger';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
@@ -86,8 +89,15 @@ export const useAuthState = () => {
     }
   };
 
+  // Explicit logout (also the last step of account deletion). A session
+  // EXPIRY does not come here, so the last card survives it (/welcome).
   const clearAuthState = async () => {
     try {
+      // While the tokens still exist: this device stops getting the leaving
+      // user's pushes (review #1).
+      await unregisterPushDevice();
+      const uid = await readStoredUserId();
+      await clearLoyaltyStorageOnLogout(uid, 'logout');
       await AsyncStorage.multiRemove([
         'isLoggedIn',
         'userData',
@@ -106,6 +116,7 @@ export const useAuthState = () => {
         token: null,
         isLoading: false,
       });
+      notifyLoggedOut('logout');
     } catch (error) {
       logger.error('Error clearing auth state:', error);
     }

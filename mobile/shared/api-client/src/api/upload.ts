@@ -1,6 +1,8 @@
 import { config } from '@/config';
+import { clientHeaders } from '../clientInfo';
 import { safeGetItem } from '../utils/safeAsyncStorage';
 import { refreshAccessToken } from '../graphql/refreshToken';
+import { emitUpgradeRequired, upgradeInfoFrom } from '../upgradeEvents';
 import type { ApiResponse } from './types';
 
 const REST_BASE_URL = config.REST_API_URL;
@@ -28,6 +30,7 @@ export async function uploadProfileImage(
       method: 'POST',
       headers: {
         // NOTE: do NOT set Content-Type; fetch sets the multipart boundary.
+        ...clientHeaders(),
         ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: formData,
@@ -55,9 +58,14 @@ export async function uploadProfileImage(
     }
 
     if (!response.ok) {
+      const code = typeof data?.code === 'string' ? data.code : undefined;
+      if (code === 'UPGRADE_REQUIRED' || response.status === 426) {
+        emitUpgradeRequired(upgradeInfoFrom(data));
+      }
       return {
         error: data.error || data.message || `HTTP error! status: ${response.status}`,
         status: response.status,
+        code,
       };
     }
 

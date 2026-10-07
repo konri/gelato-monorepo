@@ -26,6 +26,9 @@ export type UpdateProfileInput = {
   birthDate?: string;
   picture?: string;
   referralCode?: string;
+  /** Server-side language for pushes and error texts (BRANDS_SPEC §5.2). */
+  language?: 'EN' | 'PL' | 'UA';
+  preferredCityId?: string;
 };
 
 export type UpdateProfileResponse = {
@@ -34,4 +37,6 @@ export type UpdateProfileResponse = {
 
 export type UpdateProfileOptions = ApolloServerConfig & {
   data: UpdateProfileInput;
+  /** Background update: no generic error toast. */
+  silent?: boolean;
 };

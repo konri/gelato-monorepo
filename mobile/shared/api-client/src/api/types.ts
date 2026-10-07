@@ -4,6 +4,9 @@ export type ApiResponse<T> = {
   data?: T;
   error?: string;
   status: number;
+  // Machine-readable error code from the server body (`{ code, error }`),
+  // e.g. INVALID_CREDENTIALS, RATE_LIMITED, UPGRADE_REQUIRED.
+  code?: string;
   // Set by /login when the account exists but hasn't confirmed its emailed
   // OTP yet — lets the caller redirect to the verify-code screen instead of
   // just showing a generic error.

@@ -28,6 +28,7 @@ export const ORDER_DETAIL_QUERY = gql`
   query OrderDetail($id: ID!) {
     order(id: $id) {
       id
+      brandId
       orderNumber
       status
       fulfillmentType

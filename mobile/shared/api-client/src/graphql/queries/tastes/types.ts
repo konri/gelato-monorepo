@@ -1,3 +1,5 @@
+import type { BrandPromotion } from '../loyalty/types';
+
 export type LocalizedText = { pl?: string; en?: string; ua?: string } | string | null;
 
 export type TasteCategory = 'SORBET' | 'MILK' | 'GELATO' | 'VEGAN' | 'OTHER';
@@ -35,6 +37,12 @@ export type Spot = {
   averageRating?: number | null;
   reviewCount?: number;
   isFavorite?: boolean;
+  isActive?: boolean;
+  /** SpotDetail only: the brand this location belongs to. */
+  brandId?: string;
+  brand?: { id: string; name: string; logoUrl?: string | null; isActive: boolean };
+  /** SpotDetail only: the promotion running here now (or starting soon). */
+  activePromotion?: BrandPromotion | null;
 };
 
 export type Taste = {

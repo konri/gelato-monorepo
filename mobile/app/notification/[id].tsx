@@ -4,6 +4,7 @@ import { Typography } from '@/components/atoms/Typography';
 import { getNotification, type AppNotification } from '@repo/api-client';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
 import { localizeNotification } from '@/utils/notificationDisplay';
+import { CARD_EVENTS, routeFromNotification } from '@/utils/notificationRouting';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -18,7 +19,17 @@ function iconFor(type: string): { name: keyof typeof Ionicons.glyphMap; color: s
     case 'NEWS':
       return { name: 'newspaper', color: '#2563EB', bg: '#DBEAFE' };
     case 'POINTS_EARNED':
-      return { name: 'star', color: '#D97706', bg: '#FEF3C7' };
+      return { name: 'star', color: '#B45309', bg: '#FEF3C7' };
+    case 'BIRTHDAY_BONUS':
+      return { name: 'balloon', color: '#6D28D9', bg: '#EDE9FE' };
+    case 'REFERRAL_BONUS':
+      return { name: 'people', color: '#9D174D', bg: '#FCE7F3' };
+    case 'REWARD_REFUNDED':
+      return { name: 'arrow-undo', color: '#92400E', bg: '#FEF3C7' };
+    case 'REWARD_EXPIRING':
+      return { name: 'alarm', color: '#B01E1E', bg: '#FEE2E2' };
+    case 'REWARD_EXCHANGED':
+      return { name: 'gift', color: '#B01E1E', bg: '#FEE2E2' };
     default:
       return { name: 'notifications', color: '#6B7280', bg: '#F3F4F6' };
   }
@@ -131,15 +142,36 @@ export default function NotificationDetailScreen() {
               </Pressable>
             )}
 
-            {item.type === 'POINTS_EARNED' && (
+            {CARD_EVENTS.has(item.type) && (
               <Pressable
-                onPress={() => router.push('/(tabs)' as never)}
-                className="mt-5 flex-row items-center justify-center rounded-xl py-3.5"
-                style={{ backgroundColor: '#D97706' }}
+                onPress={() => {
+                  const target = routeFromNotification(item.type, item.data);
+                  if (target) router.navigate(target as never);
+                }}
+                accessibilityRole="button"
+                className="mt-5 flex-row items-center justify-center rounded-xl"
+                style={{ backgroundColor: '#B45309', minHeight: 56 }}
               >
-                <Ionicons name="star-outline" size={18} color="#fff" />
+                <Ionicons name="star-outline" size={20} color="#fff" />
                 <Typography variant="body-base-semibold" className="ml-2 text-white">
                   {t('Notifications.viewPoints')}
+                </Typography>
+              </Pressable>
+            )}
+
+            {item.type === 'REWARD_EXPIRING' && (
+              <Pressable
+                onPress={() => {
+                  const target = routeFromNotification(item.type, item.data);
+                  if (target) router.push(target as never);
+                }}
+                accessibilityRole="button"
+                className="mt-5 flex-row items-center justify-center rounded-xl"
+                style={{ backgroundColor: '#B01E1E', minHeight: 56 }}
+              >
+                <Ionicons name="gift-outline" size={20} color="#fff" />
+                <Typography variant="body-base-semibold" className="ml-2 text-white">
+                  {t('Notifications.viewReward')}
                 </Typography>
               </Pressable>
             )}

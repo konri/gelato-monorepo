@@ -2,12 +2,16 @@ import Lockup from "@/assets/images/loodly_lockup.svg";
 import { Button } from "@/components/atoms/Button";
 import { Typography } from "@/components/atoms/Typography";
 import { CustomSafeAreaView } from "@/components/CustomSafeAreaView";
+import { LoyaltyCodeFullscreen } from "@/components/molecules/Loyalty/LoyaltyCodeFullscreen";
 import { SocialMediaButtons } from "@/components/molecules/SocialMediaButtons";
 import { config } from "@/config";
 import { useWelcome } from "@/hooks/useWelcome";
-import React from "react";
+import { readLastCard, type LastCard } from "@/utils/loyaltyStorage";
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Linking, Pressable, ScrollView, View } from "react-native";
+import { Linking, Pressable, ScrollView, Text, View } from "react-native";
 
 export default function MainLoginScreen() {
   const { t } = useTranslation();
@@ -20,6 +24,23 @@ export default function MainLoginScreen() {
     handleGoogleLogin,
     handleAppleLogin,
   } = useWelcome();
+
+  // After a session EXPIRY the last card stays on the device, so the user can
+  // still show it at the counter before logging in again (BRANDS_SPEC §5.4).
+  // An explicit logout removes it.
+  const [lastCard, setLastCard] = useState<LastCard | null>(null);
+  const [showCard, setShowCard] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      void readLastCard().then((card) => {
+        if (active) setLastCard(card);
+      });
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
 
   return (
     <CustomSafeAreaView>
@@ -45,6 +66,25 @@ export default function MainLoginScreen() {
             {t("Main.subtitle")}
           </Typography>
         </View>
+
+        {lastCard ? (
+          <Pressable
+            onPress={() => setShowCard(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t("LoyaltyCode.showMyCard")}
+            className="w-full mt-10 flex-row items-center justify-center rounded-2xl border-2 border-gray-300 bg-white px-4 active:opacity-80"
+            style={{ minHeight: 56 }}
+          >
+            <Ionicons name="qr-code-outline" size={24} color="#111827" />
+            <Text
+              className="ml-2 font-urbanist text-gray-900"
+              style={{ fontSize: 18, fontWeight: "700" }}
+              maxFontSizeMultiplier={1.4}
+            >
+              {t("LoyaltyCode.showMyCard")}
+            </Text>
+          </Pressable>
+        ) : null}
 
         <View className="w-full mt-14">
           <SocialMediaButtons
@@ -101,6 +141,12 @@ export default function MainLoginScreen() {
           </Pressable>
         </View>
       </ScrollView>
+      <LoyaltyCodeFullscreen
+        visible={showCard && !!lastCard}
+        onClose={() => setShowCard(false)}
+        code={lastCard?.loyaltyCode}
+        userId={lastCard?.userId}
+      />
     </CustomSafeAreaView>
   );
 }

@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import { PROMOTION_FIELDS } from '../loyalty/query';
 
 // Active cities (used to resolve the stored city name -> backend city id)
 export const CITIES_QUERY = gql`
@@ -108,7 +109,7 @@ export const CHECK_DELIVERY_QUERY = gql`
   }
 `;
 
-// Single spot detail
+// Single spot detail, with its brand and the promotion running there
 export const SPOT_DETAIL_QUERY = gql`
   query SpotDetail($id: ID!) {
     spot(id: $id) {
@@ -135,8 +136,20 @@ export const SPOT_DETAIL_QUERY = gql`
       averageRating
       reviewCount
       isFavorite
+      isActive
+      brandId
+      brand {
+        id
+        name
+        logoUrl
+        isActive
+      }
+      activePromotion {
+        ...PromotionFields
+      }
     }
   }
+  ${PROMOTION_FIELDS}
 `;
 
 // Tastes (flavors) for a spot

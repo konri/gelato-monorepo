@@ -13,6 +13,10 @@ const listeners = new Set<Listener>();
 let lastEmit = 0;
 const BURST_MS = 3000;
 
+/** True when a request failed because the device could not reach the server. */
+export const isNetworkErrorMessage = (message: string | null | undefined): boolean =>
+  !!message && /network request failed|failed to fetch|network error/i.test(message);
+
 export const onRequestError = (listener: Listener): (() => void) => {
   listeners.add(listener);
   return () => listeners.delete(listener);
@@ -28,11 +32,7 @@ export const emitRequestError = (message: string): void => {
   if (now - lastEmit < BURST_MS) return;
   lastEmit = now;
   // A missing/unreachable backend surfaces as "Network request failed".
-  const kind: RequestErrorKind = /network request failed|failed to fetch|network error/i.test(
-    message,
-  )
-    ? 'network'
-    : 'server';
+  const kind: RequestErrorKind = isNetworkErrorMessage(message) ? 'network' : 'server';
   listeners.forEach((l) => {
     try {
       l({ kind, message });

@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Modal } from '@/components/atoms/Modal';
 import { Typography } from '@/components/atoms/Typography';
+import { pushLanguageToServer } from '@/utils/languageSync';
 
 interface LanguageSelectorModalProps {
   visible: boolean;
@@ -24,6 +25,8 @@ export const LanguageSelectorModal = ({ visible, onClose }: LanguageSelectorModa
   const handleSelect = async (code: string) => {
     await i18n.changeLanguage(code);
     await AsyncStorage.setItem('language', code.toUpperCase());
+    // Pushes and server messages follow the app language (best effort).
+    void pushLanguageToServer(code);
     onClose();
   };
 

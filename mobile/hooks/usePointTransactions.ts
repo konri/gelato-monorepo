@@ -1,10 +1,11 @@
 import { getMyPointTransactions, PointTransaction } from '@repo/api-client';
 import { useGraphQLQuery } from './useGraphQLQuery';
 
-export const usePointTransactions = (limit: number = 50) => {
+/** Ledger rows, newest first: every brand, or one with `brandId` (MULTI, §5.6). */
+export const usePointTransactions = (brandId?: string | null, limit: number = 50) => {
   return useGraphQLQuery<PointTransaction[]>(
-    getMyPointTransactions,
-    { variables: { limit } },
-    [limit]
+    (options) => getMyPointTransactions({ limit, brandId: brandId ?? null }, options),
+    {},
+    [limit, brandId ?? null],
   );
 };

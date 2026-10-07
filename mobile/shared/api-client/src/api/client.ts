@@ -1,4 +1,6 @@
 import { config } from '@/config';
+import { clientHeaders } from '../clientInfo';
+import { emitUpgradeRequired, upgradeInfoFrom } from '../upgradeEvents';
 import { safeGetItem } from '../utils/safeAsyncStorage';
 import type { ApiResponse } from './types';
 
@@ -14,6 +16,7 @@ async function makeRequest<T>(
 
   const defaultHeaders = {
     'Content-Type': 'application/json',
+    ...clientHeaders(),
     ...(token && { 'Authorization': `Bearer ${token}` }),
   };
 
@@ -39,9 +42,15 @@ async function makeRequest<T>(
     }
 
     if (!response.ok) {
+      // Error bodies carry a machine-readable `code` (CONTRACTS §16).
+      const code = typeof data?.code === 'string' ? data.code : undefined;
+      if (code === 'UPGRADE_REQUIRED' || response.status === 426) {
+        emitUpgradeRequired(upgradeInfoFrom(data));
+      }
       return {
         error: data.error || data.message || `HTTP error! status: ${response.status}`,
         status: response.status,
+        code,
         requiresVerification: data.requiresVerification,
         email: data.email,
       };

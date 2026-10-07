@@ -2,6 +2,7 @@ import { config } from '@/config';
 import { logger } from '@/utils/logger';
 import { ApolloClient, ApolloLink, HttpLink, InMemoryCache } from '@apollo/client';
 import { map } from 'rxjs/operators';
+import { clientHeaders } from '../clientInfo';
 import { safeGetItem } from '../utils/safeAsyncStorage';
 import { ApolloServerConfig } from './types';
 
@@ -67,6 +68,7 @@ export const createApolloServerClient = async (apolloConfig: ApolloServerConfig 
     operation.setContext(({ headers = {} }) => ({
       headers: {
         ...headers,
+        ...clientHeaders(),
         authorization: token ? `Bearer ${token}` : '',
       },
     }));
