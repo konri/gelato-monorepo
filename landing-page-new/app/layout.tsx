@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: pl.site.title,
   description: pl.site.description,
-  icons: { icon: "/favicon.ico" },
+  icons: { icon: "/favicon.ico", apple: "/apple-touch-icon.png" },
   // og:url is set per page (`/` and `/for-business`), so other routes never
   // claim the home page as their URL.
   openGraph: BASE_OPEN_GRAPH,

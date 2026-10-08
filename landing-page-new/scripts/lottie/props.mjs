@@ -655,14 +655,14 @@ export function mark({ scale = 0.5, lattice = true, name = "mark", ...t } = {}) 
   }
   if (tiny) {
     // silhouette: a red outline around the scoop cloud (internal lines dropped)
-    parts.push(leaf("scoopsOutline", MARK_SCOOPS.map(([cx, cy, rr]) => circ(rr, cx, cy)), { stroke: { c: C.logoRed, w: sw * 2 } }));
+    parts.push(leaf("scoopsOutline", MARK_SCOOPS.map(([cx, cy, rr]) => circ(rr, cx, cy)), { stroke: { c: C.logoBerry, w: sw * 2 } }));
     parts.push(leaf("scoopsFill", MARK_SCOOPS.map(([cx, cy, rr]) => circ(rr, cx, cy)), { fill: C.logoCream }));
   } else {
     MARK_SCOOPS.forEach(([cx, cy, rr], k) =>
-      parts.push(leaf(`scoop${k}`, circ(rr, cx, cy), { fill: C.logoCream, stroke: { c: C.logoRed, w: sw } })),
+      parts.push(leaf(`scoop${k}`, circ(rr, cx, cy), { fill: C.logoCream, stroke: { c: C.logoBerry, w: sw } })),
     );
   }
-  parts.push(leaf("rings", [el({ w: 24.4, h: 26, x: 38.6, y: 52 }), el({ w: 24.4, h: 26, x: 61.4, y: 52 })], { fill: C.logoRed }));
+  parts.push(leaf("rings", [el({ w: 24.4, h: 26, x: 38.6, y: 52 }), el({ w: 24.4, h: 26, x: 61.4, y: 52 })], { fill: C.logoBerry }));
   parts.push(leaf("ringHoles", [el({ w: 14.4, h: 16, x: 38.6, y: 52 }), el({ w: 14.4, h: 16, x: 61.4, y: 52 })], { fill: C.logoCream }));
   const { s, ...rest } = t;
   return group(name, parts, { ...xf(rest), a: [50, 55], s: s ?? scale * 100 });

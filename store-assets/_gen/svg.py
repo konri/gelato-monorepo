@@ -5,12 +5,11 @@ scoop cluster piles over the letter pair, and a waffle cone sits behind with its
 mouth narrower than the `oo` span so it never pokes out past the letters.
 
 There is no cream-on-red cut: the mark does not hold up on the brand red, so
-every in-app surface uses the red-on-cream primary.
+every in-app surface uses the berry-on-cream primary.
 """
 from __future__ import annotations
 
-RED = "#EC2828"
-RED_DARK = "#C61A20"
+LOGO = "#C026A3"  # berry, as on the landing page and in the client app
 CREAM = "#FFF7F0"
 MANGO = "#FFB020"
 WHITE = "#FFFFFF"
@@ -63,7 +62,7 @@ def _cone(fill=MANGO, cell=CREAM) -> str:
   </g>'''
 
 
-def _cluster(fill=CREAM, line=RED) -> str:
+def _cluster(fill=CREAM, line=LOGO) -> str:
     """Cream scoop cluster above the `oo`, back row first."""
     # matches logo.py: cluster base sits 0.22 x-heights below the `o` top
     base = (O_CY - O_RY) + (2 * O_RY) * 0.22
@@ -82,7 +81,7 @@ def _cluster(fill=CREAM, line=RED) -> str:
         f'stroke="{line}" stroke-width="1.6"/>' for x, y, r in balls)
 
 
-def _oo(fill=RED, counter=CREAM) -> str:
+def _oo(fill=LOGO, counter=CREAM) -> str:
     """The kerned `oo` pair drawn as two rings, over the cone and cluster."""
     out = []
     for dx in (-O_DX, O_DX):
@@ -95,14 +94,14 @@ def _oo(fill=RED, counter=CREAM) -> str:
     return chr(10).join(out)
 
 
-def _mark_body(mark=RED, scoop=CREAM) -> str:
+def _mark_body(mark=LOGO, scoop=CREAM) -> str:
     return f"""{_cone()}
 {_cluster(fill=scoop, line=mark)}
 {_oo(fill=mark, counter=scoop)}"""
 
 
 def icon_svg(size: int = 100, *, bg: str | None = None,
-             mark=RED, scoop=CREAM) -> str:
+             mark=LOGO, scoop=CREAM) -> str:
     bg_rect = (f'  <rect width="100" height="100" rx="23.5" fill="{bg}"/>\n'
                if bg else "")
     return f'''<svg width="{size}" height="{size}" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -111,7 +110,7 @@ def icon_svg(size: int = 100, *, bg: str | None = None,
 '''
 
 
-def wordmark_svg(w: int = 138, h: int = 25, *, fill=RED) -> str:
+def wordmark_svg(w: int = 138, h: int = 25, *, fill=LOGO) -> str:
     """Single-line `loodly` wordmark for app headers — text only, no ice cream.
 
     Used where vertical space is too tight for the cluster (nav bars, chips).
@@ -122,7 +121,7 @@ def wordmark_svg(w: int = 138, h: int = 25, *, fill=RED) -> str:
 '''
 
 
-def lockup_svg(w: int = 232, h: int = 160, *, fill=RED, scoop=CREAM) -> str:
+def lockup_svg(w: int = 232, h: int = 160, *, fill=LOGO, scoop=CREAM) -> str:
     """Full logo: the ice cream built into the `oo` of `loodly`.
 
     Splash screens and email headers. The `l` and `dly` are set as text either

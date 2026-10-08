@@ -51,7 +51,7 @@ export default {
     }
   },
   Main: {
-    title: 'Czas na lody! 🍦',
+    title: 'Czas na coś pysznego!',
     subtitle: 'Zaloguj się lub utwórz konto',
     googleLogin: 'Kontynuuj z Google',
     facebookLogin: 'Kontynuuj z Facebook',

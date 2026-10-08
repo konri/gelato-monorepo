@@ -255,7 +255,7 @@ export default function CourierHomeScreen() {
             <Typography
               variant="body-very-small-medium"
               className="tracking-[2px]"
-              style={{ color: '#EC2828', fontSize: 9 }}
+              style={{ color: '#C026A3', fontSize: 9 }}
             >
               COURIER
             </Typography>

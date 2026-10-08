@@ -205,9 +205,9 @@ def build_brand() -> None:
 def _palette_sheet() -> Image.Image:
     from PIL import ImageDraw
 
-    from brand import (CREAM, CRIMSON, ESPRESSO, INK, MANGO, MINT, RED,
+    from brand import (BERRY, CREAM, CRIMSON, ESPRESSO, INK, MANGO, MINT, RED,
                        RED_DARK, RED_LIGHT, SCARLET, SKY, f_bold, f_reg)
-    swatches = [("Loodly Red", RED), ("Red Dark", RED_DARK),
+    swatches = [("Loodly Berry", BERRY), ("Red (UI)", RED), ("Red Dark", RED_DARK),
                 ("Red Light", RED_LIGHT), ("Scarlet", SCARLET),
                 ("Crimson", CRIMSON), ("Cream", CREAM), ("Ink", INK),
                 ("Espresso", ESPRESSO), ("Mango", MANGO), ("Mint", MINT),

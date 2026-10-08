@@ -16,7 +16,7 @@ import os
 
 from PIL import Image, ImageDraw
 
-from brand import CREAM, CREAM_SOFT, MANGO, RED, RED_DARK, WHITE, F_ROUND, font
+from brand import CREAM, CREAM_SOFT, LOGO, MANGO, RED, RED_DARK, WHITE, F_ROUND, font
 
 MANGO_DEEP = (240, 150, 12)
 
@@ -89,7 +89,7 @@ def _scoops(d_size, cx, base_y, span, *, fill, line, lw, scale=1.0):
 
 
 # ---------------------------------------------------------------- assembly ----
-def logo(height=600, *, letters=RED, scoop=CREAM_SOFT, keyline=RED,
+def logo(height=600, *, letters=LOGO, scoop=CREAM_SOFT, keyline=LOGO,
          cone=MANGO, cone_cell=CREAM_SOFT, transparent=True, bg=WHITE,
          text="loodly", oo_kern=-0.13, tracking=-0.015, counter=None,
          cone_len=1.22, cone_width=0.42, scoop_scale=0.84, cone_top=0.86):
@@ -171,8 +171,8 @@ def logo(height=600, *, letters=RED, scoop=CREAM_SOFT, keyline=RED,
     return flat
 
 
-def logo_mark(size=1024, *, transparent=True, bg=CREAM_SOFT, letters=RED,
-              scoop=CREAM_SOFT, keyline=RED, cone=MANGO, cone_cell=CREAM_SOFT,
+def logo_mark(size=1024, *, transparent=True, bg=CREAM_SOFT, letters=LOGO,
+              scoop=CREAM_SOFT, keyline=LOGO, cone=MANGO, cone_cell=CREAM_SOFT,
               counter=None):
     """Square icon cut: just the `oo` cone, no `l`/`dly`.
 

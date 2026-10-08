@@ -42,7 +42,7 @@ export const C = {
   crust: "#d18f4e",
   waferLine: "#b9773a",
   cherry: "#e11d48",
-  logoRed: "#ec2828",
+  logoBerry: "#c026a3",
   logoCream: "#fff7f0",
 };
 

@@ -68,7 +68,21 @@ def write_app(root: str, app: str, sfx: str) -> None:
     print("icons ->", p)
 
 
+def write_landing(root: str) -> None:
+    """Landing page tab icon and iOS home-screen icon (app/layout.tsx metadata)."""
+    site = os.path.join(root, "landing-page-new")
+    if not os.path.isdir(site):
+        return
+    logo_mark(256, transparent=True).save(
+        os.path.join(site, "app", "favicon.ico"), format="ICO",
+        sizes=[(16, 16), (32, 32), (48, 48), (64, 64)])
+    _flat(logo_mark(180, transparent=True), CREAM_SOFT).save(
+        os.path.join(site, "public", "apple-touch-icon.png"), "PNG", optimize=True)
+    print("icons ->", site)
+
+
 if __name__ == "__main__":
     root = sys.argv[1] if len(sys.argv) > 1 else "."
     for app, sfx in APPS.items():
         write_app(root, app, sfx)
+    write_landing(root)

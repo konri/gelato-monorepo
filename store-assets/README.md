@@ -8,6 +8,7 @@ cd store-assets/_gen
 python3 build.py          # store icons + 288 screenshots + brand files (~100s)
 python3 svg.py ../..      # re-write the in-app SVG logos
 python3 appicons.py ../.. # re-write the on-device icon/splash PNGs in each app
+                          # (and the landing favicon.ico / apple-touch-icon.png)
 ```
 
 The logo itself lives in `_gen/logo.py`; run it directly to preview variants

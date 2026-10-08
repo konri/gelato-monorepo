@@ -51,7 +51,7 @@ export default {
     }
   },
   Main: {
-    title: 'Time for ice cream! 🍦',
+    title: 'Time for a treat!',
     subtitle: 'Sign in or create an account',
     googleLogin: 'Continue with Google',
     facebookLogin: 'Continue with Facebook',

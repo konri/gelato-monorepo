@@ -51,7 +51,7 @@ const ua = {
     }
   },
   Main: {
-    title: 'Час на морозиво! 🍦',
+    title: 'Час на щось смачненьке!',
     subtitle: 'Увійдіть або створіть акаунт',
     googleLogin: 'Продовжити з Google',
     facebookLogin: 'Продовжити з Facebook',

@@ -11,7 +11,7 @@ import { useId, type SVGProps } from "react";
  *   collides when the mark appears several times on one page.
  */
 
-const LOGO_RED = "#EC2828";
+const LOGO_BERRY = "#C026A3";
 const LOGO_CREAM = "#FFF7F0";
 const LOGO_MANGO = "#FFB020";
 
@@ -72,12 +72,12 @@ export function LoodlyMark({ title, detail = false, ...props }: LoodlyMarkProps)
           cy={s.cy}
           r={s.r}
           fill={LOGO_CREAM}
-          stroke={LOGO_RED}
+          stroke={LOGO_BERRY}
           strokeWidth="1.6"
         />
       ))}
-      <ellipse cx="38.6" cy="52" rx="12.2" ry="13" fill={LOGO_RED} />
-      <ellipse cx="61.4" cy="52" rx="12.2" ry="13" fill={LOGO_RED} />
+      <ellipse cx="38.6" cy="52" rx="12.2" ry="13" fill={LOGO_BERRY} />
+      <ellipse cx="61.4" cy="52" rx="12.2" ry="13" fill={LOGO_BERRY} />
       <ellipse cx="38.6" cy="52" rx="7.2" ry="8" fill={LOGO_CREAM} />
       <ellipse cx="61.4" cy="52" rx="7.2" ry="8" fill={LOGO_CREAM} />
     </svg>
@@ -86,7 +86,7 @@ export function LoodlyMark({ title, detail = false, ...props }: LoodlyMarkProps)
 
 /** Logo colours, for illustrations that pair the mark with a wordmark. */
 export const LOODLY_LOGO_COLORS = {
-  red: LOGO_RED,
+  berry: LOGO_BERRY,
   cream: LOGO_CREAM,
   mango: LOGO_MANGO,
 } as const;

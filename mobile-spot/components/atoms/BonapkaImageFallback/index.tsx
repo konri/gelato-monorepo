@@ -11,7 +11,7 @@ export const BonapkaImageFallback = ({
   return (
     <View className="h-full w-full overflow-hidden">
       <LinearGradient
-        colors={['#EC2828', '#E8520D']}
+        colors={['#FFF1E6', '#FFE6D5']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}

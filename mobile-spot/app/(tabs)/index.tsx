@@ -138,7 +138,7 @@ function SpotOrdersScreen() {
               >
                 <Typography
                   variant="body-very-small-medium"
-                  style={{ color: '#EC2828', letterSpacing: 2, fontSize: 9 }}
+                  style={{ color: '#C026A3', letterSpacing: 2, fontSize: 9 }}
                 >
                   SPOT
                 </Typography>

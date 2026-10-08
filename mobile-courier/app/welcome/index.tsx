@@ -38,7 +38,7 @@ export default function MainLoginScreen() {
               <Typography
                 variant="body-base-bold"
                 className="tracking-[4px]"
-                style={{ color: '#EC2828' }}
+                style={{ color: '#C026A3' }}
               >
                 COURIER
               </Typography>

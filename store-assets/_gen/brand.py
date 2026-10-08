@@ -35,6 +35,9 @@ ROSE = (232, 96, 92)
 ROSE_LIGHT = (247, 150, 142)
 ROSE_DEEP = (188, 40, 44)
 BERRY = (192, 38, 163)
+# The logo colour: the landing / client-app berry (the logo was RED before).
+# RED stays the UI red of the screenshot mocks (screens.py, ui.py, frame.py).
+LOGO = BERRY
 ESPRESSO = (58, 21, 38)
 INK = (42, 16, 28)
 CREAM = (255, 244, 232)
@@ -75,7 +78,7 @@ def f_reg(size: int):
 
 
 # --------------------------------------------------------------- wordmark ----
-def wordmark(height: int = 240, *, core=RED, light=CREAM, dark=RED_DARK,
+def wordmark(height: int = 240, *, core=LOGO, light=CREAM, dark=RED_DARK,
              text="loodly", stacked=True, mark=True) -> Image.Image:
     """The `loodly` logo — see `logo.logo()` for the geometry.
 
@@ -93,7 +96,7 @@ def wordmark(height: int = 240, *, core=RED, light=CREAM, dark=RED_DARK,
 
 # ------------------------------------------------------------------- icon ----
 def app_icon(size: int = 1024, *, bg=CREAM_SOFT, transparent=False,
-             mark_col=RED, scoop_col=CREAM, squircle=False) -> Image.Image:
+             mark_col=LOGO, scoop_col=CREAM, squircle=False) -> Image.Image:
     """The `oo`-cone mark on a square — see `logo.logo_mark()`.
 
     `scoop_col` is accepted and ignored (the cluster is always cream); it is

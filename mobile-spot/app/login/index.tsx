@@ -177,7 +177,7 @@ export default function SpotLoginScreen() {
             >
               <Typography
                 variant="body-base-bold"
-                style={{ color: '#EC2828', letterSpacing: 4 }}
+                style={{ color: '#C026A3', letterSpacing: 4 }}
               >
                 SPOT
               </Typography>
