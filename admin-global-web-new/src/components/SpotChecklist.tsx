@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cityName } from '../lib/format';
+import { hasOpeningHours } from '../graphql/spots';
 import type { PickerSpot } from './SpotPicker';
 
 /**
@@ -87,7 +88,7 @@ export function SpotChecklist({
                   <span className="block font-medium text-gray-900">
                     {s.name}
                     {s.isActive === false && (
-                      <span className="ml-2 text-xs font-normal text-gray-400">{t('SpotPicker.notActive')}</span>
+                      <span className="ml-2 text-xs font-normal text-gray-400">{t(s.openingHours !== undefined && !hasOpeningHours(s.openingHours) ? 'SpotPicker.draft' : 'SpotPicker.notActive')}</span>
                     )}
                   </span>
                   <span className="block truncate text-xs text-gray-500">{s.address}</span>

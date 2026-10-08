@@ -29,6 +29,9 @@ import { Toggle } from '../components/ui/Toggle';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { EmptyState } from '../components/ui/EmptyState';
 import { FullPageSpinner } from '../components/ui/FullPageSpinner';
+import { stickyActionsClass } from '../components/ui/modalActions';
+import { placesConfigured } from '../lib/places';
+import { guardLeave, useUnsavedChanges } from '../lib/unsaved';
 
 const STATUS_TONE: Record<string, BadgeTone> = { ACTIVE: 'green', DRAFT: 'blue', INACTIVE: 'gray' };
 
@@ -48,7 +51,7 @@ export function EditSpotPage() {
   });
   const spot = data?.spot ?? null;
   const back = (
-    <Link to={paths.spots} className="text-sm text-gray-500 hover:text-brand">
+    <Link to={paths.spots} onClick={guardLeave(t('Common.unsavedConfirm'))} className="text-sm text-gray-500 hover:text-brand">
       {t('Common.backToSpots')}
     </Link>
   );
@@ -186,6 +189,7 @@ function SpotForm({ spot }: { spot: AdminSpot }) {
 
   const diff = diffOf(spot, form);
   const dirty = Object.keys(diff).length > 0;
+  useUnsavedChanges(dirty);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -202,7 +206,7 @@ function SpotForm({ spot }: { spot: AdminSpot }) {
     const lat = num(form.latitude);
     const lng = num(form.longitude);
     if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
-      errs.coords = t('CreateSpot.coordsRequired');
+      errs.coords = placesConfigured ? t('CreateSpot.coordsRequired') : t('CreateSpot.coordsRequiredManual');
     }
     if (form.email.trim() && !/^\S+@\S+\.\S+$/.test(form.email.trim())) errs.email = t('EditSpot.emailInvalid');
     const radius = num(form.deliveryRadiusKm);
@@ -277,7 +281,11 @@ function SpotForm({ spot }: { spot: AdminSpot }) {
             )}
           </Field>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label={t('Common.latitude')} error={errors.coords}>
+            <Field
+              label={t('Common.latitude')}
+              error={errors.coords}
+              hint={placesConfigured ? undefined : t('CreateSpot.coordsManualHint')}
+            >
               {(id, invalid) => (
                 <Input id={id} invalid={invalid} type="number" step="any" value={form.latitude} onChange={onText('latitude')} />
               )}
@@ -342,7 +350,7 @@ function SpotForm({ spot }: { spot: AdminSpot }) {
 
       {error && <Alert tone="error">{error}</Alert>}
       {notice && <Alert tone="success">{notice}</Alert>}
-      <div className="flex justify-end gap-3">
+      <div className={stickyActionsClass}>
         {dirty && (
           <Button
             variant="secondary"

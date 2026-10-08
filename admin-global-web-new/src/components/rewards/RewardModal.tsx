@@ -16,6 +16,7 @@ import { uploadPrizeImage } from '../../lib/upload';
 import { LocalizedTextFields } from '../LocalizedTextFields';
 import { ImageInput } from '../ImageInput';
 import { Modal } from '../ui/Modal';
+import { modalActionsClass } from '../ui/modalActions';
 import { Button } from '../ui/Button';
 import { Alert } from '../ui/Alert';
 import { Field, Input } from '../ui/Field';
@@ -377,7 +378,7 @@ export function RewardModal({
               onSelect={setFile}
             />
           )}
-          <div className="flex gap-3 border-t border-gray-100 pt-4">
+          <div className={modalActionsClass}>
             <Button variant="secondary" className="flex-1" onClick={onClose} disabled={busy}>
               {t('Common.cancel')}
             </Button>

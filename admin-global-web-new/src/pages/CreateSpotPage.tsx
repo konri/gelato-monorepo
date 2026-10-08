@@ -16,13 +16,19 @@ import { Alert } from '../components/ui/Alert';
 import { Field, Input, Select, Textarea } from '../components/ui/Field';
 import { Toggle } from '../components/ui/Toggle';
 import { EmptyState } from '../components/ui/EmptyState';
+import { stickyActionsClass } from '../components/ui/modalActions';
+import { buttonClass } from '../components/ui/buttonClass';
+import { SPOT_APP_URL } from '../lib/config';
+import { placesConfigured } from '../lib/places';
+import { confirmLeave, guardLeave, useUnsavedChanges } from '../lib/unsaved';
 
 type Errors = Partial<Record<'name' | 'cityId' | 'address' | 'coords' | 'phone' | 'radius' | 'threshold', string>>;
 
 /**
  * New spot of the brand, created as a draft with a server-generated id
  * (BRANDS_SPEC §3.3). Only the brand's cities can be chosen; PLATFORM can add
- * a city (it joins the brand's list).
+ * a city (it joins the brand's list). Starts as pick-up only: delivery needs
+ * couriers the spot has accepted, so it is switched on later.
  */
 export function CreateSpotPage() {
   const { t } = useTranslation();
@@ -53,13 +59,16 @@ export function CreateSpotPage() {
     deliveryRadiusKm: '5',
     freeDeliveryThreshold: '',
   });
-  const [deliveryEnabled, setDeliveryEnabled] = useState(true);
-  const [pickupEnabled, setPickupEnabled] = useState(false);
+  const [deliveryEnabled, setDeliveryEnabled] = useState(false);
+  const [pickupEnabled, setPickupEnabled] = useState(true);
   const [onlinePaymentEnabled, setOnlinePaymentEnabled] = useState(true);
   const [errors, setErrors] = useState<Errors>({});
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<AdminSpot | null>(null);
   const [cityModalOpen, setCityModalOpen] = useState(false);
+  const [touched, setTouched] = useState(false);
+  useUnsavedChanges(touched && !created);
+  const unsavedMessage = t('Common.unsavedConfirm');
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -81,7 +90,8 @@ export function CreateSpotPage() {
     const lat = parseFloat(form.latitude);
     const lng = parseFloat(form.longitude);
     if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
-      errs.coords = t('CreateSpot.coordsRequired');
+      // Without Google Places there is no address list to pick from.
+      errs.coords = placesConfigured ? t('CreateSpot.coordsRequired') : t('CreateSpot.coordsRequiredManual');
     }
     if (!form.phone.trim()) errs.phone = t('CreateSpot.required');
     if (deliveryEnabled) {
@@ -131,7 +141,7 @@ export function CreateSpotPage() {
   };
 
   const back = (
-    <Link to={paths.spots} className="text-sm text-gray-500 hover:text-brand">
+    <Link to={paths.spots} onClick={guardLeave(unsavedMessage)} className="text-sm text-gray-500 hover:text-brand">
       {t('Common.backToSpots')}
     </Link>
   );
@@ -146,6 +156,9 @@ export function CreateSpotPage() {
           </Alert>
           <div className="mt-4 flex flex-wrap gap-2">
             <ButtonLink to={paths.editSpot(created.id)}>{t('CreateSpot.openSpot')}</ButtonLink>
+            <a href={SPOT_APP_URL} target="_blank" rel="noreferrer" className={buttonClass('secondary')}>
+              {t('SpotApp.open')} ↗
+            </a>
             <ButtonLink to={paths.spots} variant="secondary">
               {t('Common.backToSpots')}
             </ButtonLink>
@@ -178,7 +191,7 @@ export function CreateSpotPage() {
 
       {error && <Alert tone="error" className="mb-4">{error}</Alert>}
 
-      <form onSubmit={submit} className="space-y-6" noValidate>
+      <form onSubmit={submit} onChange={() => setTouched(true)} className="space-y-6" noValidate>
         <Card title={t('EditSpot.basics')}>
           <div className="space-y-4">
             <Field label={t('Common.name')} error={errors.name}>
@@ -230,7 +243,11 @@ export function CreateSpotPage() {
               )}
             </Field>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label={t('Common.latitude')} error={errors.coords}>
+              <Field
+                label={t('Common.latitude')}
+                error={errors.coords}
+                hint={placesConfigured ? undefined : t('CreateSpot.coordsManualHint')}
+              >
                 {(id, invalid) => (
                   <Input id={id} invalid={invalid} type="number" step="any" value={form.latitude} onChange={set('latitude')} />
                 )}
@@ -301,8 +318,14 @@ export function CreateSpotPage() {
 
         <Alert tone="info">{t('CreateSpot.draftNote')}</Alert>
 
-        <div className="flex justify-end gap-3">
-          <Button variant="secondary" onClick={() => navigate(paths.spots)} disabled={loading}>
+        <div className={stickyActionsClass}>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              if (confirmLeave(unsavedMessage)) navigate(paths.spots);
+            }}
+            disabled={loading}
+          >
             {t('Common.cancel')}
           </Button>
           <Button type="submit" loading={loading} loadingText={t('Common.creating')}>

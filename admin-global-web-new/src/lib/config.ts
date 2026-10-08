@@ -9,8 +9,10 @@ export const API_ORIGIN = GRAPHQL_URL.replace(/\/graphql$/, '');
 // build injects package.json's version otherwise (vite.config.ts).
 export const APP_VERSION: string = import.meta.env.VITE_APP_VERSION || __APP_VERSION__;
 
-// Web link to the Loodly Spot app ("Open Loodly Spot"); hidden when unset.
-export const SPOT_APP_URL: string | undefined = import.meta.env.VITE_SPOT_APP_URL || undefined;
+// Web link to the Loodly Spot app ("Open Loodly Spot"). Defaults to the
+// production Spot, the same address the staff invite emails link to, so a
+// brand admin always has a way into the app the console sends them to.
+export const SPOT_APP_URL: string = import.meta.env.VITE_SPOT_APP_URL || 'https://spot.loodly.pl';
 
 export const ACCESS_TOKEN_KEY = 'admin_access_token';
 export const ADMIN_USER_KEY = 'admin_user';

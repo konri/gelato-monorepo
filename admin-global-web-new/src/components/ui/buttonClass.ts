@@ -9,8 +9,9 @@ const VARIANT: Record<ButtonVariant, string> = {
   ghost: 'text-brand hover:text-brand-dark',
 };
 
+// Small buttons keep a 44 px touch target on phones (below md).
 const SIZE: Record<ButtonSize, string> = {
-  sm: 'px-3 py-1.5 text-xs',
+  sm: 'min-h-11 px-3 py-1.5 text-xs md:min-h-0',
   md: 'px-4 py-2.5 text-sm',
 };
 

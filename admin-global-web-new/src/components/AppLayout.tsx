@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContext';
+import { confirmLeave } from '../lib/unsaved';
 import { useOptionalBrandScope } from '../brand/BrandScope';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { BrandLogo } from './brand/BrandLogo';
@@ -34,7 +36,8 @@ const BRAND_NAV: NavItem[] = [
 /**
  * Console shell. `platform`: Loodly header and the platform sections.
  * `brand`: the brand's logo and name, the brand sections, and a banner while
- * the brand is inactive.
+ * the brand is inactive. Below `md` the sidebar becomes a drawer opened from
+ * a top bar, so the content keeps the full width of a phone.
  */
 export function AppLayout({ variant }: { variant: 'platform' | 'brand' }) {
   const { t } = useTranslation();
@@ -45,30 +48,60 @@ export function AppLayout({ variant }: { variant: 'platform' | 'brand' }) {
   // Polled every 60 s and refetched on focus; platform only (the query is SUPER_ADMIN-only).
   const leadCounts = useLeadCounts({ live: true, skip: variant !== 'platform' });
   const newRequests = leadCounts.data?.businessLeadCounts.new ?? 0;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const unsavedMessage = t('Common.unsavedConfirm');
+  // Nav links: ask before leaving unsaved edits, and close the phone drawer.
+  const onNavigate = (e: React.MouseEvent) => {
+    if (!confirmLeave(unsavedMessage)) {
+      e.preventDefault();
+      return;
+    }
+    setMenuOpen(false);
+  };
+
+  const header =
+    variant === 'brand' && brand ? (
+      <div className="flex min-w-0 items-center gap-3">
+        <BrandLogo name={brand.name} logoUrl={brand.logoUrl} size="md" />
+        <div className="min-w-0">
+          <div className="truncate text-sm font-bold leading-5 text-gray-900" title={brand.name}>
+            {brand.name}
+          </div>
+          <div className="text-xs font-semibold tracking-wide text-brand">{t('Nav.brandConsole')}</div>
+        </div>
+      </div>
+    ) : (
+      <div className="flex items-center gap-2">
+        <img src="/loodly-mark.svg" alt="Loodly" className="h-9 w-9" />
+        <div>
+          <div className="text-sm font-bold leading-4 text-gray-900">Loodly</div>
+          <div className="text-xs font-semibold tracking-wide text-brand">{t('Nav.adminBadge')}</div>
+        </div>
+      </div>
+    );
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-gray-200 bg-white">
-        {variant === 'brand' && brand ? (
-          <div className="flex items-center gap-3 px-5 py-5">
-            <BrandLogo name={brand.name} logoUrl={brand.logoUrl} size="md" />
-            <div className="min-w-0">
-              <div className="truncate text-sm font-bold leading-5 text-gray-900" title={brand.name}>
-                {brand.name}
-              </div>
-              <div className="text-xs font-semibold tracking-wide text-brand">{t('Nav.brandConsole')}</div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 px-5 py-5">
-            <img src="/loodly-mark.svg" alt="Loodly" className="h-9 w-9" />
-            <div>
-              <div className="text-sm font-bold leading-4 text-gray-900">Loodly</div>
-              <div className="text-xs font-semibold tracking-wide text-brand">{t('Nav.adminBadge')}</div>
-            </div>
-          </div>
-        )}
+      {menuOpen && (
+        <div className="fixed inset-0 z-30 bg-black/40 md:hidden" aria-hidden onClick={() => setMenuOpen(false)} />
+      )}
+      {/* Sidebar: static from md up, a drawer below. */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 flex h-screen w-60 shrink-0 flex-col border-r border-gray-200 bg-white transition-transform md:sticky md:top-0 md:translate-x-0 ${
+          menuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="flex items-center justify-between gap-2 px-5 py-5">
+          {header}
+          <button
+            type="button"
+            onClick={() => setMenuOpen(false)}
+            aria-label={t('Common.close')}
+            className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-xl text-gray-500 hover:bg-gray-100 md:hidden"
+          >
+            ×
+          </button>
+        </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-3">
           {nav.map((item) => (
@@ -76,8 +109,9 @@ export function AppLayout({ variant }: { variant: 'platform' | 'brand' }) {
               key={item.to}
               to={item.to}
               end={item.end}
+              onClick={onNavigate}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium ${
+                `flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium ${
                   isActive ? 'bg-brand-light text-brand' : 'text-gray-600 hover:bg-gray-50'
                 }`
               }
@@ -108,21 +142,38 @@ export function AppLayout({ variant }: { variant: 'platform' | 'brand' }) {
           <LanguageSwitcher className="mb-1 px-1" />
           <NavLink
             to="/change-password"
-            className="block w-full rounded-lg px-3 py-2 text-left text-sm text-gray-600 hover:bg-gray-50"
+            onClick={onNavigate}
+            className="flex min-h-11 w-full items-center rounded-lg px-3 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 md:min-h-0"
           >
             {t('Nav.changePassword')}
           </NavLink>
           <button
-            onClick={() => logout()}
-            className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-600 hover:bg-gray-50"
+            onClick={() => {
+              if (confirmLeave(unsavedMessage)) logout();
+            }}
+            className="flex min-h-11 w-full items-center rounded-lg px-3 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 md:min-h-0"
           >
             {t('Nav.signOut')}
           </button>
         </div>
       </aside>
 
-      {/* Content */}
-      <main className="min-w-0 flex-1 overflow-auto">
+      {/* Content. The window scrolls, not <main>: clip (not auto) keeps it from
+          becoming a scroll container, so the phone top bar and the sticky
+          form actions stick to the viewport. Wide tables scroll in their own wrappers. */}
+      <main className="min-w-0 flex-1 overflow-x-clip">
+        <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-2 md:hidden">
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            aria-label={t('Nav.openMenu')}
+            aria-expanded={menuOpen}
+            className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-xl text-gray-700 hover:bg-gray-100"
+          >
+            ☰
+          </button>
+          {header}
+        </div>
         {variant === 'brand' && scope && !scope.brandActive && (
           <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-800 sm:px-8">
             {t('BrandScope.inactiveBanner')}
@@ -150,7 +201,7 @@ function FlashNotice() {
 
   const dismiss = () => navigate(`${location.pathname}${location.search}${location.hash}`, { replace: true, state: null });
   const close = (
-    <button type="button" onClick={dismiss} className="text-xs font-semibold underline">
+    <button type="button" onClick={dismiss} className="min-h-11 px-2 text-xs font-semibold underline md:min-h-0">
       {t('Common.close')}
     </button>
   );

@@ -37,6 +37,8 @@ export function UseSpotAppPage({ blocked = false }: { blocked?: boolean }) {
             {t('SpotApp.open')}
           </a>
         )}
+        {/* The address too, for staff who will open it on another device. */}
+        <p className="pb-1 text-center text-xs text-gray-500">{SPOT_APP_URL.replace(/^https?:\/\//, '')}</p>
         {signedIn ? (
           <Button variant="secondary" className="w-full" onClick={() => logout()}>
             {t('Nav.signOut')}

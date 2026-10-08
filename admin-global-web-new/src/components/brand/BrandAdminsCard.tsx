@@ -18,6 +18,7 @@ import { Button } from '../ui/Button';
 import { Alert } from '../ui/Alert';
 import { Badge } from '../ui/Badge';
 import { Modal } from '../ui/Modal';
+import { modalActionsClass } from '../ui/modalActions';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { Field, Input, Select } from '../ui/Field';
 
@@ -91,14 +92,17 @@ export function BrandAdminsCard() {
                 )}
                 {!self && (
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      disabled={!!state && state !== 'sent'}
-                      onClick={() => void run(a.id, 'resend', () => resend({ variables: { userId: a.id } }))}
-                    >
-                      {state === 'resend' ? t('Common.sending') : state === 'sent' ? t('Common.codeSent') : t('Common.resendCode')}
-                    </Button>
+                    {/* Resending only makes sense while the invite is still pending. */}
+                    {a.invitePending && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={!!state && state !== 'sent'}
+                        onClick={() => void run(a.id, 'resend', () => resend({ variables: { userId: a.id } }))}
+                      >
+                        {state === 'resend' ? t('Common.sending') : state === 'sent' ? t('Common.codeSent') : t('Common.resendCode')}
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="secondary"
@@ -194,7 +198,7 @@ function InviteBrandAdminModal({ onClose }: { onClose: () => void }) {
       ) : (
         <form onSubmit={submit} className="space-y-3">
           {error && <Alert tone="error">{error}</Alert>}
-          <Field label={t('Common.name')}>
+          <Field label={t('Common.fullName')}>
             {(id) => <Input id={id} value={name} onChange={(e) => setName(e.target.value)} required />}
           </Field>
           <Field label={t('Common.email')} error={emailError}>
@@ -213,7 +217,7 @@ function InviteBrandAdminModal({ onClose }: { onClose: () => void }) {
               </Select>
             )}
           </Field>
-          <div className="flex gap-3 pt-2">
+          <div className={modalActionsClass}>
             <Button variant="secondary" className="flex-1" onClick={onClose} disabled={loading}>
               {t('Common.cancel')}
             </Button>

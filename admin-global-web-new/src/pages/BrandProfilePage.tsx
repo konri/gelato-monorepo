@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useQuery } from '@apollo/client/react';
 import { useTranslation } from 'react-i18next';
 import { useBrandScope } from '../brand/BrandScope';
@@ -25,6 +27,17 @@ export function BrandProfilePage() {
   });
   const spots = data?.brandSpots ?? [];
   const spotsLoaded = !!data && !loading;
+
+  // Checklist links point at sections of this page (#identity, #cities):
+  // the router only changes the hash, so scroll to the section ourselves.
+  const { hash, key } = useLocation();
+  useEffect(() => {
+    if (!hash) return;
+    const frame = requestAnimationFrame(() => {
+      document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [hash, key]);
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6 p-6 sm:p-8">

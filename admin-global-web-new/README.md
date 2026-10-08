@@ -15,7 +15,7 @@ npm run dev
 |---|---|
 | `VITE_API_URL` | GraphQL endpoint (REST routes live on the same origin). Default `http://localhost:4000/graphql` |
 | `VITE_APP_VERSION` | Version in the `x-loodly-client: admin-web@<version>` header (default: `package.json` version) |
-| `VITE_SPOT_APP_URL` | Link behind "Open Loodly Spot" (hidden when unset) |
+| `VITE_SPOT_APP_URL` | Link behind "Open Loodly Spot" (setup checklist, activation, staff screen). Default `https://spot.loodly.pl` |
 | `VITE_GOOGLE_MAPS_API_KEY` | Address and city suggestions (optional) |
 
 ## Checks
