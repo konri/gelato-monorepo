@@ -25,6 +25,8 @@ import { ChipMultiSelect } from '../components/ChipMultiSelect';
 import { CreateCityModal } from '../components/CreateCityModal';
 import { ImageInput } from '../components/ImageInput';
 import { Card, PageHeader } from '../components/ui/Card';
+import { stickyActionsClass } from '../components/ui/modalActions';
+import { confirmLeave, guardLeave, useUnsavedChanges } from '../lib/unsaved';
 import { Button } from '../components/ui/Button';
 import { Alert } from '../components/ui/Alert';
 import { Field, Input, Select, Textarea } from '../components/ui/Field';
@@ -95,6 +97,10 @@ export function CreateBrandPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [cityModalOpen, setCityModalOpen] = useState(false);
+  // Any typed field, a chosen city or a logo: leaving asks first.
+  const [touched, setTouched] = useState(false);
+  useUnsavedChanges(touched || cityIds.length > 0 || !!logo);
+  const unsavedMessage = t('Common.unsavedConfirm');
 
   const cityOptions = useMemo(
     () =>
@@ -200,7 +206,7 @@ export function CreateBrandPage() {
         title={t('BrandForm.createTitle')}
         subtitle={t('BrandForm.createSubtitle')}
         back={
-          <Link to="/brands" className="text-sm text-gray-500 hover:text-brand">
+          <Link to="/brands" onClick={guardLeave(unsavedMessage)} className="text-sm text-gray-500 hover:text-brand">
             {t('BrandScope.backToBrands')}
           </Link>
         }
@@ -208,7 +214,7 @@ export function CreateBrandPage() {
 
       {error && <Alert tone="error" className="mb-4">{error}</Alert>}
 
-      <form onSubmit={submit} className="space-y-6" noValidate>
+      <form onSubmit={submit} onChange={() => setTouched(true)} className="space-y-6" noValidate>
         <Card title={t('BrandForm.identity')}>
           <div className="space-y-4">
             <Field label={t('BrandForm.name')} error={fieldErrors.name} hint={t('BrandForm.nameHint')}>
@@ -340,7 +346,7 @@ export function CreateBrandPage() {
 
         <Card title={t('BrandForm.firstAdmin')} description={t('BrandForm.firstAdminHint')}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t('Common.name')} error={fieldErrors.adminName}>
+            <Field label={t('Common.fullName')} error={fieldErrors.adminName}>
               {(id, invalid) => (
                 <Input id={id} invalid={invalid} value={adminName} onChange={(e) => setAdminName(e.target.value)} />
               )}
@@ -374,8 +380,14 @@ export function CreateBrandPage() {
           </div>
         </Card>
 
-        <div className="flex justify-end gap-3">
-          <Button variant="secondary" onClick={() => navigate('/brands')} disabled={busy}>
+        <div className={stickyActionsClass}>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              if (confirmLeave(unsavedMessage)) navigate('/brands');
+            }}
+            disabled={busy}
+          >
             {t('Common.cancel')}
           </Button>
           <Button type="submit" loading={busy} loadingText={t('Common.creating')}>

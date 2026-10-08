@@ -10,6 +10,8 @@ import {
 import { ADMIN_BRAND, type BrandAdminView } from '../graphql/brands';
 import { useOptionalBrandScope } from '../brand/BrandScope';
 import { errorText } from '../lib/errors';
+import { SPOT_APP_URL } from '../lib/config';
+import { buttonClass } from './ui/buttonClass';
 import { mountedQueries } from '../lib/cachePolicies';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
@@ -21,7 +23,8 @@ type Check = { key: string; ok: boolean | null; label: string; hint: string };
 /**
  * Activation of a draft or inactive spot (BRANDS_SPEC §3.3): hours, menu and
  * a photo are checked as warnings only; the plan's active-spot limit and an
- * inactive brand block it.
+ * inactive brand block it. With something missing, the way forward is the
+ * Loodly Spot app; activating anyway stays possible but is not the main button.
  */
 export function ActivationChecklist({
   spot,
@@ -98,20 +101,51 @@ export function ActivationChecklist({
       onClose={onClose}
       busy={loading}
       footer={
-        <>
-          <Button variant="secondary" className="flex-1" onClick={onClose} disabled={loading}>
-            {t('Common.cancel')}
-          </Button>
-          <Button
-            className="flex-1"
-            onClick={() => void submit()}
-            disabled={blocked || !quota}
-            loading={loading}
-            loadingText={t('Common.saving')}
-          >
-            {warnings > 0 ? t('Activation.activateAnyway') : t('Activation.activate')}
-          </Button>
-        </>
+        warnings > 0 ? (
+          <div className="flex w-full flex-col gap-2 sm:flex-row-reverse">
+            <a
+              href={SPOT_APP_URL}
+              target="_blank"
+              rel="noreferrer"
+              className={buttonClass('primary', 'md', 'flex-1')}
+            >
+              {t('Activation.openSpotApp')} ↗
+            </a>
+            <Button
+              variant="secondary"
+              className="flex-1"
+              onClick={() => void submit()}
+              disabled={blocked || !quota}
+              loading={loading}
+              loadingText={t('Common.saving')}
+            >
+              {t('Activation.activateAnyway')}
+            </Button>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="min-h-11 rounded-lg px-3 text-sm font-semibold text-gray-500 hover:text-gray-700 disabled:opacity-60 sm:min-h-0"
+            >
+              {t('Common.cancel')}
+            </button>
+          </div>
+        ) : (
+          <>
+            <Button variant="secondary" className="flex-1" onClick={onClose} disabled={loading}>
+              {t('Common.cancel')}
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={() => void submit()}
+              disabled={blocked || !quota}
+              loading={loading}
+              loadingText={t('Common.saving')}
+            >
+              {t('Activation.activate')}
+            </Button>
+          </>
+        )
       }
     >
       {error && <Alert tone="error" className="mb-3">{error}</Alert>}

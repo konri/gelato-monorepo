@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cityName } from '../lib/format';
+import { hasOpeningHours, type OpeningHours } from '../graphql/spots';
 
 /** What the picker needs from a spot (AdminSpot fits). */
 export type PickerSpot = {
@@ -9,6 +10,8 @@ export type PickerSpot = {
   address: string;
   phone?: string | null;
   isActive?: boolean;
+  /** With hours set a non-active spot is "inactive", without them a draft. */
+  openingHours?: OpeningHours;
   city?: { id: string; name: string; nameLocal?: unknown } | null;
   brand?: { id: string; name: string } | null;
 };
@@ -152,7 +155,7 @@ export function SpotPicker({
                     <span className="text-sm font-medium text-gray-900">
                       {s.name}
                       {s.isActive === false && (
-                        <span className="ml-2 text-xs font-normal text-gray-400">{t('SpotPicker.notActive')}</span>
+                        <span className="ml-2 text-xs font-normal text-gray-400">{t(s.openingHours !== undefined && !hasOpeningHours(s.openingHours) ? 'SpotPicker.draft' : 'SpotPicker.notActive')}</span>
                       )}
                     </span>
                     <span className="text-xs text-gray-500">{secondary(s)}</span>

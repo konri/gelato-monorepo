@@ -10,13 +10,14 @@ import { STAFF_LANGUAGES, passwordProblems, staffLanguageFor, type StaffLanguage
 import { SpotChecklist } from '../SpotChecklist';
 import { PasswordRules } from '../PasswordRules';
 import { Modal } from '../ui/Modal';
+import { modalActionsClass } from '../ui/modalActions';
 import { Button } from '../ui/Button';
 import { Alert } from '../ui/Alert';
 import { Field, Input, Select } from '../ui/Field';
 
 type InviteKind = Extract<StaffKind, 'SPOT_ADMIN' | 'EMPLOYEE'>;
 type Mode = 'code' | 'password';
-type Errors = Partial<Record<'spots' | 'name' | 'email' | 'password', string>>;
+type Errors = Partial<Record<'kind' | 'spots' | 'name' | 'email' | 'password', string>>;
 type Outcome = { tone: 'success' | 'info'; title: string; body?: string };
 
 /** An existing account is at least this old when inviteStaff re-attached it. */
@@ -26,7 +27,8 @@ const NAME_MAX = 100;
 /**
  * Invite a spot admin (one or more spots) or an employee (one spot)
  * (BRANDS_SPEC §3.3, §2.5): role cards, spots, name, email, email language,
- * and an emailed code (default) or a password handed over in person.
+ * and an emailed code (default) or a password handed over in person. No role
+ * is preselected: the owner picks one of the two cards before the spots show.
  */
 export function InviteStaffModal({
   brandId,
@@ -47,7 +49,7 @@ export function InviteStaffModal({
 }) {
   const { t, i18n } = useTranslation();
   const preselected = initialSpotId && spots.some((s) => s.id === initialSpotId) ? [initialSpotId] : [];
-  const [kind, setKind] = useState<InviteKind>('EMPLOYEE');
+  const [kind, setKind] = useState<InviteKind | null>(null);
   const [spotIds, setSpotIds] = useState<string[]>(preselected);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -66,12 +68,14 @@ export function InviteStaffModal({
 
   const chooseKind = (next: InviteKind) => {
     setKind(next);
+    setErrors((errs) => ({ ...errs, kind: undefined }));
     // An employee works at exactly one spot.
     if (next === 'EMPLOYEE' && spotIds.length > 1) setSpotIds(spotIds.slice(0, 1));
   };
 
   const validate = (): Errors => {
     const errs: Errors = {};
+    if (!kind) errs.kind = t('Staff.errRole');
     if (kind === 'SPOT_ADMIN' && spotIds.length === 0) errs.spots = t('Staff.errSpotsMany');
     if (kind === 'EMPLOYEE' && spotIds.length !== 1) errs.spots = t('Staff.errSpotOne');
     if (!name.trim()) errs.name = t('Staff.errName');
@@ -94,7 +98,7 @@ export function InviteStaffModal({
     setError(null);
     const errs = validate();
     setErrors(errs);
-    if (Object.keys(errs).length > 0) return;
+    if (Object.keys(errs).length > 0 || !kind) return;
 
     const normalizedEmail = email.trim().toLowerCase();
     const before = members.find((m) => m.email.toLowerCase() === normalizedEmail) ?? null;
@@ -181,14 +185,19 @@ export function InviteStaffModal({
                 </button>
               ))}
             </div>
+            {errors.kind && <p className="mt-1 text-xs text-red-600">{errors.kind}</p>}
           </fieldset>
 
           <div>
             <p className="mb-1 text-sm font-medium text-gray-700">
-              {kind === 'SPOT_ADMIN' ? t('Staff.spotsMany') : t('Staff.spotOne')}
+              {kind === 'EMPLOYEE' ? t('Staff.spotOne') : t('Staff.spotsMany')}
             </p>
             {spots.length === 0 ? (
               <p className="text-sm text-gray-500">{t('Staff.noSpots')}</p>
+            ) : !kind ? (
+              <p className="rounded-lg border border-dashed border-gray-200 px-4 py-3 text-sm text-gray-500">
+                {t('Staff.chooseRoleFirst')}
+              </p>
             ) : (
               <SpotChecklist
                 spots={spots}
@@ -203,7 +212,7 @@ export function InviteStaffModal({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={t('Common.name')} error={errors.name}>
+            <Field label={t('Common.fullName')} error={errors.name}>
               {(id, invalid) => (
                 <Input
                   id={id}
@@ -290,7 +299,7 @@ export function InviteStaffModal({
 
           <p className="rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-800">{t('Staff.appNote')}</p>
 
-          <div className="flex gap-3 border-t border-gray-100 pt-4">
+          <div className={modalActionsClass}>
             <Button variant="secondary" className="flex-1" onClick={onClose} disabled={loading}>
               {t('Common.cancel')}
             </Button>

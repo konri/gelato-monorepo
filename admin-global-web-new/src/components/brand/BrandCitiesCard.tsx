@@ -82,7 +82,7 @@ export function BrandCitiesCard({ spots }: { spots: AdminSpot[] }) {
         ) : undefined
       }
     >
-      <div id="cities" className="space-y-4">
+      <div id="cities" className="scroll-mt-28 space-y-4">
         <ChipMultiSelect
           options={options}
           value={selected}

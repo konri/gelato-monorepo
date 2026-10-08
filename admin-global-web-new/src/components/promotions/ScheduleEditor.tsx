@@ -63,7 +63,7 @@ export function ScheduleEditor({
                       aria-pressed={on}
                       title={dayLong(day)}
                       onClick={() => toggleDay(range, day)}
-                      className={`min-w-[2.75rem] rounded-full border px-2.5 py-1 text-xs font-semibold capitalize transition-colors disabled:opacity-60 ${
+                      className={`min-h-11 min-w-[2.75rem] rounded-full border px-2.5 py-1 text-xs md:min-h-0 font-semibold capitalize transition-colors disabled:opacity-60 ${
                         on ? 'border-brand bg-brand text-white' : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'
                       }`}
                     >

@@ -282,13 +282,13 @@ function SpotList({
               {spot.phone && <p className="mt-1 text-xs text-gray-400">{spot.phone}</p>}
               {st === 'DRAFT' && <p className="mt-2 text-xs text-blue-700">{t('Spots.draftHint')}</p>}
               <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 pt-4 text-sm font-semibold">
-                <Link to={p.editSpot(spot.id)} className="text-brand hover:text-brand-dark">
+                <Link to={p.editSpot(spot.id)} className="inline-flex min-h-11 items-center text-brand hover:text-brand-dark md:min-h-0">
                   {t('Common.edit')}
                 </Link>
-                <Link to={p.staffFor({ spotId: spot.id })} className="text-brand hover:text-brand-dark">
+                <Link to={p.staffFor({ spotId: spot.id })} className="inline-flex min-h-11 items-center text-brand hover:text-brand-dark md:min-h-0">
                   {t('Spots.staff')}
                 </Link>
-                <Link to={p.ordersFor(spot.id)} className="text-brand hover:text-brand-dark">
+                <Link to={p.ordersFor(spot.id)} className="inline-flex min-h-11 items-center text-brand hover:text-brand-dark md:min-h-0">
                   {t('Spots.orderHistory')}
                 </Link>
                 <span className="ml-auto">

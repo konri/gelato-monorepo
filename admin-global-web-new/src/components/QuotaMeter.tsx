@@ -3,15 +3,16 @@ import type { SpotQuota } from '../graphql/brands';
 import { DRAFT_SPOT_ALLOWANCE } from '../lib/constants';
 
 /**
- * Active spots against the plan's maxSpots: amber from 80 %, red at 100 %
- * (BRANDS_SPEC §3.3). `compact` drops the drafts line.
+ * Active spots against the plan's maxSpots: amber from 80 % (a full plan is
+ * normal, e.g. right after activating the only spot), red only above the
+ * plan (BRANDS_SPEC §3.3). `compact` drops the drafts line.
  */
 export function QuotaMeter({ quota, compact = false }: { quota: SpotQuota; compact?: boolean }) {
   const { t } = useTranslation();
   const { activeSpots, maxSpots, totalSpots } = quota;
   const ratio = maxSpots > 0 ? activeSpots / maxSpots : activeSpots > 0 ? Infinity : 0;
   const full = maxSpots === 0 || ratio >= 1;
-  const tone = ratio >= 1 ? 'red' : ratio >= 0.8 ? 'amber' : 'green';
+  const tone = ratio > 1 ? 'red' : ratio >= 0.8 ? 'amber' : 'green';
   const bar = { red: 'bg-red-500', amber: 'bg-amber-500', green: 'bg-green-500' }[tone];
   const text = { red: 'text-red-700', amber: 'text-amber-700', green: 'text-gray-700' }[tone];
   const width = maxSpots > 0 ? Math.min(100, Math.round(ratio * 100)) : activeSpots > 0 ? 100 : 0;

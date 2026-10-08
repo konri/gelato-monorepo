@@ -66,7 +66,7 @@ export function BrandIdentityCard() {
 
   return (
     <Card title={t('BrandProfile.identity')} description={t('BrandProfile.identityHint')}>
-      <div id="identity" className="grid gap-6 lg:grid-cols-[1fr_auto]">
+      <div id="identity" className="grid scroll-mt-28 gap-6 lg:grid-cols-[1fr_auto]">
         <div className="space-y-5">
           <div>
             <p className="mb-1 text-sm font-medium text-gray-700">{t('BrandForm.name')}</p>
