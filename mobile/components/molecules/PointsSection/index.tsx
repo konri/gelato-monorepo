@@ -19,13 +19,13 @@ export const PointsSection = ({ variant = 'default' }: { variant?: 'default' | '
   const points = selectedWallet.availablePoints;
   return (
     <View
-      className="flex-row items-center self-start rounded-full border border-red-100 bg-red-50 pl-1 pr-3"
+      className="flex-row items-center self-start rounded-full border border-berry-pale bg-berry-wash pl-1 pr-3"
       style={{ minHeight: small ? 36 : 44 }}
       accessible
       accessibilityLabel={`${selectedWallet.brand.name}, ${pointsText(t, points)}`}
     >
       <BrandLogo brand={selectedWallet.brand} size={small ? 28 : 36} />
-      <LText size={small ? 16 : 18} weight="700" color={COLORS.red} className="ml-2" max={1.3}>
+      <LText size={small ? 16 : 18} weight="700" color={COLORS.brand} className="ml-2" max={1.3}>
         {formatNumber(points)}
       </LText>
       <LText size={16} color={COLORS.secondary} className="ml-1" max={1.3}>

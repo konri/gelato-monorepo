@@ -7,6 +7,7 @@ import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { THEME } from '@/constants/palette';
 
 export default function CartScreen() {
   const insets = useSafeAreaInsets();
@@ -29,18 +30,18 @@ export default function CartScreen() {
     t('Ordering.price', { amount: amount.toFixed(2).replace(/\.00$/, '') });
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-mainBg" style={{ paddingTop: insets.top }}>
       {/* Header */}
       <View className="flex-row items-center px-4 py-3 border-b border-gray-200">
         <Pressable onPress={() => router.back()} hitSlop={8} className="mr-2">
-          <Ionicons name="arrow-back" size={24} color="#212121" />
+          <Ionicons name="arrow-back" size={24} color={THEME.text} />
         </Pressable>
         <Text className="text-lg font-urbanist-bold text-text-primary flex-1">
           {t('Ordering.viewCart')}
         </Text>
         {cart.count > 0 ? (
           <Pressable onPress={() => cart.clear()} hitSlop={8}>
-            <Ionicons name="trash-outline" size={22} color="#EC2828" />
+            <Ionicons name="trash-outline" size={22} color={THEME.error} />
           </Pressable>
         ) : null}
       </View>
@@ -132,11 +133,11 @@ export default function CartScreen() {
                       <Ionicons
                         name={type === 'delivery' ? 'bicycle-outline' : 'storefront-outline'}
                         size={18}
-                        color={active ? '#EC2828' : '#6B7280'}
+                        color={active ? THEME.primary : THEME.textTertiary}
                       />
                       <Text
                         className="ml-2 font-urbanist-bold"
-                        style={{ color: active ? '#EC2828' : '#6B7280' }}
+                        style={{ color: active ? THEME.primary : THEME.textTertiary }}
                       >
                         {t(type === 'delivery' ? 'Ordering.delivery' : 'Ordering.pickup')}
                       </Text>
@@ -149,7 +150,7 @@ export default function CartScreen() {
                 <Ionicons
                   name={pickupEnabled && !deliveryEnabled ? 'storefront-outline' : 'bicycle-outline'}
                   size={18}
-                  color="#EC2828"
+                  color={THEME.primary}
                 />
                 <Text className="ml-2 font-urbanist-bold text-accent">
                   {pickupEnabled && !deliveryEnabled ? t('Ordering.pickup') : t('Ordering.delivery')}

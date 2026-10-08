@@ -4,6 +4,7 @@ import Slider from '@react-native-community/slider';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 interface DistanceSectionProps {
   value: number;
@@ -35,10 +36,10 @@ export const DistanceSection: React.FC<DistanceSectionProps> = ({
         {t('Filters.distance')}
       </Typography>
       <View className="flex-row justify-between mb-2">
-        <Typography variant="body-small-regular" className="text-red-500">
+        <Typography variant="body-small-regular" className="text-accent">
           0 m
         </Typography>
-        <Typography variant="body-small-regular" className="text-red-500">
+        <Typography variant="body-small-regular" className="text-accent">
           {formatDistance(value)}
         </Typography>
       </View>
@@ -48,9 +49,9 @@ export const DistanceSection: React.FC<DistanceSectionProps> = ({
         minimumValue={min}
         maximumValue={max}
         step={0.2}
-        minimumTrackTintColor="#EA3A1D"
-        maximumTrackTintColor="#D1D5DB"
-        thumbTintColor="#EA3A1D"
+        minimumTrackTintColor={THEME.primary}
+        maximumTrackTintColor={THEME.inactive}
+        thumbTintColor={THEME.primary}
         tapToSeek
       />
     </View>

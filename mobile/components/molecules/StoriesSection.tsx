@@ -76,10 +76,10 @@ export const StoriesSection = ({ storeStories, onStoryPress }: StoriesSectionPro
                 width: 68,
                 height: 68,
                 background: store.hasUnread
-                  ? 'linear-gradient(45deg, #EC2828, #FFA500)'
+                  ? 'linear-gradient(45deg, #C026A3, #FFB020)'
                   : 'transparent',
                 borderWidth: store.hasUnread ? 0 : 2,
-                borderColor: store.hasUnread ? 'transparent' : '#E5E7EB',
+                borderColor: store.hasUnread ? 'transparent' : '#EAD8CC',
               }}
             >
               <View className="w-full h-full rounded-full bg-white p-0.5 items-center justify-center">

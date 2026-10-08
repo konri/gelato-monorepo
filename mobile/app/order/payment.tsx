@@ -10,6 +10,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { THEME } from '@/constants/palette';
 
 const zl = (n: number) => `${n.toFixed(2).replace(/\.00$/, '')} zł`;
 
@@ -168,10 +169,10 @@ export default function PaymentScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-mainBg" style={{ paddingTop: insets.top }}>
       <View className="flex-row items-center px-4 py-3 border-b border-gray-200">
         <Pressable onPress={() => router.back()} hitSlop={8} className="mr-2" disabled={processing}>
-          <Ionicons name="arrow-back" size={24} color="#212121" />
+          <Ionicons name="arrow-back" size={24} color={THEME.text} />
         </Pressable>
         <Text className="text-lg font-urbanist-bold text-text-primary flex-1">
           {t('Payment.title')}
@@ -179,13 +180,13 @@ export default function PaymentScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <View className="bg-background-secondary rounded-2xl p-4">
+        <View className="bg-white border border-gray-200 rounded-2xl p-4">
           <Text className="font-urbanist-bold text-text-primary mb-2">{t('Checkout.summary')}</Text>
           <View className="flex-row items-start">
             <Ionicons
               name={isPickup ? 'storefront' : 'location'}
               size={16}
-              color="#EC2828"
+              color={THEME.primary}
               style={{ marginTop: 2 }}
             />
             <Text className="ml-2 flex-1 font-urbanist text-text-secondary">
@@ -289,8 +290,8 @@ const SummaryRow = ({ label, value }: { label: string; value: string }) => (
 );
 
 const PayBadge = ({ icon, label }: { icon: any; label: string }) => (
-  <View className="flex-row items-center bg-background-secondary rounded-full px-3 py-2 mr-2 mb-2">
-    <Ionicons name={icon} size={16} color="#212121" />
+  <View className="flex-row items-center bg-white border border-gray-200 rounded-full px-3 py-2 mr-2 mb-2">
+    <Ionicons name={icon} size={16} color={THEME.text} />
     <Text className="ml-1.5 font-urbanist-semibold text-text-primary text-xs">{label}</Text>
   </View>
 );
@@ -314,7 +315,7 @@ const PayOption = ({
       active ? 'border-accent bg-accent/5' : 'border-gray-200'
     }`}
   >
-    <Ionicons name={icon} size={22} color={active ? '#EC2828' : '#6B7280'} />
+    <Ionicons name={icon} size={22} color={active ? THEME.primary : THEME.textTertiary} />
     <View className="flex-1 ml-3">
       <Text className="font-urbanist-bold text-text-primary">{title}</Text>
       <Text className="font-urbanist text-text-tertiary text-xs mt-0.5">{subtitle}</Text>
@@ -322,7 +323,7 @@ const PayOption = ({
     <Ionicons
       name={active ? 'radio-button-on' : 'radio-button-off'}
       size={20}
-      color={active ? '#EC2828' : '#9CA3AF'}
+      color={active ? THEME.primary : THEME.placeholder}
     />
   </Pressable>
 );

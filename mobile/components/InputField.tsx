@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Pressable, Text, TextInput, TextInputProps, View } from "react-native";
+import { THEME } from "@/constants/palette";
 
 interface InputFieldProps extends TextInputProps {
   label: string;
@@ -58,7 +59,7 @@ export const InputField = ({
           <Ionicons
             name={iconName}
             size={iconSize}
-            color="#9E9E9E"
+            color={THEME.placeholder}
             className={iconMargin}
           />
         )}
@@ -79,7 +80,7 @@ export const InputField = ({
             paddingVertical: 0,
           }}
           placeholder={placeholder}
-          placeholderTextColor="#9E9E9E"
+          placeholderTextColor={THEME.placeholder}
           value={value}
           onChangeText={handleTextChange}
           secureTextEntry={isPassword && !showPassword}
@@ -90,7 +91,7 @@ export const InputField = ({
             <Ionicons
               name={showPassword ? "eye-outline" : "eye-off-outline"}
               size={24}
-              color="#9E9E9E"
+              color={THEME.placeholder}
             />
           </Pressable>
         )}

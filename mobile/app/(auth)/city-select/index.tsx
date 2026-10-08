@@ -12,6 +12,7 @@ import { router } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 const haversineKm = (aLat: number, aLng: number, bLat: number, bLng: number) => {
   const toRad = (d: number) => (d * Math.PI) / 180;
@@ -88,7 +89,7 @@ export default function CitySelectScreen() {
 
         {loading ? (
           <View className="py-16 items-center">
-            <ActivityIndicator size="large" color="#EC2828" />
+            <ActivityIndicator size="large" color={THEME.primary} />
           </View>
         ) : (
           <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -104,7 +105,7 @@ export default function CitySelectScreen() {
                   }`}
                 >
                   <View className="flex-row items-center flex-1">
-                    <Ionicons name="location" size={20} color={selected ? '#EC2828' : '#9E9E9E'} />
+                    <Ionicons name="location" size={20} color={selected ? THEME.primary : THEME.placeholder} />
                     <Text
                       className={`ml-3 font-urbanist-semibold ${selected ? 'text-accent' : 'text-text-primary'}`}
                     >
@@ -118,7 +119,7 @@ export default function CitySelectScreen() {
                       </View>
                     ) : null}
                   </View>
-                  {selected ? <Ionicons name="checkmark-circle" size={22} color="#EC2828" /> : null}
+                  {selected ? <Ionicons name="checkmark-circle" size={22} color={THEME.primary} /> : null}
                 </Pressable>
               );
             })}

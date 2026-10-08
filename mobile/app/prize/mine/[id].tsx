@@ -15,6 +15,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, ActivityIndicator, LayoutChangeEvent, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { THEME } from '@/constants/palette';
 
 const QR_SIZE = 220;
 
@@ -50,7 +51,7 @@ export default function MyRewardScreen() {
 
   if (loading && !reward) {
     return (
-      <View className="flex-1 bg-white">
+      <View className="flex-1 bg-mainBg">
         <BackHeader topInset={insets.top} />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={COLORS.accent} />
@@ -198,19 +199,19 @@ export default function MyRewardScreen() {
                 <Ionicons
                   name={deadline.urgent ? 'alarm-outline' : 'calendar-outline'}
                   size={22}
-                  color={deadline.urgent ? COLORS.red : '#374151'}
+                  color={deadline.urgent ? COLORS.danger : THEME.text}
                 />
                 <LText
                   size={18}
                   weight={deadline.urgent ? '700' : '400'}
-                  color={deadline.urgent ? COLORS.red : '#374151'}
+                  color={deadline.urgent ? COLORS.danger : THEME.text}
                   className="ml-2 flex-1"
                 >
                   {deadline.text}
                 </LText>
               </View>
             ) : null}
-            <LText size={18} color="#374151" className="mx-4 mt-2">
+            <LText size={18} color={THEME.text} className="mx-4 mt-2">
               {t('Prizes.showAtCounter', { brand: brandName })}
             </LText>
             <LText size={16} color={COLORS.secondary} className="mx-4 mt-2">

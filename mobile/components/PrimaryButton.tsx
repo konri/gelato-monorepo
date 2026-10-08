@@ -1,5 +1,6 @@
 import React from 'react';
 import {Pressable, Text, DimensionValue} from 'react-native';
+import { THEME } from '@/constants/palette';
 
 interface PrimaryButtonProps {
     title: string;
@@ -16,7 +17,7 @@ export const PrimaryButton = ({ title, onPress, width = "80%", height = 42, disa
             className="rounded-32px justify-center items-center"
             style={{
                 height: height, 
-                backgroundColor: disabled ? '#EC282880' : '#EC2828',
+                backgroundColor: disabled ? `${THEME.primary}80` : THEME.primary,
                 width: width,
                 opacity: disabled ? 0.6 : 1
             }}

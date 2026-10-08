@@ -4,6 +4,7 @@ import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 type Props = {
   value: CodeFormat;
@@ -58,13 +59,13 @@ export function CodeFormatToggle({ value, onChange, barcodeDisabled = false }: P
                 : null),
             }}
           >
-            <Ionicons name={segment.icon} size={22} color={selected ? '#B01E1E' : '#4B5563'} />
+            <Ionicons name={segment.icon} size={22} color={selected ? THEME.primaryDark : THEME.textSecondary} />
             <Text
               className="ml-2 font-urbanist"
               style={{
                 fontSize: 17,
                 fontWeight: selected ? '700' : '500',
-                color: selected ? '#B01E1E' : '#4B5563',
+                color: selected ? THEME.primaryDark : THEME.textSecondary,
                 flexShrink: 1,
               }}
               numberOfLines={2}

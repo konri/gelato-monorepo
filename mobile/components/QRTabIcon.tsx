@@ -1,3 +1,4 @@
+import { THEME } from '@/constants/palette';
 import { Image } from 'expo-image';
 import { View, Text } from 'react-native';
 import { useActiveCoupons } from '@/hooks/useActiveCoupons';
@@ -11,7 +12,7 @@ interface QRTabIconProps {
 export const QRTabIcon = ({ focused, iconUri, alwaysShowBackground }: QRTabIconProps) => {
   const { coupons } = useActiveCoupons();
   const showBackground = alwaysShowBackground || focused;
-  const backgroundColor = focused ? '#EC2828' : '#00000040';
+  const backgroundColor = focused ? THEME.primary : '#3a152640';
   const activeCouponsCount = coupons?.length || 0;
 
   return (
@@ -32,7 +33,7 @@ export const QRTabIcon = ({ focused, iconUri, alwaysShowBackground }: QRTabIconP
         {activeCouponsCount > 0 && (
           <View 
             className="absolute -top-1 -right-1 bg-accent rounded-full min-w-[16px] h-4 items-center justify-center px-1"
-            style={{ backgroundColor: '#EC2828' }}
+            style={{ backgroundColor: THEME.primary }}
           >
             <Text className="text-white text-xs font-bold" style={{ fontSize: 10 }}>
               {activeCouponsCount}

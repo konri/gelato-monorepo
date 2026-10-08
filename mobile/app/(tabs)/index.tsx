@@ -13,6 +13,7 @@ import { useReturnToMyCardOnResume } from '@/hooks/useReturnToMyCard';
 import { useUnreadNotificationsCount } from '@/hooks/useUnreadNotificationsCount';
 import { TAB_BAR_TOTAL_HEIGHT } from '@/constants/tabBarStyles';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { THEME } from '@/constants/palette';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -36,15 +37,15 @@ function NewsTab() {
 
   return (
     <ScrollView
-      className="flex-1 bg-white"
+      className="flex-1 bg-mainBg"
       contentContainerStyle={{ paddingBottom: TAB_BAR_TOTAL_HEIGHT + 8 }}
       showsVerticalScrollIndicator={true}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor="#EC2828"
-          colors={['#EC2828']}
+          tintColor={THEME.primary}
+          colors={[THEME.primary]}
         />
       }
     >
@@ -100,7 +101,7 @@ export default function StartScreen() {
   useReturnToMyCardOnResume();
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-mainBg" style={{ paddingTop: insets.top }}>
       {/* Header with title and icons. Compact: My card must fit above the
           fold on small phones (BRANDS_SPEC §5.4). */}
       <View className="flex-row items-center justify-between px-6 py-2 border-b border-gray-200">
@@ -114,10 +115,10 @@ export default function StartScreen() {
             onPress={() => router.push('/notification_center' as any)}
             className="relative"
           >
-            <Ionicons name="notifications-outline" size={24} color="#212121" />
+            <Ionicons name="notifications-outline" size={24} color={THEME.text} />
             {/* Unread count badge */}
             {hasUnread && (
-              <View className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 bg-red-500 rounded-full items-center justify-center">
+              <View className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 bg-accent rounded-full items-center justify-center">
                 <Text className="text-white text-[10px] font-urbanist-bold">
                   {(unreadCount ?? 0) > 99 ? '99+' : unreadCount}
                 </Text>
@@ -127,7 +128,7 @@ export default function StartScreen() {
 
           {/* Settings icon */}
           <Pressable onPress={() => router.push('/settings' as any)}>
-            <Ionicons name="settings-outline" size={24} color="#212121" />
+            <Ionicons name="settings-outline" size={24} color={THEME.text} />
           </Pressable>
         </View>
       </View>
@@ -137,8 +138,8 @@ export default function StartScreen() {
         key={params.t ?? 'home'}
         initialRouteName={ROUTE_FOR_SECTION[section]}
         screenOptions={{
-          tabBarActiveTintColor: '#EC2828',
-          tabBarInactiveTintColor: '#6B7280',
+          tabBarActiveTintColor: THEME.primary,
+          tabBarInactiveTintColor: THEME.textTertiary,
           tabBarLabelStyle: {
             fontSize: 16,
             fontWeight: '600',
@@ -146,15 +147,15 @@ export default function StartScreen() {
             fontFamily: 'Urbanist-SemiBold',
           },
           tabBarIndicatorStyle: {
-            backgroundColor: '#EC2828',
+            backgroundColor: THEME.primary,
             height: 3,
           },
           tabBarStyle: {
-            backgroundColor: 'white',
+            backgroundColor: THEME.background,
             elevation: 0,
             shadowOpacity: 0,
             borderBottomWidth: 1,
-            borderBottomColor: '#E5E7EB',
+            borderBottomColor: THEME.borderStrong,
           },
           swipeEnabled: false,
         }}

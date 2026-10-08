@@ -29,7 +29,7 @@ export default function VerifyPhoneCodeScreen() {
           <View className="items-center">
             <Typography
               variant="body-small-regular"
-              className={codeValidTimer > 0 ? 'text-text-subtitle' : 'text-accent'}
+              className={codeValidTimer > 0 ? 'text-text-subtitle' : 'text-red-600'}
             >
               {codeValidTimer > 0
                 ? `${t('VerifyPhoneCode.codeValidFor')} ${formatTime(codeValidTimer)}`

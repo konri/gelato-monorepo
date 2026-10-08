@@ -2,6 +2,7 @@ import { Typography } from '@/components/atoms/Typography';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 interface DropdownOption<T = string> {
   label: string;
@@ -26,12 +27,12 @@ export function Dropdown<T = string>({ options, value, onChange, placeholder, co
         <Pressable
           onPress={() => setIsOpen(true)}
           className="rounded-full px-4 items-center justify-between flex-row"
-          style={{ height: 28, backgroundColor: '#E9E9E9' }}
+          style={{ height: 28, backgroundColor: THEME.border }}
         >
           <Typography variant="body-small-semibold" className="text-text-primary">
             {selectedOption?.label || placeholder}
           </Typography>
-          <Ionicons name="chevron-down" size={16} color="#212121" />
+          <Ionicons name="chevron-down" size={16} color={THEME.text} />
         </Pressable>
 
         <Modal visible={isOpen} transparent animationType="fade" onRequestClose={() => setIsOpen(false)}>
@@ -78,7 +79,7 @@ export function Dropdown<T = string>({ options, value, onChange, placeholder, co
         <Typography variant="body-base-regular" className="text-text-primary">
           {selectedOption?.label || placeholder}
         </Typography>
-        <Ionicons name="chevron-down" size={20} color="#212121" />
+        <Ionicons name="chevron-down" size={20} color={THEME.text} />
       </Pressable>
 
       <Modal visible={isOpen} transparent animationType="fade" onRequestClose={() => setIsOpen(false)}>

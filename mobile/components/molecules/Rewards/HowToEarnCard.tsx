@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 type BrandBonuses = { name: string; birthdayBonusPoints: number; referralBonusPoints: number };
 
@@ -46,8 +47,8 @@ export function HowToEarnCard({ brand }: { brand?: BrandBonuses | null }) {
 function Step({ n, icon, text }: { n: number; icon: React.ComponentProps<typeof Ionicons>['name']; text: string }) {
   return (
     <View className="mt-3 flex-row items-start" accessible accessibilityLabel={`${n}. ${text}`}>
-      <View className="h-10 w-10 items-center justify-center rounded-full bg-red-50">
-        <Ionicons name={icon} size={22} color={COLORS.red} />
+      <View className="h-10 w-10 items-center justify-center rounded-full bg-berry-wash">
+        <Ionicons name={icon} size={22} color={COLORS.brand} />
       </View>
       <LText size={18} className="ml-3 flex-1" style={{ paddingTop: 7 }}>
         {text}
@@ -60,7 +61,7 @@ function Extra({ icon, text }: { icon: React.ComponentProps<typeof Ionicons>['na
   return (
     <View className="mt-2 flex-row items-start">
       <Ionicons name={icon} size={22} color={COLORS.amber} style={{ marginTop: 1 }} />
-      <LText size={18} className="ml-3 flex-1" color="#374151">
+      <LText size={18} className="ml-3 flex-1" color={THEME.text}>
         {text}
       </LText>
     </View>

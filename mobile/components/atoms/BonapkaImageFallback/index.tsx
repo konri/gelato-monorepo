@@ -4,6 +4,7 @@ import React from 'react';
 import { View } from 'react-native';
 
 import { BonapkaImageFallbackProps } from './types';
+import { PALETTE } from '@/constants/palette';
 
 export const BonapkaImageFallback = ({
   logoSize = 48,
@@ -11,7 +12,7 @@ export const BonapkaImageFallback = ({
   return (
     <View className="h-full w-full overflow-hidden">
       <LinearGradient
-        colors={['#EC2828', '#E8520D']}
+        colors={[PALETTE.creamSoft, PALETTE.creamDeep]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}

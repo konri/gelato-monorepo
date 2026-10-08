@@ -9,6 +9,7 @@ import { useWhoAmI } from '@/hooks/useWhoAmI';
 import { QuestCard } from './QuestCard';
 import { ReferralQuestModal } from './ReferralQuestModal';
 import { BirthdayQuestModal } from './BirthdayQuestModal';
+import { THEME } from '@/constants/palette';
 
 /**
  * Tasks (BRANDS_SPEC §5.6, A2): running promotions, the invitation (paid at
@@ -62,8 +63,8 @@ export const TasksTabContent = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor="#EC2828"
-            colors={['#EC2828']}
+            tintColor={THEME.primary}
+            colors={[THEME.primary]}
           />
         }
       >

@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, TextInput, View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 // Chat thread on an order (client ↔ spot ↔ courier). Self-contained: loads +
 // polls its own messages, renders a flat timeline, and posts. `highlightId`
@@ -82,11 +83,11 @@ export function OrderChat({
 
       {loading ? (
         <View className="py-6 items-center">
-          <ActivityIndicator color="#EC2828" />
+          <ActivityIndicator color={THEME.primary} />
         </View>
       ) : messages.length === 0 ? (
         <View className="py-6 items-center">
-          <Ionicons name="chatbubbles-outline" size={28} color="#9CA3AF" />
+          <Ionicons name="chatbubbles-outline" size={28} color={THEME.placeholder} />
           <Typography variant="body-small-regular" className="mt-2 text-gray-500 text-center">
             {t('OrderChat.empty')}
           </Typography>
@@ -117,16 +118,16 @@ export function OrderChat({
               value={text}
               onChangeText={setText}
               className="text-base font-urbanist text-gray-900"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={THEME.placeholder}
               multiline
               maxLength={500}
             />
           </View>
           <Pressable onPress={send} disabled={!text.trim() || posting} hitSlop={8}>
             {posting ? (
-              <ActivityIndicator size="small" color="#EC2828" />
+              <ActivityIndicator size="small" color={THEME.primary} />
             ) : (
-              <Ionicons name="send" size={24} color={text.trim() ? '#EC2828' : '#D1D5DB'} />
+              <Ionicons name="send" size={24} color={text.trim() ? THEME.primary : THEME.inactive} />
             )}
           </Pressable>
         </View>
@@ -163,7 +164,7 @@ function MessageRow({
               fallbackLogoSize={12}
             />
           ) : (
-            <Ionicons name={message.senderRole === 'courier' ? 'bicycle' : 'storefront'} size={16} color="#6B7280" />
+            <Ionicons name={message.senderRole === 'courier' ? 'bicycle' : 'storefront'} size={16} color={THEME.textTertiary} />
           )}
         </View>
       )}
@@ -173,9 +174,9 @@ function MessageRow({
             highlighted
               ? 'bg-amber-100 border border-amber-300'
               : isMine
-                ? 'bg-red-600'
+                ? 'bg-accent'
                 : isStaff
-                  ? 'bg-red-50'
+                  ? 'bg-berry-wash'
                   : 'bg-gray-50'
           }`}
         >

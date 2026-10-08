@@ -1,4 +1,5 @@
 import { TextInput, View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 interface SearchInputProps {
   placeholder?: string;
@@ -18,7 +19,7 @@ export const SearchInput = ({
       <TextInput
         className="bg-white border border-gray-300 rounded-lg px-4 py-3 text-base"
         placeholder={placeholder}
-        placeholderTextColor="#9CA3AF"
+        placeholderTextColor={THEME.placeholder}
         value={value}
         onChangeText={onChangeText}
         onSubmitEditing={onSubmitEditing}

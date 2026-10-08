@@ -3,6 +3,7 @@ import { View, Pressable, TextInput } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/atoms/Typography';
+import { THEME } from '@/constants/palette';
 
 interface SearchableHeaderProps {
   title?: string;
@@ -30,7 +31,7 @@ export const SearchableHeader = ({
   return (
     <View className="bg-white rounded-32px mx-6 mb-4 px-4 py-2 flex-row items-center">
       <Pressable onPress={onBack || (() => router.back())} className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center mr-3">
-        <Ionicons name="chevron-back" size={20} color="black" />
+        <Ionicons name="chevron-back" size={20} color={THEME.text} />
       </Pressable>
       {isSearchActive ? (
         <>
@@ -43,7 +44,7 @@ export const SearchableHeader = ({
             style={{fontFamily: 'Urbanist'}}
           />
           <Pressable onPress={onSearchClose} className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center">
-            <Ionicons name="close" size={20} color="black" />
+            <Ionicons name="close" size={20} color={THEME.text} />
           </Pressable>
         </>
       ) : (
@@ -53,7 +54,7 @@ export const SearchableHeader = ({
           </Typography>
           {showSearch ? (
             <Pressable onPress={onSearchPress} className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center">
-              <Ionicons name="search" size={20} color="black" />
+              <Ionicons name="search" size={20} color={THEME.text} />
             </Pressable>
           ) : (
             <View className="w-10" />

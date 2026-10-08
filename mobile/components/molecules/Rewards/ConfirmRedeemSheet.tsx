@@ -12,6 +12,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, Modal, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { THEME } from '@/constants/palette';
 
 type Props = {
   visible: boolean;
@@ -113,17 +114,17 @@ export function ConfirmRedeemSheet({ visible, onClose, reward, brandName, points
             <LText size={20} weight="700" className="mt-3">
               {t('Prizes.confirmWhat', { reward: reward.title, brand: brandName, costText: pointsText(t, reward.pointsCost) })}
             </LText>
-            <LText size={18} className="mt-2" color="#374151">
+            <LText size={18} className="mt-2" color={THEME.text}>
               {t('Prizes.confirmLeft', { leftText: pointsText(t, left) })}
             </LText>
-            <LText size={18} className="mt-2" color="#374151">
+            <LText size={18} className="mt-2" color={THEME.text}>
               {t('Prizes.confirmPickup', { brand: brandName })}
             </LText>
 
             {failure ? (
               <View className="mt-4 flex-row items-start rounded-2xl bg-red-50 p-3" accessibilityLiveRegion="polite">
-                <Ionicons name="alert-circle" size={22} color={COLORS.red} style={{ marginTop: 1 }} />
-                <LText size={18} weight="600" color={COLORS.red} className="ml-2 flex-1">
+                <Ionicons name="alert-circle" size={22} color={COLORS.danger} style={{ marginTop: 1 }} />
+                <LText size={18} weight="600" color={COLORS.danger} className="ml-2 flex-1">
                   {failure.message}
                 </LText>
               </View>

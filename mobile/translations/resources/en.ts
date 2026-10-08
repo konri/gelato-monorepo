@@ -8,25 +8,30 @@ export default {
   },
   Onboarding: {
     slide1: {
-      title: 'Order ice cream in a tap 🍦',
-      description: 'Browse flavors from spots near you and get your favorite scoops delivered straight to your door.'
+      title: 'Ice cream, coffee and pastries near you',
+      description: 'Ice cream shops, bakeries, cafés and pastry shops, all in one app.'
     },
     slide2: {
       title: 'One card everywhere',
-      description: 'Ice cream shops, bakeries, cafés and pastry shops: show the same card at the counter, or order in the app, and collect points.'
+      description: 'Show the same card at the counter. Staff scan it, and you collect points.'
     },
     slide3: {
-      title: 'Points stay where you collect them',
-      description: 'Points from a café can be spent only at that café, on its rewards. The map shows where you can collect points.'
+      title: 'Points become rewards',
+      description: 'Points stay where you collect them and turn into rewards there.'
+    },
+    slide4: {
+      title: 'Order for pickup or delivery',
+      description: 'Order in the app, then pick it up or wait for the courier. Orders earn points too.'
     },
     buttons: {
       skip: 'Skip',
       continue: 'Continue',
-      getStarted: 'Get Started'
-    }
+      getStarted: 'Get started'
+    },
+    step: 'Step {{current}} of {{total}}'
   },
   Main: {
-    title: 'Time for ice cream! 🍦',
+    title: 'Time for a treat!',
     subtitle: 'Sign in or create an account',
     googleLogin: 'Continue with Google',
     facebookLogin: 'Continue with Facebook',
@@ -163,7 +168,7 @@ export default {
   CitySelect: {
     headerTitle: 'Choose your city',
     title: 'Choose your city',
-    subtitle: 'Pick the city where you want ice cream. We suggest the closest one — change it anytime.',
+    subtitle: 'Pick your city to see spots and rewards near you. We suggest the closest one — change it anytime.',
     nearYou: 'Near you',
     cityLabel: 'City',
     cityPlaceholder: 'Kielce',
@@ -173,7 +178,7 @@ export default {
     headerTitle: 'Allow notifications',
     title: 'Notifications',
     subtitle: 'Allow the app to send you notifications. You won\'t miss interesting promotions in your area.',
-    cardTitle: 'Your favourite ice cream',
+    cardTitle: 'Your favourite spot',
     cardSubtitle: 'Special for you',
     cardPromo: 'New promotion - 20%',
     allow: 'Allow',
@@ -695,7 +700,7 @@ export default {
     cardHint: 'Your card still works at the counter.',
   },
   Tastes: {
-    subtitle: 'Explore ice cream flavors',
+    subtitle: 'See what\'s on the menu',
     inCity: 'Spots in {{city}}',
     viewTastes: 'View Tastes',
     allSpots: 'All spots',
@@ -903,7 +908,7 @@ export default {
     orderFailed: 'Could not create your order.',
     paymentFailed: 'Payment failed',
     successTitle: 'Order placed! 🎉',
-    successMessage: 'Your ice cream is on its way. You can follow your order status.',
+    successMessage: 'Your order is on its way. You can follow its status.',
     successPickupCash: 'Your order is being prepared. Pay in cash and show your loyalty QR code at the spot to collect and earn points.',
     orderNumber: 'Order #{{number}}',
     trackOrder: 'Track my order',

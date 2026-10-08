@@ -1,128 +1,111 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { PALETTE as C } from './onboarding/palette';
 
-const { width, height } = Dimensions.get('window');
+/**
+ * Onboarding (app/onboarding): the landing page look — cream background,
+ * espresso / berry type, berry pill buttons (landing BTN_PRIMARY /
+ * BTN_SECONDARY). Sized for older users: titles ≥ 28, body ≥ 18, 56 dp
+ * buttons, high-contrast text (espresso on cream ≈ 15:1, white on berry ≈ 5:1).
+ */
 
-// The mocked-screen image is a 1212x2192 device frame (aspect ~0.553). Size
-// it to fit the space above the white content card (which is `contentOverlay`
-// tall) instead of a fixed multiple of screen width, so it never spills
-// past the card.
-const CONTENT_OVERLAY_HEIGHT = 400;
-const PHONE_IMAGE_ASPECT = 1212 / 2192;
-const phoneImageHeight = height - CONTENT_OVERLAY_HEIGHT - 90;
-const phoneImageWidth = Math.min(width * 0.72, phoneImageHeight * PHONE_IMAGE_ASPECT);
+/** Screens shorter than this (iPhone SE class, 667 pt) get the compact type scale. */
+export const COMPACT_HEIGHT = 740;
+
+export const ONBOARDING_TYPE = {
+  compact: { title: 28, titleLine: 34, body: 18, bodyLine: 26, lockup: 44 },
+  regular: { title: 32, titleLine: 38, body: 19, bodyLine: 28, lockup: 56 },
+} as const;
+
+/** Text scaling caps, so Dynamic Type still fits a 667 pt screen without scrolling. */
+export const MAX_FONT_SCALE = { title: 1.2, body: 1.3, button: 1.3 } as const;
+
+export const BUTTON_HEIGHT = 56;
+export const COPY_GAP = 12;
 
 export const styles = StyleSheet.create({
-    container: { flex: 1 },
-    gradientBackground: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    phoneImage: {
-        width: phoneImageWidth,
-        height: phoneImageWidth / PHONE_IMAGE_ASPECT,
-        position: 'absolute',
-        top: 60,
-        alignSelf: 'center'
-    },
-    contentOverlay: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: CONTENT_OVERLAY_HEIGHT,
-        backgroundColor: '#FFFFFF',
-        shadowColor: '#181A20',
-        shadowOffset: { width: 12, height: 0 },
-        shadowOpacity: 0.12,
-        shadowRadius: 24,
-        elevation: 10
-    },
-    curvedTop: {
-        position: 'absolute',
-        top: -40,
-        left: 0,
-        right: 0
-    },
-    textSlider: { 
-        height: 280,
-        width: '100%'
-    },
-    textContainer: {
-        paddingTop: 30,
-        paddingHorizontal: 24,
-        paddingBottom: 20,
-        gap: 16,
-        alignItems: 'center'
-    },
-    title: {
-        width: 354,
-        fontFamily: 'Urbanist',
-        fontWeight: '700',
-        fontSize: 32,
-        lineHeight: 40,
-        letterSpacing: 0,
-        textAlign: 'center',
-        color: '#212121'
-    },
-    description: {
-        width: 354,
-        fontFamily: 'Urbanist',
-        fontWeight: '100',
-        fontSize: 17,
-        lineHeight: 24,
-        letterSpacing: 0.2,
-        textAlign: 'center',
-        color: '#616161'
-    },
-    bulletsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: 354,
-        height: 8,
-        gap: 8,
-        marginTop: -20,
-        alignSelf: 'center'
-    },
-    bullet: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#EEEEEE'
-    },
-    activeBullet: {
-        backgroundColor: '#EC2828',
-        width: 28,
-        borderRadius: 4
-    },
-    buttonContainer: { 
-        flexDirection: 'row', 
-        justifyContent: 'space-between', 
-        paddingHorizontal: 24, 
-        paddingBottom: 40,
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0
-    },
-    button: { 
-        backgroundColor: '#F3F3F3',
-        paddingVertical: 15, 
-        paddingHorizontal: 30, 
-        borderRadius: 26,
-        minWidth: 170
-    },
-    buttonText: { 
-        color: '#616161',
-        textAlign: 'center', 
-        fontSize: 16,
-        fontFamily: 'Urbanist',
-        fontWeight: '700',
-        lineHeight: 30,
-        letterSpacing: 0.2
-    },
-    buttonTextPressed: {
-        color: '#000000'
-    }
+  screen: { flex: 1, backgroundColor: C.cream },
+  header: { alignItems: 'center', justifyContent: 'center', paddingBottom: 4 },
+  pager: { flex: 1 },
+  page: { flex: 1 },
+  art: {
+    flex: 1,
+    minHeight: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  copy: {
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    gap: COPY_GAP,
+    justifyContent: 'flex-start',
+  },
+  title: {
+    fontFamily: 'Urbanist',
+    color: C.espresso,
+    textAlign: 'center',
+    letterSpacing: -0.2,
+  },
+  body: {
+    fontFamily: 'Urbanist-Medium',
+    color: C.espressoLight,
+    textAlign: 'center',
+  },
+  dots: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 40,
+  },
+  dot: {
+    height: 10,
+    borderRadius: 5,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 24,
+    paddingTop: 4,
+  },
+  button: {
+    flex: 1,
+    minHeight: BUTTON_HEIGHT,
+    borderRadius: BUTTON_HEIGHT / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  primary: {
+    backgroundColor: C.berry,
+    shadowColor: C.berry,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  primaryPressed: { backgroundColor: C.berryDark },
+  primaryText: {
+    fontFamily: 'Urbanist',
+    fontSize: 20,
+    color: C.white,
+  },
+  secondary: {
+    backgroundColor: C.white,
+    borderWidth: 2,
+    borderColor: 'rgba(192, 38, 163, 0.25)',
+  },
+  secondaryPressed: { backgroundColor: C.creamSoft, borderColor: C.berry },
+  secondaryText: {
+    fontFamily: 'Urbanist',
+    fontSize: 20,
+    color: C.berryDark,
+  },
 });
+
+export const DOT_COLORS = {
+  active: C.berry,
+  inactive: 'rgba(58, 21, 38, 0.25)',
+} as const;
+
+export const BACKGROUND_GRADIENT = [C.creamSoft, C.cream, C.cream] as const;

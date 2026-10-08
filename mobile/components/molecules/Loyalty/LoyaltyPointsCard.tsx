@@ -6,6 +6,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 import { PromotionRibbon } from './PromotionRibbon';
+import { THEME } from '@/constants/palette';
 
 type Props = {
   mode: LoyaltyMode;
@@ -104,10 +105,10 @@ function Card({ children }: { children: React.ReactNode }) {
 function HowTo({ text }: { text: string }) {
   return (
     <View className="flex-row items-start">
-      <Ionicons name="information-circle-outline" size={24} color="#4B5563" />
+      <Ionicons name="information-circle-outline" size={24} color={THEME.textSecondary} />
       <Text
         className="ml-2 flex-1 font-urbanist"
-        style={{ fontSize: 18, lineHeight: 25, color: '#374151' }}
+        style={{ fontSize: 18, lineHeight: 25, color: THEME.text }}
         maxFontSizeMultiplier={1.5}
       >
         {text}

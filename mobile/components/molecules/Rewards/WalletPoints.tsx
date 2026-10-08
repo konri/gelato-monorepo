@@ -26,7 +26,7 @@ export function WalletPoints({ wallet }: { wallet: LoyaltyWallet }) {
         {t('Prizes.yourPointsAt', { brand: wallet.brand.name })}
       </LText>
       <View className="flex-row flex-wrap items-baseline">
-        <LText size={56} lineHeight={64} weight="700" color={COLORS.red} max={1.3}>
+        <LText size={56} lineHeight={64} weight="700" color={COLORS.brand} max={1.3}>
           {formatNumber(points)}
         </LText>
         <LText size={20} weight="600" className="ml-2" max={1.3}>

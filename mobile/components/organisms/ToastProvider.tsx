@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useTranslation } from 'react-i18next';
 import { Animated, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { PALETTE } from '@/constants/palette';
 
 export type ToastType = 'success' | 'error' | 'info';
 
@@ -31,7 +32,7 @@ const STYLES: Record<ToastType, { bg: string; text: string; icon: any }> = {
   // `text`: the action label on its white button (contrast ≥ 4.5:1).
   success: { bg: '#15803D', text: '#14532D', icon: 'checkmark-circle' },
   error: { bg: '#DC2626', text: '#991B1B', icon: 'alert-circle' },
-  info: { bg: '#374151', text: '#111827', icon: 'information-circle' },
+  info: { bg: PALETTE.espresso, text: PALETTE.espresso, icon: 'information-circle' },
 };
 
 // Older users (BRANDS_SPEC §5.7): long enough to read 18px text…

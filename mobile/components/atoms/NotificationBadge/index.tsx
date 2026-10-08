@@ -22,7 +22,7 @@ export const NotificationBadge = ({
 
   const isAvatar = variant === 'avatar';
   const containerClassName = isAvatar
-    ? 'absolute left-6 top-6 h-size-14 w-size-14 items-center justify-center rounded-full bg-red-600'
+    ? 'absolute left-6 top-6 h-size-14 w-size-14 items-center justify-center rounded-full bg-accent'
     : twMerge(
         'absolute h-5 w-5 items-center justify-center rounded-full bg-accent',
         position === 'top-right' ? '-right-1 -top-1' : '-bottom-1 -right-1',

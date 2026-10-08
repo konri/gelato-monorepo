@@ -2,6 +2,7 @@ import { Image } from '@/components/atoms/Image';
 import { Typography } from '@/components/atoms/Typography';
 import React, { useState } from 'react';
 import { Dimensions, ScrollView, View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -23,7 +24,7 @@ export function MerchantItemsGroup<T>({
   renderItem,
   itemWidth,
   fixedItemWidth = true,
-  bulletsColor = '#EA3A1D',
+  bulletsColor = THEME.primary,
   keyExtractor,
 }: MerchantItemsGroupProps<T>) {
   const [logoError, setLogoError] = useState(false);
@@ -82,7 +83,7 @@ export function MerchantItemsGroup<T>({
               className="h-2 rounded-full mx-1"
               style={{
                 width: index === currentIndex ? 32 : 8,
-                backgroundColor: index === currentIndex ? bulletsColor : '#d1d5db',
+                backgroundColor: index === currentIndex ? bulletsColor : THEME.inactive,
               }}
             />
           ))}

@@ -65,7 +65,7 @@ export function FavoriteMerchantRewardCard({
 
         {/* Status */}
         {!hasActivity ? (
-          <Typography variant="body-base-medium-small" className="text-gray-400 text-center pb-2">
+          <Typography variant="body-base-medium-small" className="text-gray-500 text-center pb-2">
             {statusLabel}
           </Typography>
         ) : (

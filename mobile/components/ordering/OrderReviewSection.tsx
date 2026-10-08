@@ -16,6 +16,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { THEME } from '@/constants/palette';
 
 type Props = {
   orderId: string;
@@ -181,7 +182,7 @@ const ReviewModal = ({
           <View className="mb-3 flex-row items-center justify-between">
             <Text className="text-lg font-urbanist-bold text-text-primary">{t('Review.modalTitle')}</Text>
             <Pressable onPress={onClose} hitSlop={8}>
-              <Ionicons name="close" size={24} color="#374151" />
+              <Ionicons name="close" size={24} color={THEME.text} />
             </Pressable>
           </View>
 
@@ -210,7 +211,7 @@ const ReviewModal = ({
               value={comment}
               onChangeText={setComment}
               placeholder={t('Review.commentPlaceholder')}
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={THEME.placeholder}
               multiline
               onFocus={scrollCommentIntoView}
               className="rounded-xl border border-gray-300 px-4 py-3"
@@ -227,7 +228,7 @@ const ReviewModal = ({
               onPress={submit}
               disabled={submitting}
               className="mt-4 items-center rounded-2xl py-4"
-              style={{ backgroundColor: submitting ? '#F4A3A3' : '#EC2828' }}
+              style={{ backgroundColor: submitting ? THEME.primaryDisabled : THEME.primary }}
             >
               {submitting ? (
                 <ActivityIndicator color="#fff" />

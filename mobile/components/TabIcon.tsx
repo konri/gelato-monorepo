@@ -1,3 +1,4 @@
+import { THEME } from '@/constants/palette'
 import { Image } from 'expo-image'
 import { View } from 'react-native'
 
@@ -9,7 +10,7 @@ interface TabIconProps {
 
 export const TabIcon = ({ focused, iconUri, alwaysShowBackground }: TabIconProps) => {
   const showBackground = alwaysShowBackground || focused
-  const backgroundColor = focused ? '#EC2828' : '#00000040'
+  const backgroundColor = focused ? THEME.primary : '#3a152640'
 
   return (
     <View className="items-center justify-center">

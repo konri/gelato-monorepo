@@ -2,6 +2,7 @@ import { SkeletonRect } from '@/components/atoms/Skeleton';
 import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
+import { THEME } from '@/constants/palette';
 
 const { width: screenWidth } = Dimensions.get('window');
 const AUTO_SCROLL_INTERVAL = 5000;
@@ -87,7 +88,7 @@ export function AutoScrollCarousel<T>({
                                     borderRadius: 9999,
                                     marginHorizontal: 4,
                                     width: index === activeIndex ? 32 : 8,
-                                    backgroundColor: index === activeIndex ? bulletsColor : '#d1d5db'
+                                    backgroundColor: index === activeIndex ? bulletsColor : THEME.inactive
                                 }}
                             />
                         );

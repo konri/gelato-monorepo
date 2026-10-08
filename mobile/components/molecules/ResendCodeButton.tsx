@@ -17,7 +17,7 @@ export const ResendCodeButton = ({ resendTimer, isResending, onResend }: ResendC
         onPress={onResend}
         disabled={resendTimer > 0 || isResending}
         className={`px-6 py-3 rounded-full ${
-          resendTimer > 0 || isResending ? 'bg-gray-300' : 'bg-red-500'
+          resendTimer > 0 || isResending ? 'bg-gray-300' : 'bg-accent'
         }`}
       >
         <Text

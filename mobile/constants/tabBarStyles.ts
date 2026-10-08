@@ -1,4 +1,6 @@
+import { StyleSheet } from 'react-native'
 import { colors } from './colors'
+import { PALETTE } from './palette'
 
 export const TAB_BAR_HEIGHT = 70
 
@@ -11,9 +13,10 @@ export const getTabBarStyle = (bottomInset: number) => ({
   height: TAB_BAR_HEIGHT + bottomInset,
   paddingTop: 2,
   paddingBottom: bottomInset,
-  borderTopWidth: 0,
+  borderTopWidth: StyleSheet.hairlineWidth,
+  borderTopColor: colors.tabBar.border,
   elevation: 8,
-  shadowColor: '#000',
+  shadowColor: PALETTE.espresso,
   shadowOffset: { width: 0, height: -2 },
   shadowOpacity: 0.08,
   shadowRadius: 8,

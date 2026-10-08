@@ -6,6 +6,7 @@ import { Button } from '@/components/atoms/Button';
 import { Typography } from '@/components/atoms/Typography';
 import { sendContactMessage } from '@repo/api-client';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
+import { THEME } from '@/constants/palette';
 
 interface ContactFormModalProps {
   visible: boolean;
@@ -86,7 +87,7 @@ export const ContactFormModal = ({ visible, onClose }: ContactFormModalProps) =>
             value={email}
             onChangeText={setEmail}
             placeholder="you@example.com"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={THEME.placeholder}
             keyboardType="email-address"
             autoCapitalize="none"
           />
@@ -101,7 +102,7 @@ export const ContactFormModal = ({ visible, onClose }: ContactFormModalProps) =>
             style={{ fontFamily: 'Urbanist' }}
             value={title}
             onChangeText={setTitle}
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={THEME.placeholder}
           />
         </View>
 
@@ -115,7 +116,7 @@ export const ContactFormModal = ({ visible, onClose }: ContactFormModalProps) =>
             value={message}
             onChangeText={setMessage}
             multiline
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={THEME.placeholder}
           />
         </View>
       </View>

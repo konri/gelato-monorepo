@@ -14,6 +14,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { THEME } from '@/constants/palette';
 
 /**
  * Reward detail (BRANDS_SPEC §5.5). The brand comes from the reward and the
@@ -32,7 +33,7 @@ export default function PrizeDetailScreen() {
 
   if (loading && !prize) {
     return (
-      <View className="flex-1 bg-white">
+      <View className="flex-1 bg-mainBg">
         <BackHeader topInset={insets.top} />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={COLORS.accent} />
@@ -81,7 +82,7 @@ export default function PrizeDetailScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-mainBg">
       <BackHeader topInset={insets.top} />
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
         <Image
@@ -97,7 +98,7 @@ export default function PrizeDetailScreen() {
           <LText size={28} lineHeight={34} weight="700" accessibilityRole="header" max={1.3}>
             {title}
           </LText>
-          <LText size={22} weight="700" color={COLORS.red} className="mt-1" max={1.3}>
+          <LText size={22} weight="700" color={COLORS.brand} className="mt-1" max={1.3}>
             {pointsText(t, prize.pointsCost)}
           </LText>
 
@@ -125,7 +126,7 @@ export default function PrizeDetailScreen() {
               </LText>
             </View>
           ) : (
-            <View className="mt-3 rounded-2xl bg-gray-50 p-3">
+            <View className="mt-3 rounded-2xl border border-gray-200 bg-white p-3">
               <LText size={18} weight="600">
                 {balance.loading
                   ? t('Common.loading')
@@ -139,7 +140,7 @@ export default function PrizeDetailScreen() {
                       style={{ width: `${Math.round(status.progress * 100)}%`, backgroundColor: COLORS.accent }}
                     />
                   </View>
-                  <LText size={18} color="#374151" className="mt-1">
+                  <LText size={18} color={THEME.text} className="mt-1">
                     {t('Prizes.morePoints', { count: status.missing })}
                   </LText>
                 </View>
@@ -152,7 +153,7 @@ export default function PrizeDetailScreen() {
           )}
 
           {description ? (
-            <LText size={18} lineHeight={26} color="#374151" className="mt-4">
+            <LText size={18} lineHeight={26} color={THEME.text} className="mt-4">
               {description}
             </LText>
           ) : null}

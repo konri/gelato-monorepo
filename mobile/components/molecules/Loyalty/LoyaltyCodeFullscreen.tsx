@@ -9,6 +9,7 @@ import { Modal, Pressable, StatusBar, Text, useWindowDimensions, View } from 're
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CodeFormatToggle } from './CodeFormatToggle';
 import { LoyaltyCode, spelledCode, useBarcodeAvailable } from './LoyaltyCode';
+import { THEME } from '@/constants/palette';
 
 type Props = {
   visible: boolean;
@@ -118,7 +119,7 @@ export function LoyaltyCodeFullscreenBody({
           <Text
             selectable
             className="mt-5 text-center"
-            style={{ fontSize: 34, fontFamily: 'SpaceMono', letterSpacing: 2, color: '#111827' }}
+            style={{ fontSize: 34, fontFamily: 'SpaceMono', letterSpacing: 2, color: THEME.text }}
             maxFontSizeMultiplier={1.3}
             accessibilityLabel={label}
           >
@@ -127,7 +128,7 @@ export function LoyaltyCodeFullscreenBody({
         ) : null}
         <Text
           className="mt-3 text-center font-urbanist"
-          style={{ fontSize: 18, lineHeight: 26, color: '#4B5563' }}
+          style={{ fontSize: 18, lineHeight: 26, color: THEME.textSecondary }}
           maxFontSizeMultiplier={1.5}
         >
           {t('LoyaltyCode.fullscreenHint')}

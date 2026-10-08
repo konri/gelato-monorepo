@@ -1,4 +1,5 @@
 import type { FulfillmentType, OrderStatus } from '@repo/api-client';
+import { THEME } from '@/constants/palette';
 
 // Text + background colors per status (Tailwind class fragments).
 export const STATUS_STYLE: Record<OrderStatus, { text: string; bg: string; dot: string }> = {
@@ -10,7 +11,7 @@ export const STATUS_STYLE: Record<OrderStatus, { text: string; bg: string; dot: 
   IN_TRANSIT: { text: 'text-blue-700', bg: 'bg-blue-50', dot: '#1D4ED8' },
   DELIVERED: { text: 'text-green-700', bg: 'bg-green-50', dot: '#16A34A' },
   COLLECTED: { text: 'text-green-700', bg: 'bg-green-50', dot: '#16A34A' },
-  CANCELLED: { text: 'text-gray-600', bg: 'bg-gray-100', dot: '#6B7280' },
+  CANCELLED: { text: 'text-gray-600', bg: 'bg-gray-100', dot: THEME.textTertiary },
   FAILED: { text: 'text-red-700', bg: 'bg-red-50', dot: '#DC2626' },
   TERMINATED: { text: 'text-red-700', bg: 'bg-red-50', dot: '#DC2626' },
 };

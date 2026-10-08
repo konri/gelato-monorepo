@@ -2,6 +2,7 @@ import React from 'react';
 import {View, Modal, Pressable} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {Typography} from '@/components/atoms/Typography';
+import { THEME } from '@/constants/palette';
 
 interface PopoverModalProps {
   visible: boolean;
@@ -15,7 +16,7 @@ interface PopoverModalProps {
   backgroundColor?: string;
 }
 
-export const PopoverModal = ({visible, onClose, title, children, anchorPosition = {top: 120, right: 24}, width = 300, height, titleColor = '#A9A9A9', backgroundColor = '#D7D7D7'}: PopoverModalProps) => {
+export const PopoverModal = ({visible, onClose, title, children, anchorPosition = {top: 120, right: 24}, width = 300, height, titleColor = THEME.textTertiary, backgroundColor = '#ead8cc'}: PopoverModalProps) => {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable className="flex-1 bg-black/50" onPress={onClose}>
@@ -29,9 +30,9 @@ export const PopoverModal = ({visible, onClose, title, children, anchorPosition 
             onPress={(e) => e.stopPropagation()}
           >
             <View className="flex-row items-center justify-center mb-6 relative">
-              <Typography variant="body-lg-semibold-spaced" className={titleColor === '#000000' || titleColor === '#000' || titleColor === 'black' ? 'text-black' : 'text-[#A9A9A9]'} >{title}</Typography>
+              <Typography variant="body-lg-semibold-spaced" className={titleColor === '#000000' || titleColor === '#000' || titleColor === 'black' ? 'text-text-primary' : 'text-text-tertiary'} >{title}</Typography>
               <Pressable onPress={onClose} className="w-8 h-8 items-center justify-center absolute right-0">
-                <Ionicons name="close" size={24} color="#A9A9A9" />
+                <Ionicons name="close" size={24} color={THEME.textTertiary} />
               </Pressable>
             </View>
             {children}

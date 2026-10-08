@@ -12,6 +12,7 @@ import { useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Linking, Pressable, ScrollView, Text, View } from "react-native";
+import { THEME } from "@/constants/palette";
 
 export default function MainLoginScreen() {
   const { t } = useTranslation();
@@ -75,7 +76,7 @@ export default function MainLoginScreen() {
             className="w-full mt-10 flex-row items-center justify-center rounded-2xl border-2 border-gray-300 bg-white px-4 active:opacity-80"
             style={{ minHeight: 56 }}
           >
-            <Ionicons name="qr-code-outline" size={24} color="#111827" />
+            <Ionicons name="qr-code-outline" size={24} color={THEME.text} />
             <Text
               className="ml-2 font-urbanist text-gray-900"
               style={{ fontSize: 18, fontWeight: "700" }}

@@ -27,6 +27,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { THEME } from '@/constants/palette';
 
 export default function AddressScreen() {
   const insets = useSafeAreaInsets();
@@ -107,11 +108,11 @@ export default function AddressScreen() {
   const canContinue = !!selected && delivery.result?.canDeliver === true;
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-mainBg" style={{ paddingTop: insets.top }}>
       {/* Header */}
       <View className="flex-row items-center px-4 py-3 border-b border-gray-200">
         <Pressable onPress={() => router.back()} hitSlop={8} className="mr-2">
-          <Ionicons name="arrow-back" size={24} color="#212121" />
+          <Ionicons name="arrow-back" size={24} color={THEME.text} />
         </Pressable>
         <Text className="text-lg font-urbanist-bold text-text-primary flex-1">
           {t('Address.title')}
@@ -120,13 +121,13 @@ export default function AddressScreen() {
 
       <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16 }}>
         {/* Search input */}
-        <View className="flex-row items-center bg-background-secondary rounded-2xl px-4 py-3">
-          <Ionicons name="search" size={20} color="#9E9E9E" />
+        <View className="flex-row items-center bg-white border border-gray-200 rounded-2xl px-4 py-3">
+          <Ionicons name="search" size={20} color={THEME.placeholder} />
           <TextInput
             className="flex-1 ml-2 text-base text-text-primary"
             style={{ fontFamily: 'Urbanist' }}
             placeholder={t('Address.searchPlaceholder')}
-            placeholderTextColor="#9E9E9E"
+            placeholderTextColor={THEME.placeholder}
             value={query}
             onChangeText={(txt) => {
               if (selected) clearSelection();
@@ -136,10 +137,10 @@ export default function AddressScreen() {
           />
           {selected ? (
             <Pressable onPress={clearSelection} hitSlop={8}>
-              <Ionicons name="close-circle" size={20} color="#9E9E9E" />
+              <Ionicons name="close-circle" size={20} color={THEME.placeholder} />
             </Pressable>
           ) : searching ? (
-            <ActivityIndicator size="small" color="#EC2828" />
+            <ActivityIndicator size="small" color={THEME.primary} />
           ) : null}
         </View>
 
@@ -152,7 +153,7 @@ export default function AddressScreen() {
         {/* Use my location */}
         {!selected ? (
           <Pressable className="flex-row items-center mt-3 px-1" onPress={onUseMyLocation}>
-            <Ionicons name="locate" size={18} color="#EC2828" />
+            <Ionicons name="locate" size={18} color={THEME.primary} />
             <Text className="ml-2 font-urbanist-semibold text-accent">
               {t('Address.useMyLocation')}
             </Text>
@@ -166,7 +167,7 @@ export default function AddressScreen() {
             className="flex-row items-start py-3 border-b border-gray-100"
             onPress={() => onPickPrediction(p)}
           >
-            <Ionicons name="location-outline" size={18} color="#9E9E9E" style={{ marginTop: 2 }} />
+            <Ionicons name="location-outline" size={18} color={THEME.placeholder} style={{ marginTop: 2 }} />
             <View className="ml-2 flex-1">
               <Text className="font-urbanist-semibold text-text-primary">{p.primaryText}</Text>
               {p.secondaryText ? (
@@ -186,17 +187,17 @@ export default function AddressScreen() {
                 resizeMode="cover"
               />
             ) : (
-              <View className="w-full h-44 rounded-2xl bg-background-secondary items-center justify-center">
+              <View className="w-full h-44 rounded-2xl bg-white border border-gray-200 items-center justify-center">
                 <Text className="text-4xl">🗺️</Text>
               </View>
             )}
 
-            <View className="mt-3 bg-background-secondary rounded-2xl p-4">
+            <View className="mt-3 bg-white border border-gray-200 rounded-2xl p-4">
               <Text className="font-urbanist-bold text-text-primary">{selected.address}</Text>
 
               {delivery.checking ? (
                 <View className="flex-row items-center mt-3">
-                  <ActivityIndicator size="small" color="#EC2828" />
+                  <ActivityIndicator size="small" color={THEME.primary} />
                   <Text className="ml-2 font-urbanist text-text-secondary">
                     {t('Address.checking')}
                   </Text>
@@ -207,11 +208,11 @@ export default function AddressScreen() {
                     <Ionicons
                       name={delivery.result.canDeliver ? 'checkmark-circle' : 'close-circle'}
                       size={20}
-                      color={delivery.result.canDeliver ? '#16A34A' : '#EC2828'}
+                      color={delivery.result.canDeliver ? '#16A34A' : THEME.error}
                     />
                     <Text
                       className={`ml-2 font-urbanist-bold ${
-                        delivery.result.canDeliver ? 'text-green-700' : 'text-accent'
+                        delivery.result.canDeliver ? 'text-green-700' : 'text-red-600'
                       }`}
                     >
                       {delivery.result.canDeliver
@@ -226,13 +227,13 @@ export default function AddressScreen() {
                     })}
                   </Text>
                   {!delivery.result.canDeliver ? (
-                    <Text className="text-xs font-urbanist text-accent mt-1">
+                    <Text className="text-xs font-urbanist text-red-600 mt-1">
                       {t('Address.tryCloser')}
                     </Text>
                   ) : null}
                 </View>
               ) : delivery.error ? (
-                <Text className="mt-3 font-urbanist text-accent">{delivery.error}</Text>
+                <Text className="mt-3 font-urbanist text-red-600">{delivery.error}</Text>
               ) : null}
             </View>
           </View>

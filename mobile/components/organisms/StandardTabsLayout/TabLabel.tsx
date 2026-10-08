@@ -9,7 +9,7 @@ type TabLabelProps = {
 
 export const TabLabel = ({ label, focused }: TabLabelProps) => (
     <View className="items-center justify-center">
-        <Typography variant="body-very-small-medium">
+        <Typography variant="body-very-small-medium" className="text-text-primary">
             {label}
         </Typography>
         {focused && (

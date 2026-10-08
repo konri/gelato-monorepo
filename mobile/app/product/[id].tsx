@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { THEME } from '@/constants/palette';
 
 export default function ProductDetailScreen() {
   const insets = useSafeAreaInsets();
@@ -28,14 +29,14 @@ export default function ProductDetailScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
-        <ActivityIndicator size="large" color="#EC2828" />
+      <View className="flex-1 bg-mainBg items-center justify-center">
+        <ActivityIndicator size="large" color={THEME.primary} />
       </View>
     );
   }
   if (!product) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
+      <View className="flex-1 bg-mainBg items-center justify-center">
         <Text className="font-urbanist text-text-secondary">{t('Common.error')}</Text>
       </View>
     );
@@ -47,7 +48,7 @@ export default function ProductDetailScreen() {
     t('Ordering.price', { amount: amount.toFixed(2).replace(/\.00$/, '') });
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-mainBg">
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
         <View className="relative">
           <Image url={product.imageUrl ?? undefined} className="w-full h-72" resizeMode="cover" fallbackLogoSize={72} />
@@ -57,7 +58,7 @@ export default function ProductDetailScreen() {
             style={{ top: insets.top + 8 }}
             hitSlop={8}
           >
-            <Ionicons name="arrow-back" size={22} color="#212121" />
+            <Ionicons name="arrow-back" size={22} color={THEME.text} />
           </Pressable>
         </View>
 
@@ -80,9 +81,9 @@ export default function ProductDetailScreen() {
           ) : null}
 
           {product.allergens.length > 0 ? (
-            <View className="rounded-2xl p-4 mt-4 border border-accent/30 bg-accent/5">
-              <Text className="font-urbanist-bold text-accent mb-2">⚠️ {t('Tastes.allergens')}</Text>
-              <Text className="font-urbanist text-accent-dark">
+            <View className="rounded-2xl p-4 mt-4 border border-amber-300 bg-amber-50">
+              <Text className="font-urbanist-bold text-amber-800 mb-2">⚠️ {t('Tastes.allergens')}</Text>
+              <Text className="font-urbanist text-amber-900">
                 {product.allergens.join(', ')}
               </Text>
             </View>

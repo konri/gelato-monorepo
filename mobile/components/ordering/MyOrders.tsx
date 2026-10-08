@@ -6,6 +6,7 @@ import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { STATUS_STYLE } from './orderStatus';
+import { THEME } from '@/constants/palette';
 
 const zl = (n: number) => `${n.toFixed(2).replace(/\.00$/, '')} zł`;
 
@@ -26,7 +27,7 @@ export const MyOrders = () => {
   if (loading && !orders) {
     return (
       <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" color="#EC2828" />
+        <ActivityIndicator size="large" color={THEME.primary} />
       </View>
     );
   }
@@ -37,10 +38,10 @@ export const MyOrders = () => {
       keyExtractor={(o) => o.id}
       contentContainerStyle={{ padding: 16, paddingBottom: TAB_BAR_TOTAL_HEIGHT + 8, flexGrow: 1 }}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#EC2828" colors={['#EC2828']} />
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={THEME.primary} colors={[THEME.primary]} />
       }
       ListEmptyComponent={
-        <View className="mt-8 bg-background-secondary rounded-2xl p-8 items-center">
+        <View className="mt-8 bg-white border border-gray-200 rounded-2xl p-8 items-center">
           <Text className="text-5xl mb-3">🧾</Text>
           <Text className="font-urbanist-bold text-text-primary text-center">
             {t('Ordering.myOrdersEmpty')}

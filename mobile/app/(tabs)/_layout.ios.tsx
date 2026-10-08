@@ -1,6 +1,7 @@
 import { StandardTabsLayout } from "@/components/organisms/StandardTabsLayout";
 import { getSfIcon } from "@/components/organisms/StandardTabsLayout/utils";
 import { colors } from "@/constants/colors";
+import { PALETTE } from "@/constants/palette";
 import { useAuthState } from "@/hooks/useAuthState";
 import { useNotificationRegistration } from "@/hooks/useNotificationRegistration";
 import { usePointsSubscription } from "@/hooks/usePointsSubscription";
@@ -40,7 +41,7 @@ export default function TabsLayout() {
       <NativeTabs
         labelStyle={{
           color: DynamicColorIOS({
-            light: "#000000",
+            light: PALETTE.espresso,
             dark: "#FFFFFF",
           }),
         }}

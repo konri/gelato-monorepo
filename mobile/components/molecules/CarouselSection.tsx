@@ -4,6 +4,7 @@ import { useDevDelay } from '@/hooks/useDevDelay';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dimensions, View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 const {width: screenWidth} = Dimensions.get('window');
 
@@ -28,7 +29,7 @@ export function CarouselSection<T>({
     getItemKey,
     itemsPerSlide = 2,
     autoScroll = true,
-    bulletsColor = '#EC2828',
+    bulletsColor = THEME.primary,
     headerContent,
     onSeeAllPress
 }: CarouselSectionProps<T>) {

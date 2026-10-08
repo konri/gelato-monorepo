@@ -11,7 +11,7 @@ export const ListButton = ({ title, onPress, disabled = false }: ListButtonProps
     return (
         <Pressable
             onPress={disabled ? undefined : onPress}
-            className="bg-red-600 rounded-2xl justify-center items-center"
+            className="bg-accent rounded-2xl justify-center items-center"
             style={{ 
                 width: 129, 
                 height: 32, 

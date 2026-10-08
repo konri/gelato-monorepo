@@ -3,6 +3,7 @@ import {Pressable} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {Typography} from '@/components/atoms/Typography';
 import {PopoverModal} from '@/components/atoms/PopoverModal';
+import { THEME } from '@/constants/palette';
 
 interface SortButtonProps {
   label: string;
@@ -21,7 +22,7 @@ export const SortButton = ({label, modalTitle, modalContent, anchorPosition, wid
         <Typography variant="body-lg-bold" className="text-text-primary">
           {label}
         </Typography>
-        <Ionicons name="chevron-down" size={16} color="#919191" />
+        <Ionicons name="chevron-down" size={16} color={THEME.placeholder} />
       </Pressable>
 
       <PopoverModal

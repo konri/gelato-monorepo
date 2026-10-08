@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { TextInput, View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 interface SearchInputProps {
   value: string;
@@ -18,9 +19,9 @@ export const SearchInput: React.FC<SearchInputProps> = ({ value, onChangeText, p
         placeholder={placeholder}
         className="flex-1 text-base"
         style={{ fontFamily: 'Urbanist' }}
-        placeholderTextColor="#9CA3AF"
+        placeholderTextColor={THEME.placeholder}
       />
-      <Ionicons name="search" size={20} color="#9CA3AF" />
+      <Ionicons name="search" size={20} color={THEME.placeholder} />
     </View>
   );
 };

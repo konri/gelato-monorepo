@@ -9,10 +9,11 @@ import {
   GRADIENT_PILL_RADIUS,
 } from './gradientPillLayout';
 import type { GradientPillButtonProps } from './types';
+import { PALETTE } from '@/constants/palette';
 
-const GRADIENT_COLORS = ['#FFAA88', '#BD0000'] as const;
+const GRADIENT_COLORS = [PALETTE.strawberry, PALETTE.berryDark] as const;
 const GRADIENT_PILL_SHADOW = {
-  shadowColor: '#E52121',
+  shadowColor: PALETTE.berry,
   shadowOffset: { width: 0, height: 4 },
   shadowOpacity: 0.25,
   shadowRadius: 7.3,

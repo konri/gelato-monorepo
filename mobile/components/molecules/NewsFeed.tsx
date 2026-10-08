@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, View } from 'react-native';
 import { NewsCard } from './NewsCard';
 import type { TFunction } from 'i18next';
+import { THEME } from '@/constants/palette';
 
 export interface NewsFeedHandle {
   reload: () => Promise<void>;
@@ -32,7 +33,7 @@ export const NewsFeed = forwardRef<NewsFeedHandle>((_props, ref) => {
   if (loading) {
     return (
       <View className="px-6 py-8 items-center">
-        <ActivityIndicator color="#EC2828" />
+        <ActivityIndicator color={THEME.primary} />
       </View>
     );
   }

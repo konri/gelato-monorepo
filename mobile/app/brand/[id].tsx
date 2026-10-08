@@ -22,6 +22,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { THEME } from '@/constants/palette';
 
 /**
  * Brand page (BRANDS_SPEC §5.5): cover, logo, description, "Your points
@@ -125,7 +126,7 @@ export default function BrandScreen() {
           <BrandLogo brand={brand} size={64} />
           <View className="ml-3 flex-1">
             {description ? (
-              <LText size={18} color="#374151">
+              <LText size={18} color={THEME.text}>
                 {description}
               </LText>
             ) : (
@@ -151,7 +152,7 @@ export default function BrandScreen() {
           </LText>
           {pointsKnown ? (
             <View className="flex-row flex-wrap items-baseline">
-              <LText size={44} lineHeight={52} weight="700" color={COLORS.red} max={1.3}>
+              <LText size={44} lineHeight={52} weight="700" color={COLORS.brand} max={1.3}>
                 {formatNumber(points)}
               </LText>
               <LText size={20} weight="600" className="ml-2" max={1.3}>
@@ -164,7 +165,7 @@ export default function BrandScreen() {
             </LText>
           ) : (
             <View className="items-start py-3">
-              <ActivityIndicator color={COLORS.red} />
+              <ActivityIndicator color={COLORS.brand} />
             </View>
           )}
           <LText size={16} color={COLORS.secondary} className="mt-1">
@@ -193,7 +194,7 @@ export default function BrandScreen() {
           locations.map((group) => (
             <View key={group.cityId}>
               {locations.length > 1 && group.cityName ? (
-                <LText size={18} weight="700" color="#374151" className="mx-4 mt-4">
+                <LText size={18} weight="700" color={THEME.text} className="mx-4 mt-4">
                   {group.cityName}
                 </LText>
               ) : null}
@@ -206,7 +207,7 @@ export default function BrandScreen() {
                   className="mx-4 mt-2 flex-row items-center rounded-2xl border border-gray-200 bg-white px-4 py-3 active:opacity-80"
                   style={{ minHeight: 72 }}
                 >
-                  <Ionicons name="location-outline" size={24} color={COLORS.red} />
+                  <Ionicons name="location-outline" size={24} color={COLORS.brand} />
                   <View className="ml-3 flex-1">
                     <LText size={20} weight="700" numberOfLines={2}>
                       {spot.name}

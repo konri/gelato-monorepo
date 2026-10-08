@@ -35,7 +35,7 @@ export const ActiveFiltersBar: React.FC<ActiveFiltersBarProps> = ({
             🎯 {t('Merchants.filters')}
           </Typography>
           {activeFiltersCount > 0 && (
-            <View className="absolute -top-1.5 -right-1.5 bg-red-500 rounded-full min-w-5 h-5 items-center justify-center px-1.5">
+            <View className="absolute -top-1.5 -right-1.5 bg-accent rounded-full min-w-5 h-5 items-center justify-center px-1.5">
               <Typography variant="body-small-semibold" className="text-white" style={{ fontSize: 11 }}>
                 {activeFiltersCount}
               </Typography>
@@ -59,7 +59,7 @@ export const ActiveFiltersBar: React.FC<ActiveFiltersBarProps> = ({
               />
             ))}
             <Pressable onPress={onClearAll} className="px-3 py-1.5 justify-center">
-              <Typography variant="body-small-semibold" className="text-red-500">
+              <Typography variant="body-small-semibold" className="text-accent">
                 {t('ActiveFilters.clearAll')}
               </Typography>
             </Pressable>

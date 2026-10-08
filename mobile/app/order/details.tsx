@@ -16,6 +16,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { THEME } from '@/constants/palette';
 
 const zl = (n: number) => `${n.toFixed(2).replace(/\.00$/, '')} zł`;
 
@@ -121,10 +122,10 @@ export default function OrderDetailsScreen() {
     (!invoiceRequested || (invoiceNIP.trim() && invoiceCompanyName.trim()));
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-mainBg" style={{ paddingTop: insets.top }}>
       <View className="flex-row items-center px-4 py-3 border-b border-gray-200">
         <Pressable onPress={() => router.back()} hitSlop={8} className="mr-2">
-          <Ionicons name="arrow-back" size={24} color="#212121" />
+          <Ionicons name="arrow-back" size={24} color={THEME.text} />
         </Pressable>
         <Text className="text-lg font-urbanist-bold text-text-primary flex-1">
           {t('Checkout.title')}
@@ -136,7 +137,7 @@ export default function OrderDetailsScreen() {
           /* Collect-at-spot summary */
           <Section title={t('Checkout.pickupLocation')}>
             <View className="flex-row items-start">
-              <Ionicons name="storefront" size={18} color="#EC2828" style={{ marginTop: 2 }} />
+              <Ionicons name="storefront" size={18} color={THEME.primary} style={{ marginTop: 2 }} />
               <View className="flex-1 ml-2">
                 <Text className="font-urbanist-bold text-text-primary">{spot?.name ?? '—'}</Text>
                 {spot?.address ? (
@@ -152,7 +153,7 @@ export default function OrderDetailsScreen() {
           /* Delivery address (with change) */
           <Section title={t('Checkout.deliveryAddress')}>
             <View className="flex-row items-start">
-              <Ionicons name="location" size={18} color="#EC2828" style={{ marginTop: 2 }} />
+              <Ionicons name="location" size={18} color={THEME.primary} style={{ marginTop: 2 }} />
               <Text className="flex-1 ml-2 font-urbanist text-text-primary">
                 {cart.delivery?.address ?? '—'}
               </Text>
@@ -207,7 +208,7 @@ export default function OrderDetailsScreen() {
             onPress={() => setSlot(null)}
           >
             <Text className="font-urbanist-semibold text-text-primary">{t('Checkout.asap')}</Text>
-            {slot === null ? <Ionicons name="checkmark-circle" size={20} color="#EC2828" /> : null}
+            {slot === null ? <Ionicons name="checkmark-circle" size={20} color={THEME.primary} /> : null}
           </Pressable>
 
           <View className="flex-row mb-2">
@@ -279,7 +280,7 @@ export default function OrderDetailsScreen() {
                 </Pressable>
               </View>
               {promoError ? (
-                <Text className="text-xs font-urbanist text-accent mt-1">{promoError}</Text>
+                <Text className="text-xs font-urbanist text-red-600 mt-1">{promoError}</Text>
               ) : null}
             </View>
           )}
@@ -427,10 +428,10 @@ const Field = ({
   className,
   ...props
 }: React.ComponentProps<typeof TextInput> & { className?: string }) => (
-  <View className={`bg-background-secondary rounded-xl px-4 py-3 ${className ?? ''}`}>
+  <View className={`bg-white border border-gray-200 rounded-xl px-4 py-3 ${className ?? ''}`}>
     <TextInput
       style={{ fontFamily: 'Urbanist', fontSize: 15 }}
-      placeholderTextColor="#9E9E9E"
+      placeholderTextColor={THEME.placeholder}
       className="text-text-primary"
       {...props}
     />

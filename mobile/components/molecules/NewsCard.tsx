@@ -5,6 +5,7 @@ import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View, useWindowDimensions, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
+import { THEME } from '@/constants/palette';
 
 interface NewsCardProps {
   id: string;
@@ -74,7 +75,7 @@ export const NewsCard = ({
                 resizeMode="cover"
               />
             ) : (
-              <Ionicons name="storefront-outline" size={20} color="#6B7280" />
+              <Ionicons name="storefront-outline" size={20} color={THEME.textTertiary} />
             )}
           </View>
           <View className="flex-1 ml-3">
@@ -131,7 +132,7 @@ export const NewsCard = ({
                   style={{
                     width: 6,
                     height: 6,
-                    backgroundColor: index === currentImageIndex ? '#EC2828' : 'rgba(255, 255, 255, 0.6)',
+                    backgroundColor: index === currentImageIndex ? THEME.primary : 'rgba(255, 255, 255, 0.6)',
                   }}
                 />
               ))}
@@ -146,11 +147,11 @@ export const NewsCard = ({
           <Ionicons
             name={isLiked ? 'heart' : 'heart-outline'}
             size={26}
-            color={isLiked ? '#EC2828' : '#212121'}
+            color={isLiked ? THEME.primary : THEME.text}
           />
         </Pressable>
         <Pressable onPress={onComment} hitSlop={8}>
-          <Ionicons name="chatbubble-outline" size={24} color="#212121" />
+          <Ionicons name="chatbubble-outline" size={24} color={THEME.text} />
         </Pressable>
       </View>
 

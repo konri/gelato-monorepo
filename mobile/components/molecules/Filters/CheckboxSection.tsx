@@ -44,7 +44,7 @@ export const CheckboxSection: React.FC<CheckboxSectionProps> = ({
           >
             <View
               className={`w-6 h-6 rounded border-2 mr-3 items-center justify-center ${
-                isChecked ? 'bg-red-500 border-red-500' : 'border-gray-300'
+                isChecked ? 'bg-accent border-accent' : 'border-gray-300'
               }`}
             >
               {isChecked && <Ionicons name="checkmark" size={16} color="white" />}

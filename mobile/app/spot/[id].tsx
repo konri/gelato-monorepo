@@ -24,6 +24,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { THEME } from '@/constants/palette';
 
 const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
@@ -49,15 +50,15 @@ export default function SpotDetailScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
-        <ActivityIndicator size="large" color="#EC2828" />
+      <View className="flex-1 bg-mainBg items-center justify-center">
+        <ActivityIndicator size="large" color={THEME.primary} />
       </View>
     );
   }
 
   if (!spot) {
     return (
-      <View className="flex-1 bg-white items-center justify-center px-6">
+      <View className="flex-1 bg-mainBg items-center justify-center px-6">
         <Text className="font-urbanist text-text-secondary">{t('Common.error')}</Text>
       </View>
     );
@@ -83,7 +84,7 @@ export default function SpotDetailScreen() {
       : null;
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-mainBg">
       <ScrollView
         className="flex-1"
         contentContainerClassName="pb-10"
@@ -91,8 +92,8 @@ export default function SpotDetailScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor="#EC2828"
-            colors={['#EC2828']}
+            tintColor={THEME.primary}
+            colors={[THEME.primary]}
           />
         }
       >
@@ -104,7 +105,7 @@ export default function SpotDetailScreen() {
             style={{ top: insets.top + 8 }}
             hitSlop={8}
           >
-            <Ionicons name="arrow-back" size={22} color="#212121" />
+            <Ionicons name="arrow-back" size={22} color={THEME.text} />
           </Pressable>
           <Pressable
             onPress={() => fav.toggle(spot.id, favorited)}
@@ -115,7 +116,7 @@ export default function SpotDetailScreen() {
             <Ionicons
               name={favorited ? 'heart' : 'heart-outline'}
               size={22}
-              color={favorited ? '#EC2828' : '#212121'}
+              color={favorited ? THEME.primary : THEME.text}
             />
           </Pressable>
           {open !== null ? (
@@ -179,7 +180,7 @@ export default function SpotDetailScreen() {
                   {t('Brand.partOf', { brand: spot.brand.name })}
                 </LText>
                 {pointsLine ? (
-                  <LText size={16} weight="600" color={COLORS.red}>
+                  <LText size={16} weight="600" color={COLORS.brand}>
                     {pointsLine}
                   </LText>
                 ) : null}
@@ -203,15 +204,15 @@ export default function SpotDetailScreen() {
                 className="ml-3 bg-button-secondary rounded-xl px-4 py-3 items-center justify-center"
                 onPress={callSpot}
               >
-                <Ionicons name="call" size={18} color="#212121" />
+                <Ionicons name="call" size={18} color={THEME.text} />
               </Pressable>
             ) : null}
           </View>
 
           {/* Address */}
-          <View className="bg-background-secondary rounded-2xl p-4 mt-6">
+          <View className="bg-white border border-gray-200 rounded-2xl p-4 mt-6">
             <View className="flex-row items-start">
-              <Ionicons name="location" size={20} color="#EC2828" />
+              <Ionicons name="location" size={20} color={THEME.primary} />
               <View className="ml-3 flex-1">
                 <Text className="font-urbanist-bold text-text-primary mb-1">{t('Spots.address')}</Text>
                 <Text className="font-urbanist text-text-secondary">{spot.address}</Text>
@@ -221,11 +222,11 @@ export default function SpotDetailScreen() {
 
           {/* Contact */}
           {spot.phone || spot.email ? (
-            <View className="bg-background-secondary rounded-2xl p-4 mt-4">
+            <View className="bg-white border border-gray-200 rounded-2xl p-4 mt-4">
               <Text className="font-urbanist-bold text-text-primary mb-2">{t('Spots.contact')}</Text>
               {spot.phone ? (
                 <Pressable className="flex-row items-center py-1.5" onPress={callSpot}>
-                  <Ionicons name="call" size={18} color="#EC2828" />
+                  <Ionicons name="call" size={18} color={THEME.primary} />
                   <Text className="font-urbanist text-text-primary ml-3">{spot.phone}</Text>
                 </Pressable>
               ) : null}
@@ -234,7 +235,7 @@ export default function SpotDetailScreen() {
                   className="flex-row items-center py-1.5"
                   onPress={() => Linking.openURL(`mailto:${spot.email}`)}
                 >
-                  <Ionicons name="mail" size={18} color="#EC2828" />
+                  <Ionicons name="mail" size={18} color={THEME.primary} />
                   <Text className="font-urbanist text-text-primary ml-3">{spot.email}</Text>
                 </Pressable>
               ) : null}
@@ -243,7 +244,7 @@ export default function SpotDetailScreen() {
 
           {/* Opening hours */}
           {hours ? (
-            <View className="bg-background-secondary rounded-2xl p-4 mt-4">
+            <View className="bg-white border border-gray-200 rounded-2xl p-4 mt-4">
               <Text className="font-urbanist-bold text-text-primary mb-2">
                 {t('Spots.openingHours')}
               </Text>
@@ -260,10 +261,10 @@ export default function SpotDetailScreen() {
 
           {/* Features: seating + accessibility */}
           {spot.hasSeating || spot.accessibilityFeatures ? (
-            <View className="bg-background-secondary rounded-2xl p-4 mt-4">
+            <View className="bg-white border border-gray-200 rounded-2xl p-4 mt-4">
               {spot.hasSeating ? (
                 <View className="flex-row items-center py-1">
-                  <Ionicons name="cafe" size={18} color="#EC2828" />
+                  <Ionicons name="cafe" size={18} color={THEME.primary} />
                   <Text className="font-urbanist text-text-primary ml-3">
                     {spot.seatingCapacity
                       ? t('Spots.seatingCapacity', { count: spot.seatingCapacity })
@@ -273,7 +274,7 @@ export default function SpotDetailScreen() {
               ) : null}
               {spot.accessibilityFeatures ? (
                 <View className="flex-row items-start py-1">
-                  <Ionicons name="accessibility" size={18} color="#EC2828" style={{ marginTop: 2 }} />
+                  <Ionicons name="accessibility" size={18} color={THEME.primary} style={{ marginTop: 2 }} />
                   <View className="ml-3 flex-1">
                     <Text className="font-urbanist-bold text-text-primary">{t('Spots.accessibility')}</Text>
                     <Text className="font-urbanist text-text-secondary">

@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
         minHeight: 60,
     },
     button: {
-        backgroundColor: "rgba(0, 0, 0, 0.15)",
+        backgroundColor: "rgba(58, 21, 38, 0.12)",
         borderRadius: 20,
         height: 60,
         width: "100%",
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
         right: 0,
         left: 0,
         height: 56,
-        backgroundColor: "#efefef",
+        backgroundColor: "#fff1e6",
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.12,

@@ -48,14 +48,14 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
             <Pressable
               key={category.id}
               className={`px-4 py-2 rounded-full border flex-1 items-center ${
-                isSelected ? 'bg-red-50 border-red-500' : 'bg-white border-gray-300'
+                isSelected ? 'bg-berry-wash border-accent' : 'bg-white border-gray-300'
               }`}
               style={{ minWidth: '48%' }}
               onPress={() => toggleCategory(category.id)}
             >
               <Typography
                 variant="body-small-regular"
-                className={isSelected ? 'text-red-500' : 'text-text-primary'}
+                className={isSelected ? 'text-accent' : 'text-text-primary'}
               >
                 {category.name}
               </Typography>
@@ -65,7 +65,7 @@ export const CategorySection: React.FC<CategorySectionProps> = ({
       </View>
       {hasMore && (
         <Pressable className="mt-3" onPress={() => setShowAll(!showAll)}>
-          <Typography variant="body-small-semibold" className="text-red-500 text-center">
+          <Typography variant="body-small-semibold" className="text-accent text-center">
             {showAll ? t('Filters.seeLess') : t('Filters.seeAll')} {showAll ? '↑' : '↓'}
           </Typography>
         </Pressable>

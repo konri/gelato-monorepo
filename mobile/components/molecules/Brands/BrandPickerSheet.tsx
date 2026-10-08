@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useOverlayOpen } from '@/hooks/useOverlayOpen';
+import { THEME } from '@/constants/palette';
 
 type Props = {
   visible: boolean;
@@ -113,7 +114,7 @@ export function BrandPickerSheet({ visible, onClose, selectedBrandId }: Props) {
                 className="flex-row items-center rounded-full bg-gray-100 px-3 active:opacity-80"
                 style={{ minHeight: 48 }}
               >
-                <Ionicons name="close" size={22} color="#111827" />
+                <Ionicons name="close" size={22} color={THEME.text} />
                 <Text
                   className="ml-1 font-urbanist text-gray-900"
                   style={{ fontSize: 17, fontWeight: '700' }}
@@ -125,7 +126,7 @@ export function BrandPickerSheet({ visible, onClose, selectedBrandId }: Props) {
             </View>
             <Text
               className="px-5 font-urbanist"
-              style={{ fontSize: 17, lineHeight: 23, color: '#4B5563' }}
+              style={{ fontSize: 17, lineHeight: 23, color: THEME.textSecondary }}
               maxFontSizeMultiplier={1.5}
             >
               {t('Loyalty.pickerRule')}
@@ -198,7 +199,7 @@ function useRowStatus(wallet: LoyaltyWallet): Status | null {
 const TONES = {
   green: { bg: '#DCFCE7', fg: '#166534' },
   amber: { bg: '#FEF3C7', fg: '#92400E' },
-  grey: { bg: 'transparent', fg: '#4B5563' },
+  grey: { bg: 'transparent', fg: THEME.textSecondary },
 } as const;
 
 function BrandRow({
@@ -227,15 +228,15 @@ function BrandRow({
       style={{
         minHeight: 72,
         borderWidth: selected ? 2 : 1,
-        borderColor: selected ? '#EC2828' : '#E5E7EB',
-        backgroundColor: selected ? '#FEF2F2' : wallet.paused ? '#F9FAFB' : '#FFFFFF',
+        borderColor: selected ? THEME.primary : THEME.borderStrong,
+        backgroundColor: selected ? THEME.selectedFill : wallet.paused ? THEME.subtleFill : '#FFFFFF',
       }}
     >
       <BrandLogo brand={wallet.brand} size={48} muted={wallet.paused} />
       <View className="ml-3 flex-1">
         <Text
           className="font-urbanist"
-          style={{ fontSize: 20, lineHeight: 25, fontWeight: '700', color: wallet.paused ? '#4B5563' : '#111827' }}
+          style={{ fontSize: 20, lineHeight: 25, fontWeight: '700', color: wallet.paused ? THEME.textSecondary : THEME.text }}
           numberOfLines={2}
           maxFontSizeMultiplier={1.4}
         >
@@ -264,14 +265,14 @@ function BrandRow({
       <View className="ml-2 items-end">
         <Text
           className="font-urbanist"
-          style={{ fontSize: 24, lineHeight: 30, fontWeight: '700', color: wallet.paused ? '#4B5563' : '#111827' }}
+          style={{ fontSize: 24, lineHeight: 30, fontWeight: '700', color: wallet.paused ? THEME.textSecondary : THEME.text }}
           maxFontSizeMultiplier={1.3}
         >
           {formatNumber(points)}
         </Text>
         <Text
           className="font-urbanist"
-          style={{ fontSize: 16, lineHeight: 20, color: '#4B5563' }}
+          style={{ fontSize: 16, lineHeight: 20, color: THEME.textSecondary }}
           maxFontSizeMultiplier={1.3}
         >
           {t('Loyalty.pointsUnit', { count: points })}
@@ -280,7 +281,7 @@ function BrandRow({
       {!wallet.paused ? (
         <View
           className="ml-3 items-center justify-center rounded-full"
-          style={{ width: 26, height: 26, borderWidth: 2, borderColor: selected ? '#EC2828' : '#9CA3AF' }}
+          style={{ width: 26, height: 26, borderWidth: 2, borderColor: selected ? THEME.primary : THEME.placeholder }}
         >
           {selected ? <View className="rounded-full bg-accent" style={{ width: 14, height: 14 }} /> : null}
         </View>

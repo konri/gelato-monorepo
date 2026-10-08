@@ -86,7 +86,7 @@ export function RewardRow({ reward, onPress }: { reward: RewardLike; onPress: ()
         <LText size={20} weight="700" numberOfLines={3} max={1.4}>
           {title}
         </LText>
-        <LText size={18} weight="700" color={COLORS.red} max={1.4}>
+        <LText size={18} weight="700" color={COLORS.brand} max={1.4}>
           {cost}
         </LText>
         <View className="mt-1">

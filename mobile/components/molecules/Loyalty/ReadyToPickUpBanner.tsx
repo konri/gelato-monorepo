@@ -61,7 +61,7 @@ export function ReadyToPickUpBanner({ items, onOpenOne, onOpenAll }: Props) {
         {urgency ? (
           <Text
             className="mt-0.5 font-urbanist"
-            style={{ fontSize: 16, lineHeight: 21, fontWeight: '700', color: '#B01E1E' }}
+            style={{ fontSize: 16, lineHeight: 21, fontWeight: '700', color: '#B91C1C' }}
             maxFontSizeMultiplier={1.5}
           >
             {urgency}

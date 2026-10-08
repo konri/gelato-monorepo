@@ -160,10 +160,10 @@ export const staticMapUrl = (opts: {
     key: KEY,
     language: 'pl',
   });
-  // Spot pin (brand red 'S'); destination pin ('D') + path only when delivering.
-  params.append('markers', `color:0xEC2828|label:S|${spot.latitude},${spot.longitude}`);
+  // Spot pin (brand berry 'S'); destination pin ('D', espresso) + path only when delivering.
+  params.append('markers', `color:0xC026A3|label:S|${spot.latitude},${spot.longitude}`);
   if (destination) {
-    params.append('markers', `color:0x212121|label:D|${destination.latitude},${destination.longitude}`);
+    params.append('markers', `color:0x3A1526|label:D|${destination.latitude},${destination.longitude}`);
   }
   if (courier) {
     // Courier pin (green 'C').
@@ -172,7 +172,7 @@ export const staticMapUrl = (opts: {
   if (destination) {
     params.append(
       'path',
-      `color:0xEC282880|weight:3|${spot.latitude},${spot.longitude}|${destination.latitude},${destination.longitude}`,
+      `color:0xC026A380|weight:3|${spot.latitude},${spot.longitude}|${destination.latitude},${destination.longitude}`,
     );
   }
   return `https://maps.googleapis.com/maps/api/staticmap?${params.toString()}`;

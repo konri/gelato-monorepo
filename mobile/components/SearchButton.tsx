@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { THEME } from '@/constants/palette';
 
 interface SearchButtonProps {
     title: string;
@@ -24,7 +25,7 @@ export const SearchButton = ({ title, onPress, disabled = false }: SearchButtonP
                 opacity: disabled ? 0.6 : 1
             }}
         >
-            <Ionicons name="search" size={16} color="#727272" />
+            <Ionicons name="search" size={16} color={THEME.textTertiary} />
             <Text 
                 className="text-center ml-1" 
                 style={{ 
@@ -33,7 +34,7 @@ export const SearchButton = ({ title, onPress, disabled = false }: SearchButtonP
                     fontSize: 16, 
                     lineHeight: 25.6, 
                     letterSpacing: 0.2,
-                    color: '#727272'
+                    color: THEME.textTertiary
                 }}
             >
                 {title}

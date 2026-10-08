@@ -24,6 +24,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { THEME } from '@/constants/palette';
 
 const zl = (n: number) => `${n.toFixed(2).replace(/\.00$/, '')} zł`;
 
@@ -73,14 +74,14 @@ export default function OrderTrackingScreen() {
 
   if (loading && !order) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
-        <ActivityIndicator size="large" color="#EC2828" />
+      <View className="flex-1 bg-mainBg items-center justify-center">
+        <ActivityIndicator size="large" color={THEME.primary} />
       </View>
     );
   }
   if (!order) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
+      <View className="flex-1 bg-mainBg items-center justify-center">
         <Text className="font-urbanist text-text-secondary">{t('Common.error')}</Text>
       </View>
     );
@@ -93,10 +94,10 @@ export default function OrderTrackingScreen() {
   const cancelled = order.status === 'CANCELLED' || order.status === 'FAILED' || terminated;
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-mainBg" style={{ paddingTop: insets.top }}>
       <View className="flex-row items-center px-4 py-3 border-b border-gray-200">
         <Pressable onPress={() => router.back()} hitSlop={8} className="mr-2">
-          <Ionicons name="arrow-back" size={24} color="#212121" />
+          <Ionicons name="arrow-back" size={24} color={THEME.text} />
         </Pressable>
         <Text className="text-lg font-urbanist-bold text-text-primary flex-1">
           {t('Ordering.orderNo', { number: order.orderNumber })}
@@ -147,7 +148,7 @@ export default function OrderTrackingScreen() {
             resizeMode="cover"
           />
         ) : (
-          <View className="w-full h-52 rounded-2xl bg-background-secondary items-center justify-center mt-4">
+          <View className="w-full h-52 rounded-2xl bg-white border border-gray-200 items-center justify-center mt-4">
             <Text className="text-4xl">🗺️</Text>
           </View>
         )}
@@ -165,7 +166,7 @@ export default function OrderTrackingScreen() {
                 <View key={step} className="flex-row items-center mb-3">
                   <View
                     className="w-6 h-6 rounded-full items-center justify-center mr-3"
-                    style={{ backgroundColor: done ? '#EC2828' : '#E5E7EB' }}
+                    style={{ backgroundColor: done ? THEME.primary : THEME.borderStrong }}
                   >
                     {done ? <Ionicons name="checkmark" size={14} color="white" /> : null}
                   </View>
@@ -181,19 +182,19 @@ export default function OrderTrackingScreen() {
         ) : null}
 
         {/* Spot + (delivery: destination + courier | pickup: collection note) */}
-        <View className="mt-4 bg-background-secondary rounded-2xl p-4">
-          <InfoRow icon="storefront" iconColor="#EC2828" label={t('Ordering.tracking.spot')} value={order.spot?.name} />
+        <View className="mt-4 bg-white border border-gray-200 rounded-2xl p-4">
+          <InfoRow icon="storefront" iconColor={THEME.primary} label={t('Ordering.tracking.spot')} value={order.spot?.name} />
           <View className="h-px bg-gray-200 my-3" />
           {isPickup ? (
             <InfoRow
               icon="bag-check"
-              iconColor="#EC2828"
+              iconColor={THEME.primary}
               label={t('Ordering.tracking.collection')}
               value={order.spot?.address ?? t('Checkout.pickupHint')}
             />
           ) : (
             <>
-              <InfoRow icon="location" iconColor="#212121" label={t('Ordering.tracking.destination')} value={order.deliveryAddress} />
+              <InfoRow icon="location" iconColor={THEME.text} label={t('Ordering.tracking.destination')} value={order.deliveryAddress} />
               {order.status === 'IN_TRANSIT' || order.status === 'PICKED_UP' || order.status === 'COURIER_ASSIGNED' ? (
                 <>
                   <View className="h-px bg-gray-200 my-3" />
@@ -243,13 +244,13 @@ export default function OrderTrackingScreen() {
             className="mt-4 flex-row items-center justify-center bg-white border border-accent rounded-2xl py-3.5"
             onPress={() => Linking.openURL(`tel:${order.spot!.phone}`)}
           >
-            <Ionicons name="call" size={18} color="#EC2828" />
+            <Ionicons name="call" size={18} color={THEME.primary} />
             <Text className="ml-2 font-urbanist-bold text-accent">{t('Ordering.tracking.callSpot')}</Text>
           </Pressable>
         ) : null}
 
         {/* Summary */}
-        <View className="mt-4 bg-background-secondary rounded-2xl p-4">
+        <View className="mt-4 bg-white border border-gray-200 rounded-2xl p-4">
           <Text className="font-urbanist-bold text-text-primary mb-2">
             {t('Ordering.tracking.summary')}
           </Text>
@@ -268,20 +269,20 @@ export default function OrderTrackingScreen() {
         </View>
 
         {order.invoiceRequested ? (
-          <View className="mt-4 bg-background-secondary rounded-2xl p-4">
+          <View className="mt-4 bg-white border border-gray-200 rounded-2xl p-4">
             <View className="flex-row items-center mb-3">
-              <Ionicons name="document-text-outline" size={18} color="#EC2828" />
+              <Ionicons name="document-text-outline" size={18} color={THEME.primary} />
               <Text className="ml-2 font-urbanist-bold text-text-primary">
                 {t('Checkout.invoiceRequested')}
               </Text>
             </View>
-            <InfoRow icon="business-outline" iconColor="#212121" label={t('Checkout.companyName')} value={order.invoiceCompanyName} />
+            <InfoRow icon="business-outline" iconColor={THEME.text} label={t('Checkout.companyName')} value={order.invoiceCompanyName} />
             <View className="h-px bg-gray-200 my-3" />
-            <InfoRow icon="card-outline" iconColor="#212121" label={t('Checkout.nip')} value={order.invoiceNIP} />
+            <InfoRow icon="card-outline" iconColor={THEME.text} label={t('Checkout.nip')} value={order.invoiceNIP} />
             {order.invoiceAddress ? (
               <>
                 <View className="h-px bg-gray-200 my-3" />
-                <InfoRow icon="location-outline" iconColor="#212121" label={t('Checkout.companyAddress')} value={order.invoiceAddress} />
+                <InfoRow icon="location-outline" iconColor={THEME.text} label={t('Checkout.companyAddress')} value={order.invoiceAddress} />
               </>
             ) : null}
           </View>
@@ -309,7 +310,7 @@ export default function OrderTrackingScreen() {
           className="mt-4 flex-row items-center justify-center py-3.5"
           onPress={() => setComplaintOpen(true)}
         >
-          <Ionicons name="alert-circle-outline" size={18} color="#6B7280" />
+          <Ionicons name="alert-circle-outline" size={18} color={THEME.textTertiary} />
           <Text className="ml-2 font-urbanist-semibold text-text-secondary">
             {t('Complaint.report')}
           </Text>
@@ -357,7 +358,7 @@ const ComplaintModal = ({
           <View className="flex-row items-center justify-between mb-2">
             <Text className="font-urbanist-bold text-lg text-text-primary">{t('Complaint.title')}</Text>
             <Pressable onPress={onClose} hitSlop={8}>
-              <Ionicons name="close" size={24} color="#374151" />
+              <Ionicons name="close" size={24} color={THEME.text} />
             </Pressable>
           </View>
           <Text className="font-urbanist text-text-secondary mb-4">#{orderNumber}</Text>
@@ -366,7 +367,7 @@ const ComplaintModal = ({
             <View className="items-center py-4">
               <Ionicons name="checkmark-circle" size={48} color="#16A34A" />
               <Text className="mt-3 text-center font-urbanist text-text-secondary">{t('Complaint.sent')}</Text>
-              <Pressable className="mt-5 rounded-2xl px-6 py-3" style={{ backgroundColor: '#EC2828' }} onPress={onClose}>
+              <Pressable className="mt-5 rounded-2xl px-6 py-3" style={{ backgroundColor: THEME.primary }} onPress={onClose}>
                 <Text className="font-urbanist-bold text-white">{t('Common.close')}</Text>
               </Pressable>
             </View>
@@ -394,7 +395,7 @@ const ComplaintModal = ({
               />
               <Pressable
                 className="items-center rounded-2xl py-4"
-                style={{ backgroundColor: busy || !subject.trim() || !message.trim() ? '#F4A3A3' : '#EC2828' }}
+                style={{ backgroundColor: busy || !subject.trim() || !message.trim() ? THEME.primaryDisabled : THEME.primary }}
                 onPress={submit}
                 disabled={busy || !subject.trim() || !message.trim()}
               >

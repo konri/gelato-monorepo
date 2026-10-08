@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 type Props = {
   rating: number;
@@ -22,7 +23,7 @@ export function StarRating({ rating, onChange, size = 22, color = '#F5A623' }: P
           <Ionicons
             name={filled ? 'star' : 'star-outline'}
             size={size}
-            color={filled ? color : '#D1D5DB'}
+            color={filled ? color : THEME.inactive}
             style={{ marginRight: 2 }}
           />
         );

@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, ScrollView, View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 interface SortDropdownProps {
   currentSort: SearchSortOrder;
@@ -32,7 +33,7 @@ export const SortDropdown: React.FC<SortDropdownProps> = ({
         <Typography variant="body-small-semibold" className="text-text-primary">
           {sortIcon} {sortLabel}
         </Typography>
-        <Ionicons name="chevron-down" size={14} color="#666" />
+        <Ionicons name="chevron-down" size={14} color={THEME.textTertiary} />
       </Pressable>
 
       <Modal visible={isOpen} transparent animationType="fade" onRequestClose={() => setIsOpen(false)}>

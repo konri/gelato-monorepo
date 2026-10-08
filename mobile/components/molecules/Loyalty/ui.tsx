@@ -12,26 +12,31 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
+import { PALETTE, THEME } from '@/constants/palette';
 
 /**
  * Building blocks of the loyalty screens, following the design rules for
  * older users (BRANDS_SPEC §5.7): text ≥ 16px (body 18, row titles 20,
  * section titles 22, screen titles 28), rows ≥ 72dp, primary buttons 56dp,
- * icon buttons 48dp with a text label, secondary text #4B5563, small red
- * text #B01E1E, badges with an icon AND text.
+ * icon buttons 48dp with a text label, secondary text espressoLight, small
+ * brand text berryDark (8.6:1), badges with an icon AND text.
  */
 
 export const COLORS = {
-  text: '#111827',
-  secondary: '#4B5563',
-  red: '#B01E1E',
-  accent: '#EC2828',
+  text: PALETTE.espresso,
+  secondary: PALETTE.espressoLight,
+  /** Small brand text and icons: points, costs, links (berryDark, 8.6:1 on white). */
+  brand: PALETTE.berryDark,
+  /** Brand fills: primary buttons, progress bars, spinners (berry). */
+  accent: PALETTE.berry,
+  /** Semantic: errors, failures and urgent deadlines (red-700, 6.5:1 on white). */
+  danger: '#B91C1C',
   green: '#166534',
   greenBg: '#DCFCE7',
   amber: '#92400E',
   amberBg: '#FEF3C7',
-  border: '#E5E7EB',
-  muted: '#F3F4F6',
+  border: THEME.borderStrong,
+  muted: THEME.neutralFill,
 } as const;
 
 type LTextProps = TextProps & {
@@ -102,7 +107,7 @@ type ButtonProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-/** 56dp, white on red; the label is large text (20px bold) so it passes contrast. */
+/** 56dp, white on berry (5.2:1); the label is large text (20px bold). */
 export function PrimaryButton({ label, onPress, icon, disabled, loading, accessibilityHint, style }: ButtonProps) {
   const off = disabled || loading;
   return (
@@ -113,7 +118,7 @@ export function PrimaryButton({ label, onPress, icon, disabled, loading, accessi
       accessibilityState={{ disabled: !!off, busy: !!loading }}
       accessibilityHint={accessibilityHint}
       className="flex-row items-center justify-center rounded-2xl px-4 active:opacity-80"
-      style={[{ minHeight: 56, backgroundColor: disabled ? '#D1D5DB' : COLORS.accent }, style]}
+      style={[{ minHeight: 56, backgroundColor: disabled ? '#DCC8BC' : COLORS.accent }, style]}
     >
       {loading ? (
         <ActivityIndicator color="#FFFFFF" />
@@ -173,7 +178,7 @@ export function LinkRow({
       className="mx-4 mt-3 flex-row items-center rounded-2xl border border-gray-200 bg-white px-4 py-3 active:opacity-80"
       style={{ minHeight: 72 }}
     >
-      {icon ? <Ionicons name={icon} size={24} color="#374151" /> : null}
+      {icon ? <Ionicons name={icon} size={24} color={COLORS.text} /> : null}
       <View className={icon ? 'ml-3 flex-1' : 'flex-1'}>
         <LText size={18} weight="600">
           {label}
@@ -203,7 +208,7 @@ export function Badge({
     green: { bg: COLORS.greenBg, fg: COLORS.green },
     amber: { bg: COLORS.amberBg, fg: COLORS.amber },
     grey: { bg: COLORS.muted, fg: COLORS.secondary },
-    red: { bg: '#FEE2E2', fg: COLORS.red },
+    red: { bg: '#FEE2E2', fg: COLORS.danger },
   }[tone];
   return (
     <View
@@ -274,7 +279,7 @@ export function BackHeader({
   const { t } = useTranslation();
   const back = onBack ?? (() => (router.canGoBack() ? router.back() : router.replace('/(tabs)' as never)));
   return (
-    <View className="border-b border-gray-200 bg-white px-4 pb-2" style={{ paddingTop: topInset + 4 }}>
+    <View className="border-b border-gray-200 px-4 pb-2" style={{ paddingTop: topInset + 4 }}>
       <View className="flex-row items-center justify-between">
         <Pressable
           onPress={back}

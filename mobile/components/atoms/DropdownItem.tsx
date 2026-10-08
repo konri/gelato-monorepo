@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, View } from 'react-native';
 import { Typography } from './Typography';
 import { Ionicons } from '@expo/vector-icons';
+import { THEME } from '@/constants/palette';
 
 type DropdownItemPosition = 'first' | 'middle' | 'last';
 
@@ -38,7 +39,7 @@ export const DropdownItem = ({
             <Ionicons
               name={iconName}
               size={20}
-              color={destructive ? '#EF4444' : '#212121'}
+              color={destructive ? '#EF4444' : THEME.text}
               style={{ marginRight: 12 }}
             />
           )}
@@ -51,7 +52,7 @@ export const DropdownItem = ({
         </View>
         <View className="flex-row items-center">
           {value ? (
-            <Typography variant="body-base-regular" className="text-gray-400 mr-2">
+            <Typography variant="body-base-regular" className="text-gray-500 mr-2">
               {value}
             </Typography>
           ) : null}
@@ -59,7 +60,7 @@ export const DropdownItem = ({
             <Ionicons
               name="chevron-forward"
               size={24}
-              color={destructive ? '#EF4444' : '#212121'}
+              color={destructive ? '#EF4444' : THEME.text}
             />
           )}
         </View>

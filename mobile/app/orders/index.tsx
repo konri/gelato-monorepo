@@ -12,6 +12,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { THEME } from '@/constants/palette';
 
 type Icon = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -32,15 +33,15 @@ const KNOWN_SOURCES = new Set([
 const ICONS: Record<string, { name: Icon; color: string; bg: string }> = {
   ORDER: { name: 'bag-handle-outline', color: '#166534', bg: '#DCFCE7' },
   ORDER_APOLOGY: { name: 'heart-outline', color: '#9D174D', bg: '#FCE7F3' },
-  ORDER_REVERSAL: { name: 'arrow-undo-outline', color: '#374151', bg: '#F3F4F6' },
+  ORDER_REVERSAL: { name: 'arrow-undo-outline', color: THEME.text, bg: THEME.neutralFill },
   STAFF_TEMPLATE: { name: 'qr-code-outline', color: '#1D4ED8', bg: '#DBEAFE' },
   STAFF_CUSTOM: { name: 'qr-code-outline', color: '#1D4ED8', bg: '#DBEAFE' },
   REFERRAL_REFERRER: { name: 'people-outline', color: '#9D174D', bg: '#FCE7F3' },
   REFERRAL_REFEREE: { name: 'people-outline', color: '#9D174D', bg: '#FCE7F3' },
   BIRTHDAY: { name: 'balloon-outline', color: '#6D28D9', bg: '#EDE9FE' },
-  PRIZE_CLAIM: { name: 'gift-outline', color: COLORS.red, bg: '#FEE2E2' },
+  PRIZE_CLAIM: { name: 'gift-outline', color: COLORS.brand, bg: THEME.primaryPale },
   PRIZE_REFUND: { name: 'arrow-undo-outline', color: '#92400E', bg: '#FEF3C7' },
-  ADMIN_ADJUSTMENT: { name: 'create-outline', color: '#374151', bg: '#F3F4F6' },
+  ADMIN_ADJUSTMENT: { name: 'create-outline', color: THEME.text, bg: THEME.neutralFill },
 };
 const DEFAULT_ICON = { name: 'star-outline' as Icon, color: '#92400E', bg: '#FEF3C7' };
 
@@ -177,7 +178,7 @@ export default function PointsHistoryScreen() {
         ListEmptyComponent={
           loading ? null : (
             <View className="items-center px-8 py-16">
-              <Ionicons name="star-outline" size={64} color="#9CA3AF" />
+              <Ionicons name="star-outline" size={64} color={THEME.placeholder} />
               <LText size={20} weight="700" className="mt-4 text-center">
                 {t('PointsHistory.emptyTitle')}
               </LText>

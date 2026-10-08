@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { RoundedCard } from '@/components/atoms/RoundedCard';
 import { COLORS, LText } from '@/components/molecules/Loyalty/ui';
 import { formatNumber } from '@/utils/formatPoints';
+import { THEME } from '@/constants/palette';
 
 interface QuestCardProps {
   /** Optional: bonuses differ per brand, so most cards show an icon instead. */
@@ -47,7 +48,7 @@ export const QuestCard = ({
           >
             {points != null ? (
               <>
-                <LText size={20} weight="700" color={completed ? COLORS.secondary : COLORS.red} max={1.2}>
+                <LText size={20} weight="700" color={completed ? COLORS.secondary : COLORS.brand} max={1.2}>
                   +{formatNumber(points)}
                 </LText>
                 <LText size={16} color={completed ? COLORS.secondary : COLORS.amber} max={1.2}>
@@ -55,7 +56,7 @@ export const QuestCard = ({
                 </LText>
               </>
             ) : (
-              <Ionicons name={iconName} size={30} color={completed ? COLORS.secondary : COLORS.red} />
+              <Ionicons name={iconName} size={30} color={completed ? COLORS.secondary : COLORS.brand} />
             )}
           </View>
 
@@ -68,7 +69,7 @@ export const QuestCard = ({
               {description}
             </LText>
             {lines.map((line) => (
-              <LText key={line} size={16} color="#374151" className="mt-1">
+              <LText key={line} size={16} color={THEME.text} className="mt-1">
                 {line}
               </LText>
             ))}

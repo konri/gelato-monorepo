@@ -18,7 +18,7 @@ export const CodeInput = ({ code, inputRefs, isLoading, onCodeChange, onKeyPress
           if (ref && inputRefs.current) inputRefs.current[index] = ref;
         }}
         className={`w-12 h-12 rounded-full border-2 text-center text-xl font-bold ${
-          digit ? 'border-red-500 bg-white' : 'border-gray-300 bg-white'
+          digit ? 'border-accent bg-white' : 'border-gray-300 bg-white'
         }`}
         style={{ fontFamily: 'Urbanist', opacity: isLoading ? 0.5 : 1 }}
         value={digit}

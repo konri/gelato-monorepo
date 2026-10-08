@@ -12,6 +12,7 @@ import { useReferralCode } from '@/hooks/useReferralCode';
 import { getMyReferralStats } from '@/shared/api-client/src/graphql/queries/referralCode/getMyReferralCode';
 import type { ReferralStats } from '@/shared/api-client/src/graphql/queries/referralCode/types';
 import { pointsText } from '@/utils/formatPoints';
+import { THEME } from '@/constants/palette';
 
 interface ReferralQuestModalProps {
   visible: boolean;
@@ -91,8 +92,8 @@ export const ReferralQuestModal = ({ visible, onClose }: ReferralQuestModalProps
               onPress={() => refetch()}
               className="flex-row items-center px-4 py-2 rounded-full bg-gray-100"
             >
-              <Ionicons name="refresh-outline" size={18} color="#EC2828" />
-              <Typography variant="body-small-bold" className="text-red-500 ml-2">
+              <Ionicons name="refresh-outline" size={18} color={THEME.primary} />
+              <Typography variant="body-small-bold" className="text-accent ml-2">
                 {t('Tasks.retry')}
               </Typography>
             </Pressable>
@@ -107,20 +108,20 @@ export const ReferralQuestModal = ({ visible, onClose }: ReferralQuestModalProps
               className="w-9 h-9 rounded items-center justify-center"
               disabled={!code}
             >
-              <Ionicons name="copy-outline" size={24} color="#6B7280" />
+              <Ionicons name="copy-outline" size={24} color={THEME.textTertiary} />
             </Pressable>
           </View>
         )}
 
         {/* Reward rules: the brands' own numbers, never a fixed amount (A2). */}
         <View className="w-full bg-white rounded-2xl px-4 py-3 mb-3">
-          <LText size={16} color="#374151">
+          <LText size={16} color={THEME.text}>
             {t('Tasks.referralRuleIntro')}
           </LText>
           {referralBrands.length > 0 ? (
             referralBrands.map((w) => (
               <View key={w.brand.id} className="flex-row items-start mt-2">
-                <Ionicons name="people-outline" size={20} color={COLORS.red} style={{ marginTop: 1 }} />
+                <Ionicons name="people-outline" size={20} color={COLORS.brand} style={{ marginTop: 1 }} />
                 <LText size={16} weight="600" className="ml-2 flex-1">
                   {t('Tasks.referralRuleBrand', {
                     brand: w.brand.name,

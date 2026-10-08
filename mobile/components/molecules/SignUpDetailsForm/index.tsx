@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { Alert, Image, Pressable, Text, View } from "react-native";
 import { SignUpDetailsFormData, SignUpDetailsFormProps } from "./types";
 import { buildUpdateData } from "./utils";
+import { THEME } from "@/constants/palette";
 
 export const SignUpDetailsForm = ({
   onSkip,
@@ -113,7 +114,7 @@ export const SignUpDetailsForm = ({
                 className="w-full h-full rounded-full"
               />
             ) : (
-              <Ionicons name="camera-outline" size={32} color="#9E9E9E" />
+              <Ionicons name="camera-outline" size={32} color={THEME.placeholder} />
             )}
           </Pressable>
         </View>

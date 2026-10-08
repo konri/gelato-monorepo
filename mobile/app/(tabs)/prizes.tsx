@@ -193,7 +193,7 @@ export default function RewardsScreen() {
 
   return (
     <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
-      <View className="flex-row items-center border-b border-gray-200 bg-white px-4 py-2">
+      <View className="flex-row items-center border-b border-gray-200 px-4 py-2">
         <View className="flex-1">
           <LText size={28} lineHeight={34} weight="700" accessibilityRole="header" max={1.3}>
             {t('Prizes.title')}

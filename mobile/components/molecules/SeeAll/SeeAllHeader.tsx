@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 interface SeeAllHeaderProps {
   activeFiltersCount?: number;
@@ -39,18 +40,18 @@ export const SeeAllHeader = ({
             <Typography variant="body-base-semibold" className="text-text-primary">
               {sortLabel}
             </Typography>
-            <Ionicons name="chevron-down" size={16} color="#919191" />
+            <Ionicons name="chevron-down" size={16} color={THEME.placeholder} />
           </Pressable>
         </RoundedCard>
         {showFilters && (filtersModalContent || onFiltersPress) && (
           <RoundedCard className="ml-2">
             <Pressable className="flex-row items-center" onPress={onFiltersPress}>
-              <Ionicons name="options-outline" size={24} color="#212121" />
+              <Ionicons name="options-outline" size={24} color={THEME.text} />
               <Typography variant="body-small-semibold" className="ml-1 text-text-primary">
                 {t('Merchants.filters')}
               </Typography>
               {activeFiltersCount > 0 && (
-                <View className="ml-2 bg-red-500 rounded-full w-6 h-6 items-center justify-center">
+                <View className="ml-2 bg-accent rounded-full w-6 h-6 items-center justify-center">
                   <Typography variant="body-small-semibold" className="text-white">
                     {activeFiltersCount}
                   </Typography>

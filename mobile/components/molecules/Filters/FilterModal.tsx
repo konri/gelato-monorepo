@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, ScrollView, View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 interface FilterModalProps {
   visible: boolean;
@@ -45,7 +46,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
         <View className="bg-white rounded-3xl w-[90%] h-[70%]">
           <View className="flex-row items-center justify-end p-4">
             <Pressable onPress={onClose}>
-              <Ionicons name="close" size={24} color="#212121" />
+              <Ionicons name="close" size={24} color={THEME.text} />
             </Pressable>
           </View>
 

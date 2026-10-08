@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 type Props = {
   mode: LoyaltyMode;
@@ -83,7 +84,7 @@ export function LoyaltyPointsStrip({
           <View className="h-5 w-40 rounded bg-gray-200" />
           <View className="mt-2 h-5 w-24 rounded bg-gray-200" />
         </View>
-        <ActivityIndicator color="#B01E1E" />
+        <ActivityIndicator color={THEME.primaryDark} />
       </Shell>
     );
   }
@@ -103,7 +104,7 @@ export function LoyaltyPointsStrip({
       <Shell onPress={onChooseCity} a11yLabel={`${noPointsTitle}. ${t('Loyalty.chooseCityLink')}`}>
         <IconCircle name="location-outline" />
         <TextColumn title={noPointsTitle} subtitle={t('Loyalty.chooseCityLink')} link />
-        <Ionicons name="chevron-forward" size={24} color="#B01E1E" />
+        <Ionicons name="chevron-forward" size={24} color={THEME.primaryDark} />
       </Shell>
     );
   }
@@ -128,7 +129,7 @@ export function LoyaltyPointsStrip({
       <Shell onPress={onDiscover} a11yLabel={`${noPointsTitle}. ${subtitle}`}>
         <IconCircle name="star-outline" />
         <TextColumn title={noPointsTitle} subtitle={subtitle} link />
-        <Ionicons name="chevron-forward" size={24} color="#B01E1E" />
+        <Ionicons name="chevron-forward" size={24} color={THEME.primaryDark} />
       </Shell>
     );
   }
@@ -159,7 +160,7 @@ export function LoyaltyPointsStrip({
         <View className="mt-0.5 flex-row flex-wrap items-baseline">
           <Text
             className="font-urbanist"
-            style={{ fontSize: 20, lineHeight: 26, fontWeight: '700', color: '#B01E1E' }}
+            style={{ fontSize: 20, lineHeight: 26, fontWeight: '700', color: THEME.primaryDark }}
             maxFontSizeMultiplier={1.4}
           >
             {ptsText}
@@ -248,7 +249,7 @@ function TextColumn({
       {subtitle ? (
         <Text
           className="mt-0.5 font-urbanist"
-          style={{ fontSize: 16, lineHeight: 21, color: link ? '#B01E1E' : '#4B5563', fontWeight: link ? '700' : '500' }}
+          style={{ fontSize: 16, lineHeight: 21, color: link ? THEME.primaryDark : THEME.textSecondary, fontWeight: link ? '700' : '500' }}
           numberOfLines={2}
           maxFontSizeMultiplier={1.4}
         >
@@ -263,7 +264,7 @@ function StatusText({ text }: { text: string }) {
   return (
     <Text
       className="font-urbanist"
-      style={{ fontSize: 16, lineHeight: 20, color: '#4B5563' }}
+      style={{ fontSize: 16, lineHeight: 20, color: THEME.textSecondary }}
       numberOfLines={1}
       maxFontSizeMultiplier={1.3}
     >
@@ -281,19 +282,19 @@ function Trailing({
 }) {
   return (
     <View
-      className="ml-2 flex-row items-center rounded-full bg-red-50 px-3"
+      className="ml-2 flex-row items-center rounded-full bg-berry-wash px-3"
       style={{ minHeight: 48 }}
       importantForAccessibility="no-hide-descendants"
       accessibilityElementsHidden
     >
       <Text
         className="font-urbanist"
-        style={{ fontSize: 17, fontWeight: '700', color: '#B01E1E' }}
+        style={{ fontSize: 17, fontWeight: '700', color: THEME.primaryDark }}
         maxFontSizeMultiplier={1.3}
       >
         {label}
       </Text>
-      <Ionicons name={icon} size={18} color="#B01E1E" style={{ marginLeft: 2 }} />
+      <Ionicons name={icon} size={18} color={THEME.primaryDark} style={{ marginLeft: 2 }} />
     </View>
   );
 }

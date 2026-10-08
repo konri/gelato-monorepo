@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { THEME } from '@/constants/palette';
 
 const matchesCity = (city: City, selected: string) => {
   const local = typeof city.nameLocal === 'object' && city.nameLocal ? city.nameLocal : {};
@@ -96,7 +97,7 @@ export default function TastesScreen() {
   }, [refetchCities, refetchSpots, refetchTastes, activeSpotId]);
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-mainBg" style={{ paddingTop: insets.top }}>
       <View className="px-6 py-4 border-b border-gray-200">
         <Text className="text-2xl font-urbanist-bold text-text-primary">{t('Tabs.tastes')}</Text>
         <Text className="text-sm font-urbanist text-text-secondary mt-1">
@@ -113,14 +114,14 @@ export default function TastesScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor="#EC2828"
-            colors={['#EC2828']}
+            tintColor={THEME.primary}
+            colors={[THEME.primary]}
           />
         }
       >
         {loading ? (
           <View className="py-16 items-center">
-            <ActivityIndicator size="large" color="#EC2828" />
+            <ActivityIndicator size="large" color={THEME.primary} />
           </View>
         ) : activeSpot ? (
           <TastesList
@@ -201,10 +202,10 @@ function TastesList({
 
       {tastesLoading ? (
         <View className="py-10 items-center">
-          <ActivityIndicator color="#EC2828" />
+          <ActivityIndicator color={THEME.primary} />
         </View>
       ) : tastes.length === 0 ? (
-        <View className="mx-6 bg-background-secondary rounded-2xl p-8 items-center">
+        <View className="mx-6 bg-white border border-gray-200 rounded-2xl p-8 items-center">
           <Text className="text-5xl mb-3">🍦</Text>
           <Text className="font-urbanist text-text-secondary text-center">
             {t('Tastes.noFlavors')}
@@ -260,7 +261,7 @@ function SpotList({ spots, onSelect }: { spots: Spot[]; onSelect: (id: string) =
   const { t } = useTranslation();
   if (spots.length === 0) {
     return (
-      <View className="mx-6 mt-6 bg-background-secondary rounded-2xl p-8 items-center">
+      <View className="mx-6 mt-6 bg-white border border-gray-200 rounded-2xl p-8 items-center">
         <Text className="text-5xl mb-3">🍨</Text>
         <Text className="font-urbanist text-text-secondary text-center">{t('Tastes.noSpots')}</Text>
       </View>

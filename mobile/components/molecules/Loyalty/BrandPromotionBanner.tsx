@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { promotionHeadline, promotionTiming } from './PromotionRibbon';
 import { COLORS, LText } from './ui';
+import { THEME } from '@/constants/palette';
 
 type Props = {
   promotion: BrandPromotion;
@@ -66,7 +67,7 @@ export function BrandPromotionBanner({ promotion, hideScope = false, flush = fal
       accessibilityLabel={a11y}
     >
       {showBrand ? (
-        <LText size={18} weight="700" color="#374151" className="mb-2" numberOfLines={2}>
+        <LText size={18} weight="700" color={THEME.text} className="mb-2" numberOfLines={2}>
           {promotion.brandName}
         </LText>
       ) : null}
@@ -87,7 +88,7 @@ export function BrandPromotionBanner({ promotion, hideScope = false, flush = fal
       </View>
 
       {lines.map((line) => (
-        <LText key={line} size={18} className="mt-2" color="#374151">
+        <LText key={line} size={18} className="mt-2" color={THEME.text}>
           {line}
         </LText>
       ))}
@@ -107,8 +108,8 @@ export function BrandPromotionBanner({ promotion, hideScope = false, flush = fal
 function Detail({ icon, text }: { icon: React.ComponentProps<typeof Ionicons>['name']; text: string }) {
   return (
     <View className="mt-1 flex-row items-start">
-      <Ionicons name={icon} size={20} color="#374151" style={{ marginTop: 2 }} />
-      <LText size={16} color="#374151" className="ml-2 flex-1">
+      <Ionicons name={icon} size={20} color={THEME.text} style={{ marginTop: 2 }} />
+      <LText size={16} color={THEME.text} className="ml-2 flex-1">
         {text}
       </LText>
     </View>

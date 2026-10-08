@@ -11,6 +11,7 @@ import { markNotificationRead, AppNotification } from '@repo/api-client';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
 import { localizeNotification } from '@/utils/notificationDisplay';
 import { refreshEmitter } from '@/hooks/useRefreshEmitter';
+import { THEME } from '@/constants/palette';
 
 // Map a notification's `type` (backend FCMService.NotificationType) to a
 // bell-list icon. Unknown/new types fall back to a generic bell below.
@@ -104,7 +105,7 @@ export default function NotificationCenterScreen() {
           {item.imageUrl ? (
             <Image source={{ uri: item.imageUrl }} className="w-11 h-11 rounded-full" />
           ) : (
-            <Ionicons name={typeIcon[item.type] ?? 'notifications-outline'} size={22} color="#EC2828" />
+            <Ionicons name={typeIcon[item.type] ?? 'notifications-outline'} size={22} color={THEME.primary} />
           )}
         </View>
 
@@ -118,12 +119,12 @@ export default function NotificationCenterScreen() {
           <Typography variant="body-small-regular" className="text-gray-600 mt-1">
             {body}
           </Typography>
-          <Typography variant="body-very-small-regular" className="text-gray-400 mt-1">
+          <Typography variant="body-very-small-regular" className="text-gray-500 mt-1">
             {new Date(item.createdAt).toLocaleDateString()}
           </Typography>
         </View>
 
-        {!item.isRead && <View className="w-2.5 h-2.5 rounded-full bg-red-500 mt-1 ml-2" />}
+        {!item.isRead && <View className="w-2.5 h-2.5 rounded-full bg-accent mt-1 ml-2" />}
       </Pressable>
     );
   };
@@ -134,7 +135,7 @@ export default function NotificationCenterScreen() {
 
       {loading && items.length === 0 ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#EC2828" />
+          <ActivityIndicator color={THEME.primary} />
         </View>
       ) : (
         <FlatList
@@ -146,13 +147,13 @@ export default function NotificationCenterScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor="#EC2828"
-              colors={['#EC2828']}
+              tintColor={THEME.primary}
+              colors={[THEME.primary]}
             />
           }
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center px-6 py-20">
-              <Ionicons name="notifications-off-outline" size={48} color="#9CA3AF" />
+              <Ionicons name="notifications-off-outline" size={48} color={THEME.placeholder} />
               <Typography variant="body-base-regular" className="text-gray-500 text-center mt-4">
                 {t('Notifications.noNotifications')}
               </Typography>

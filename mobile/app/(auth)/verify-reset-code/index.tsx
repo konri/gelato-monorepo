@@ -39,7 +39,7 @@ export default function VerifyResetCodeScreen() {
           <View className="items-center">
             <Text
               className={`text-sm ${
-                codeValidTimer > 0 ? "text-gray-500" : "text-red-500"
+                codeValidTimer > 0 ? "text-gray-500" : "text-red-600"
               }`}
               style={{ fontFamily: "Urbanist" }}
             >

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, Text, useWindowDimensions, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { PALETTE } from '@/constants/palette';
 
 export default function OrderSuccessScreen() {
   const insets = useSafeAreaInsets();
@@ -19,7 +20,7 @@ export default function OrderSuccessScreen() {
   const isCashPickup = cash === '1';
 
   return (
-    <View className="flex-1 bg-white items-center justify-center px-8" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-mainBg items-center justify-center px-8" style={{ paddingTop: insets.top }}>
       <ConfettiCannon
         ref={confettiRef}
         count={160}
@@ -27,7 +28,7 @@ export default function OrderSuccessScreen() {
         autoStart
         fadeOut
         fallSpeed={2800}
-        colors={['#EC2828', '#E8520D', '#F2683C', '#16A34A', '#FACC15']}
+        colors={[PALETTE.berry, PALETTE.strawberry, PALETTE.mango, PALETTE.pistachio, PALETTE.berryDark]}
       />
 
       <View className="w-24 h-24 rounded-full bg-green-100 items-center justify-center mb-6">

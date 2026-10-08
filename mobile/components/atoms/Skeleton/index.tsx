@@ -8,10 +8,11 @@ import Animated, {
     withRepeat,
     withTiming
 } from 'react-native-reanimated';
+import { THEME } from '@/constants/palette';
 
 // ─── Shimmer colours ────────────────────────────────────────────────────────
-const SHIMMER_BASE = '#E0E0E0';
-const SHIMMER_HIGHLIGHT = '#F5F5F5';
+const SHIMMER_BASE = THEME.borderStrong;
+const SHIMMER_HIGHLIGHT = THEME.neutralFill;
 const SHIMMER_WIDTH_MULTIPLIER = 3; // gradient is 3× the element width
 
 // ─── SkeletonShimmer ─────────────────────────────────────────────────────────

@@ -13,6 +13,7 @@ import { router } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 type Props = {
   cityId: string | null;
@@ -132,7 +133,7 @@ export function DiscoveryRow({ row }: { row: RowData }) {
           {brand.name}
         </LText>
         {pointsLine ? (
-          <LText size={16} weight="700" color={COLORS.red}>
+          <LText size={16} weight="700" color={COLORS.brand}>
             {pointsLine}
           </LText>
         ) : null}
@@ -141,7 +142,7 @@ export function DiscoveryRow({ row }: { row: RowData }) {
             {description}
           </LText>
         ) : null}
-        <LText size={16} color="#374151" className="mt-0.5">
+        <LText size={16} color={THEME.text} className="mt-0.5">
           {meta}
         </LText>
         {promo || birthday ? (

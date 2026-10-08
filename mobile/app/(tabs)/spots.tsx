@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import MapView, { Circle, Marker } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { THEME, berryAlpha } from '@/constants/palette';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.8;
@@ -106,7 +107,7 @@ export default function SpotsScreen() {
   const activeSpot = spotList[activeIndex] ?? null;
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-mainBg">
       <MapView
         ref={mapRef}
         style={{ flex: 1 }}
@@ -119,8 +120,8 @@ export default function SpotsScreen() {
           <Circle
             center={{ latitude: activeSpot.latitude, longitude: activeSpot.longitude }}
             radius={activeSpot.deliveryRadiusKm * 1000}
-            strokeColor="rgba(236,40,40,0.6)"
-            fillColor="rgba(236,40,40,0.10)"
+            strokeColor={berryAlpha(0.6)}
+            fillColor={berryAlpha(0.1)}
             strokeWidth={2}
           />
         ) : null}
@@ -130,7 +131,7 @@ export default function SpotsScreen() {
             coordinate={{ latitude: spot.latitude, longitude: spot.longitude }}
             title={spot.name}
             description={spot.address}
-            pinColor="#EC2828"
+            pinColor={THEME.primary}
             onPress={() => onMarkerPress(index)}
           />
         ))}
@@ -155,7 +156,7 @@ export default function SpotsScreen() {
       {/* Bottom carousel */}
       {loading ? (
         <View className="absolute bottom-10 left-0 right-0 items-center">
-          <ActivityIndicator size="large" color="#EC2828" />
+          <ActivityIndicator size="large" color={THEME.primary} />
         </View>
       ) : spotList.length === 0 ? (
         <View
@@ -224,7 +225,7 @@ const SpotCarouselCard = ({
           <Ionicons
             name={favorited ? 'heart' : 'heart-outline'}
             size={20}
-            color={favorited ? '#EC2828' : '#616161'}
+            color={favorited ? THEME.primary : THEME.textSecondary}
           />
         </Pressable>
         {/* Open / closed badge */}

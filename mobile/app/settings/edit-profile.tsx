@@ -12,6 +12,7 @@ import { Typography } from '@/components/atoms/Typography';
 import { Button } from '@/components/atoms/Button';
 import { useWhoAmI } from '@/hooks/useWhoAmI';
 import { updateProfile, uploadProfileImage } from '@repo/api-client';
+import { THEME } from '@/constants/palette';
 
 const toIsoDate = (date: Date): string => {
   const y = date.getFullYear();
@@ -156,14 +157,14 @@ export default function EditProfileScreen() {
           <Pressable onPress={handlePickAvatar} disabled={uploadingAvatar}>
             <View className="w-24 h-24 rounded-full bg-gray-100 items-center justify-center overflow-hidden border border-gray-200">
               {uploadingAvatar ? (
-                <ActivityIndicator color="#EC2828" />
+                <ActivityIndicator color={THEME.primary} />
               ) : avatarValue ? (
                 <Image source={{ uri: avatarValue }} className="w-24 h-24" resizeMode="cover" />
               ) : (
-                <Ionicons name="person" size={40} color="#9CA3AF" />
+                <Ionicons name="person" size={40} color={THEME.placeholder} />
               )}
             </View>
-            <View className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-red-500 items-center justify-center border-2 border-white">
+            <View className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-accent items-center justify-center border-2 border-white">
               <Ionicons name="camera" size={16} color="#FFFFFF" />
             </View>
           </Pressable>
@@ -178,7 +179,7 @@ export default function EditProfileScreen() {
           value={firstNameValue}
           onChangeText={setFirstName}
           autoCapitalize="words"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={THEME.placeholder}
         />
 
         <Typography variant="body-small-semibold" className={labelClass}>
@@ -190,7 +191,7 @@ export default function EditProfileScreen() {
           value={surnameValue}
           onChangeText={setSurname}
           autoCapitalize="words"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={THEME.placeholder}
         />
 
         <Typography variant="body-small-semibold" className={labelClass}>
@@ -202,7 +203,7 @@ export default function EditProfileScreen() {
           value={phoneValue}
           onChangeText={setPhone}
           keyboardType="phone-pad"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={THEME.placeholder}
         />
 
         <Typography variant="body-small-semibold" className={labelClass}>
@@ -213,7 +214,7 @@ export default function EditProfileScreen() {
           disabled={birthdayLocked}
           className={`flex-row items-center ${inputClass} ${birthdayLocked ? 'opacity-60' : ''}`}
         >
-          <Ionicons name="calendar-outline" size={20} color="#9E9E9E" />
+          <Ionicons name="calendar-outline" size={20} color={THEME.placeholder} />
           <Typography
             variant="body-base-regular"
             className={`flex-1 ml-3 ${
@@ -226,10 +227,10 @@ export default function EditProfileScreen() {
                 ? toIsoDate(birthDate)
                 : t('Settings.notSet')}
           </Typography>
-          {birthdayLocked && <Ionicons name="lock-closed-outline" size={16} color="#9CA3AF" />}
+          {birthdayLocked && <Ionicons name="lock-closed-outline" size={16} color={THEME.placeholder} />}
         </Pressable>
         {birthdayLocked && (
-          <Typography variant="body-very-small-regular" className="text-gray-400 mt-1 ml-1">
+          <Typography variant="body-very-small-regular" className="text-gray-500 mt-1 ml-1">
             {t('Settings.birthdayLocked')}
           </Typography>
         )}
@@ -245,7 +246,7 @@ export default function EditProfileScreen() {
               onChange={handlePickerChange}
             />
             <Pressable className="items-center py-3" onPress={() => setPickerOpen(false)}>
-              <Typography variant="body-base-bold" className="text-red-500">
+              <Typography variant="body-base-bold" className="text-accent">
                 {t('Tasks.done')}
               </Typography>
             </Pressable>

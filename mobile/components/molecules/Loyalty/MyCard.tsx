@@ -30,6 +30,7 @@ import { LoyaltyCodeFullscreen } from './LoyaltyCodeFullscreen';
 import { LoyaltyPointsCard } from './LoyaltyPointsCard';
 import { LoyaltyPointsStrip } from './LoyaltyPointsStrip';
 import { ReadyToPickUpBanner } from './ReadyToPickUpBanner';
+import { PALETTE, THEME } from '@/constants/palette';
 
 const MIN_QR = 120;
 const MAX_QR = 220;
@@ -191,8 +192,8 @@ export function MyCard() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor="#EC2828"
-            colors={['#EC2828']}
+            tintColor={THEME.primary}
+            colors={[THEME.primary]}
           />
         }
       >
@@ -239,7 +240,7 @@ export function MyCard() {
           className="mx-4 mt-3 flex-row items-center rounded-2xl border border-gray-200 bg-white px-4 active:opacity-80"
           style={{ minHeight: 64 }}
         >
-          <Ionicons name="time-outline" size={24} color="#374151" />
+          <Ionicons name="time-outline" size={24} color={THEME.text} />
           <Text
             className="ml-3 flex-1 font-urbanist text-gray-900"
             style={{ fontSize: 18, fontWeight: '600' }}
@@ -247,7 +248,7 @@ export function MyCard() {
           >
             {t('Loyalty.pointsHistory')}
           </Text>
-          <Ionicons name="chevron-forward" size={22} color="#4B5563" />
+          <Ionicons name="chevron-forward" size={22} color={THEME.textSecondary} />
         </Pressable>
       </ScrollView>
 
@@ -260,7 +261,7 @@ export function MyCard() {
             autoStart
             fadeOut
             fallSpeed={2600}
-            colors={['#F59E0B', '#FCD34D', '#EC2828', '#F97316', '#16A34A', '#FFFFFF']}
+            colors={[PALETTE.mango, '#FCD34D', PALETTE.berry, PALETTE.strawberry, PALETTE.pistachio, PALETTE.white]}
           />
         </View>
       ) : null}

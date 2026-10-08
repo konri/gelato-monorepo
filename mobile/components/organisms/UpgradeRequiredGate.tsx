@@ -14,6 +14,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { THEME } from '@/constants/palette';
 
 const storeUrls = (): string[] => {
   if (Platform.OS === 'android') {
@@ -92,7 +93,7 @@ export function UpgradeRequiredGate() {
         />
       ) : (
         <ScrollView
-          style={{ flex: 1, backgroundColor: '#FFFFFF' }}
+          style={{ flex: 1, backgroundColor: THEME.background }}
           contentContainerStyle={{
             flexGrow: 1,
             justifyContent: 'center',
@@ -103,8 +104,8 @@ export function UpgradeRequiredGate() {
         >
           <View className="items-center">
             <Lockup width={160} height={111} />
-            <View className="mt-8 h-16 w-16 items-center justify-center rounded-full bg-red-50">
-              <Ionicons name="arrow-up-circle-outline" size={40} color="#B01E1E" />
+            <View className="mt-8 h-16 w-16 items-center justify-center rounded-full bg-berry-wash">
+              <Ionicons name="arrow-up-circle-outline" size={40} color={THEME.primaryDark} />
             </View>
             <Text
               accessibilityRole="header"
@@ -115,14 +116,14 @@ export function UpgradeRequiredGate() {
             </Text>
             <Text
               className="mt-4 text-center font-urbanist"
-              style={{ fontSize: 18, lineHeight: 26, color: '#4B5563' }}
+              style={{ fontSize: 18, lineHeight: 26, color: THEME.textSecondary }}
             >
               {t('Upgrade.body')}
             </Text>
             {info.minVersion ? (
               <Text
                 className="mt-3 text-center font-urbanist"
-                style={{ fontSize: 18, lineHeight: 26, color: '#4B5563' }}
+                style={{ fontSize: 18, lineHeight: 26, color: THEME.textSecondary }}
               >
                 {t('Upgrade.minVersion', { version: info.minVersion })}
               </Text>
@@ -153,7 +154,7 @@ export function UpgradeRequiredGate() {
             <View className="mt-8">
               <Text
                 className="mb-3 text-center font-urbanist"
-                style={{ fontSize: 18, lineHeight: 26, color: '#4B5563' }}
+                style={{ fontSize: 18, lineHeight: 26, color: THEME.textSecondary }}
               >
                 {t('Upgrade.cardHint')}
               </Text>
@@ -164,7 +165,7 @@ export function UpgradeRequiredGate() {
                 className="flex-row items-center justify-center rounded-2xl border-2 border-gray-900 bg-white px-4 active:opacity-80"
                 style={{ minHeight: 64 }}
               >
-                <Ionicons name="qr-code-outline" size={28} color="#111827" />
+                <Ionicons name="qr-code-outline" size={28} color={THEME.text} />
                 <Text
                   className="ml-2 font-urbanist text-gray-900"
                   style={{ fontSize: 20, fontWeight: '700' }}

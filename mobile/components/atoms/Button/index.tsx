@@ -37,7 +37,8 @@ export const Button = ({
 }: ButtonProps) => {
   const bgClassMap: Record<ButtonVariant, string> = {
     primary: disabled ? "bg-button-primaryDisabled" : "bg-button-primary",
-    secondary: "bg-button-secondary",
+    // Onboarding / landing secondary: white pill, translucent berry outline.
+    secondary: "bg-white border-2 border-accent/25",
     social: "bg-background-primary border border-border-light",
     "social-large": "bg-background-primary border border-border-light",
     outline: disabled ? "bg-button-disabled" : "bg-accent",
@@ -46,11 +47,11 @@ export const Button = ({
 
   const textColorMap: Record<ButtonVariant, string> = {
     primary: "text-white",
-    secondary: "text-text-subtitle",
+    secondary: "text-accent-dark",
     social: "text-text-primary",
     "social-large": "text-text-primary",
     outline: disabled ? "text-text-tertiary" : "text-white",
-    ghost: "text-black",
+    ghost: "text-text-primary",
   };
 
   const getLayoutClasses = () => {

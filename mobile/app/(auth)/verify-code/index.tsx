@@ -40,7 +40,7 @@ export default function VerifyCodeScreen() {
             <Typography
               variant="body-small-regular"
               className={
-                codeValidTimer > 0 ? "text-text-subtitle" : "text-accent"
+                codeValidTimer > 0 ? "text-text-subtitle" : "text-red-600"
               }
             >
               {codeValidTimer > 0

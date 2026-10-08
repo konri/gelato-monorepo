@@ -45,7 +45,7 @@ export default function LocationScreen() {
             <View className="absolute inset-0 bg-gray-100 rounded-24px" />
 
             <View className="absolute top-16 right-16">
-              <View className="w-8 h-8 bg-red-500 rounded-full items-center justify-center">
+              <View className="w-8 h-8 bg-accent rounded-full items-center justify-center">
                 <View className="w-4 h-4 bg-white rounded-full" />
               </View>
             </View>

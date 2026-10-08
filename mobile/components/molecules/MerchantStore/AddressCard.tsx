@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StoreDetails } from './types';
 import { useCurrentLocation } from '@/hooks/useCurrentLocation';
 import { calculateDistance } from '@/utils/distance';
+import { THEME } from '@/constants/palette';
 
 interface AddressCardProps {
   store: StoreDetails;
@@ -25,7 +26,7 @@ export const AddressCard = ({ store }: AddressCardProps) => {
     <RoundedCard className="mt-4" variant="less-rounded">
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center flex-1">
-          <Ionicons name="location-outline" size={20} color="#666" />
+          <Ionicons name="location-outline" size={20} color={THEME.textTertiary} />
           <View className="ml-3 flex-1">
             <Typography variant="body-small-regular" className="text-text-primary">
               {store.address}

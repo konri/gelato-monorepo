@@ -8,25 +8,30 @@ export default {
   },
   Onboarding: {
     slide1: {
-      title: 'Zamów lody jednym dotknięciem 🍦',
-      description: 'Przeglądaj smaki z lokali w Twojej okolicy i zamów ulubione gałki z dostawą pod same drzwi.'
+      title: 'Lody, kawa i\u00a0wypieki blisko Ciebie',
+      description: 'Lodziarnie, piekarnie, kawiarnie i\u00a0cukiernie w\u00a0jednej aplikacji.'
     },
     slide2: {
       title: 'Jedna karta wszędzie',
-      description: 'Lodziarnie, piekarnie, kawiarnie i cukiernie: pokaż tę samą kartę przy kasie albo zamów w aplikacji i zbieraj punkty.'
+      description: 'Pokaż tę samą kartę przy kasie. Obsługa ją zeskanuje, a\u00a0Ty zbierasz punkty.'
     },
     slide3: {
-      title: 'Punkty zostają tam, gdzie je zbierasz',
-      description: 'Punkty z kawiarni wymienisz tylko w tej kawiarni, na jej nagrody. Na mapie zobaczysz, gdzie zbierać punkty.'
+      title: 'Punkty zamieniają się w\u00a0nagrody',
+      description: 'Punkty zostają tam, gdzie je zbierasz, i\u00a0tam odbierasz za nie nagrody.'
+    },
+    slide4: {
+      title: 'Zamów z\u00a0odbiorem lub dostawą',
+      description: 'Zamów w\u00a0aplikacji i\u00a0odbierz na miejscu albo poczekaj na kuriera. Za zamówienia też zbierasz punkty.'
     },
     buttons: {
       skip: 'Pomiń',
       continue: 'Dalej',
       getStarted: 'Rozpocznij'
-    }
+    },
+    step: 'Krok {{current}} z\u00a0{{total}}'
   },
   Main: {
-    title: 'Czas na lody! 🍦',
+    title: 'Czas na coś pysznego!',
     subtitle: 'Zaloguj się lub utwórz konto',
     googleLogin: 'Kontynuuj z Google',
     facebookLogin: 'Kontynuuj z Facebook',
@@ -163,7 +168,7 @@ export default {
   CitySelect: {
     headerTitle: 'Wybierz miasto',
     title: 'Wybierz miasto',
-    subtitle: 'Wybierz miasto, w którym chcesz zamawiać lody. Proponujemy najbliższe — możesz zmienić w każdej chwili.',
+    subtitle: 'Wybierz miasto, aby zobaczyć lokale i\u00a0nagrody w\u00a0okolicy. Proponujemy najbliższe — możesz zmienić w\u00a0każdej chwili.',
     nearYou: 'Blisko Ciebie',
     cityLabel: 'Miasto',
     cityPlaceholder: 'Kielce',
@@ -173,7 +178,7 @@ export default {
     headerTitle: 'Zezwól na powiadomienia',
     title: 'Powiadomienia',
     subtitle: 'Pozwól na wysyłanie do Ciebie powiadomień przez aplikację. Nie zapomnisz o ciekawych promocjach w Twojej okolicy.',
-    cardTitle: 'Twoje ulubione lody',
+    cardTitle: 'Twój ulubiony lokal',
     cardSubtitle: 'Specjalne dla Ciebie',
     cardPromo: 'Nowa promocja - 20%',
     allow: 'Pozwól',
@@ -709,7 +714,7 @@ export default {
     cardHint: 'Twoja karta nadal działa przy kasie.',
   },
   Tastes: {
-    subtitle: 'Odkryj smaki lodów',
+    subtitle: 'Sprawdź, co jest w\u00a0menu',
     inCity: 'Lokale w mieście {{city}}',
     viewTastes: 'Zobacz smaki',
     allSpots: 'Wszystkie lokale',
@@ -917,7 +922,7 @@ export default {
     orderFailed: 'Nie udało się utworzyć zamówienia.',
     paymentFailed: 'Płatność nieudana',
     successTitle: 'Zamówienie złożone! 🎉',
-    successMessage: 'Twoje lody są w drodze. Możesz śledzić status zamówienia.',
+    successMessage: 'Twoje zamówienie jest w\u00a0drodze. Możesz śledzić jego status.',
     successPickupCash: 'Twoje zamówienie jest przygotowywane. Zapłać gotówką i pokaż kod QR lojalnościowy w lokalu, aby odebrać i zdobyć punkty.',
     orderNumber: 'Zamówienie #{{number}}',
     trackOrder: 'Śledź zamówienie',

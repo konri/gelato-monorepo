@@ -80,12 +80,12 @@ export function ReadyToPickUpList({ items }: { items: ReadyToPickUpItem[] }) {
                     <Ionicons
                       name={deadline.urgent ? 'alarm-outline' : 'calendar-outline'}
                       size={18}
-                      color={deadline.urgent ? COLORS.red : COLORS.secondary}
+                      color={deadline.urgent ? COLORS.danger : COLORS.secondary}
                     />
                     <LText
                       size={16}
                       weight={deadline.urgent ? '700' : '400'}
-                      color={deadline.urgent ? COLORS.red : COLORS.secondary}
+                      color={deadline.urgent ? COLORS.danger : COLORS.secondary}
                       className="ml-1"
                     >
                       {deadline.text}

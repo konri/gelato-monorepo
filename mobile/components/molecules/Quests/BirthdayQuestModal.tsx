@@ -8,6 +8,7 @@ import { Button } from '@/components/atoms/Button';
 import { Typography } from '@/components/atoms/Typography';
 import { updateProfile } from '@/shared/api-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { THEME } from '@/constants/palette';
 
 interface BirthdayQuestModalProps {
   visible: boolean;
@@ -111,14 +112,14 @@ export const BirthdayQuestModal = ({ visible, onClose, onCompleted }: BirthdayQu
           onPress={() => setPickerOpen(true)}
           className="flex-row items-center bg-white rounded-2xl px-4 py-4 border border-gray-200"
         >
-          <Ionicons name="calendar-outline" size={22} color="#9E9E9E" />
+          <Ionicons name="calendar-outline" size={22} color={THEME.placeholder} />
           <Typography
             variant="body-base-regular"
             className={`flex-1 ml-3 ${selectedDate ? 'text-text-primary' : 'text-gray-400'}`}
           >
             {selectedDate ? toIsoDate(selectedDate) : t('Tasks.selectBirthday')}
           </Typography>
-          <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
+          <Ionicons name="chevron-down" size={18} color={THEME.placeholder} />
         </Pressable>
 
         {/* iOS shows an inline spinner once opened; Android shows a dialog. */}
@@ -133,7 +134,7 @@ export const BirthdayQuestModal = ({ visible, onClose, onCompleted }: BirthdayQu
               onChange={handlePickerChange}
             />
             <Pressable className="items-center py-3" onPress={() => setPickerOpen(false)}>
-              <Typography variant="body-base-bold" className="text-red-500">
+              <Typography variant="body-base-bold" className="text-accent">
                 {t('Tasks.done')}
               </Typography>
             </Pressable>
@@ -151,8 +152,8 @@ export const BirthdayQuestModal = ({ visible, onClose, onCompleted }: BirthdayQu
         )}
 
         <View className="flex-row items-center mt-3">
-          <Ionicons name="lock-closed-outline" size={14} color="#9CA3AF" />
-          <Typography variant="body-very-small-regular" className="text-gray-400 ml-2 flex-1">
+          <Ionicons name="lock-closed-outline" size={14} color={THEME.placeholder} />
+          <Typography variant="body-very-small-regular" className="text-gray-500 ml-2 flex-1">
             {t('Tasks.birthdayImmutableNote')}
           </Typography>
         </View>

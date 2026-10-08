@@ -1,6 +1,7 @@
 import { config } from '@/config';
 import React, { useState } from 'react';
 import { Image, Text, View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 type Props = {
   brand: { id: string; name: string; logoUrl?: string | null };
@@ -9,8 +10,9 @@ type Props = {
   muted?: boolean;
 };
 
-// Contrast-checked against white text (all ≥ 4.5:1).
-const PALETTE = ['#B01E1E', '#1D4ED8', '#047857', '#7C3AED', '#B45309', '#0F766E', '#BE185D', '#374151'];
+// Contrast-checked against white text (all ≥ 4.5:1). Categorical Tailwind
+// 700s, independent of the app accent (index order kept so colours are stable).
+const PALETTE = ['#B91C1C', '#1D4ED8', '#047857', '#7C3AED', '#B45309', '#0F766E', '#BE185D', '#374151'];
 
 const hash = (s: string) => {
   let h = 0;
@@ -51,7 +53,7 @@ export function BrandLogo({ brand, size = 48, muted = false }: Props) {
       <Image
         source={{ uri }}
         onError={() => setFailed(true)}
-        style={[box, { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E5E7EB' }]}
+        style={[box, { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: THEME.borderStrong }]}
         resizeMode="cover"
         accessibilityElementsHidden
         importantForAccessibility="no"

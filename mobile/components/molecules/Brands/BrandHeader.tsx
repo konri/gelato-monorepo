@@ -42,18 +42,18 @@ export function BrandHeader({ brand, action, onPress, subtitle }: Props) {
         ) : null}
       </View>
       <View
-        className="ml-2 flex-row items-center rounded-full bg-red-50 px-3"
+        className="ml-2 flex-row items-center rounded-full bg-berry-wash px-3"
         style={{ minHeight: 48 }}
         importantForAccessibility="no-hide-descendants"
         accessibilityElementsHidden
       >
-        <LText size={17} weight="700" color={COLORS.red} max={1.3}>
+        <LText size={17} weight="700" color={COLORS.brand} max={1.3}>
           {actionLabel}
         </LText>
         <Ionicons
           name={action === 'change' ? 'chevron-down' : 'chevron-forward'}
           size={18}
-          color={COLORS.red}
+          color={COLORS.brand}
           style={{ marginLeft: 2 }}
         />
       </View>

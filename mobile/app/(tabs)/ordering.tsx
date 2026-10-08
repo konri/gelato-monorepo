@@ -13,7 +13,7 @@ export default function OrderingScreen() {
   const [segment, setSegment] = useState<Segment>('order');
 
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-mainBg" style={{ paddingTop: insets.top }}>
       {/* Header */}
       <View className="px-6 pt-2 pb-3">
         <Text className="text-2xl font-urbanist-bold text-text-primary">{t('Tabs.ordering')}</Text>

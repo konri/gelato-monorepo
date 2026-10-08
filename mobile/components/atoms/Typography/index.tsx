@@ -1,4 +1,4 @@
-import { Text, TextProps } from "react-native";
+import { StyleSheet, Text, TextProps } from "react-native";
 
 type TextVariant =
   | "heading-32-bold"
@@ -269,6 +269,13 @@ const variantStyles: Record<TextVariant, any> = {
   }
 };
 
+/**
+ * A text-colour utility (text-white, text-accent, text-gray-500, text-[#…]) as
+ * opposed to a size / alignment one (text-sm, text-center, text-[14px], text-badge).
+ */
+const TEXT_COLOR_CLASS =
+  /(^|\s)!?text-(?!(xs|sm|base|lg|xl|[2-9]xl|center|left|right|justify|subtitle|32px|initials|badge|body-|\[\d))\S/;
+
 type Props = TextProps & {
   variant?: TextVariant;
   className?: string;
@@ -280,10 +287,13 @@ export function Typography({
   style,
   ...props
 }: Props) {
+  // Uncoloured text defaults to the theme's primary text (espresso), not black.
+  const hasColor =
+    TEXT_COLOR_CLASS.test(className) || StyleSheet.flatten(style)?.color != null;
   return (
     <Text
       {...props}
-      className={`${variants[variant]} ${className}`}
+      className={`${variants[variant]} ${hasColor ? "" : "text-text-primary"} ${className}`}
       style={[variantStyles[variant], style]}
     />
   );

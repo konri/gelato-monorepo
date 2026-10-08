@@ -3,6 +3,7 @@ import { View, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from '@/components/atoms/Image';
+import { THEME } from '@/constants/palette';
 
 interface ImageHeaderProps {
   imageUrl?: string;
@@ -34,7 +35,7 @@ export const ImageHeader = ({ imageUrl, onBack }: ImageHeaderProps) => {
         }}
       >
         <View className="-ml-0.5">
-          <Ionicons name="chevron-back" size={26} color="#000000" />
+          <Ionicons name="chevron-back" size={26} color={THEME.text} />
         </View>
       </Pressable>
     </View>

@@ -11,54 +11,83 @@ module.exports = {
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
+      // Landing / onboarding palette (constants/palette.ts mirrors these values).
       colors: {
-        accent: "#EC2828",
-        "accent-dark": "#B01E1E",
-        "red-pink": "#f91f3f",
-        "red-600-9": "rgba(236, 40, 40, 0.09)",
-        "red-600-45": "rgba(236, 40, 40, 0.45)",
-        "red-pale": "#FFCCCC",
-        "red-muted": "#CC6666",
-        "grey-700": "#4A4A4A",
-        "modal-bg": "#D7D7D7",
-        "input-bg": "#A9A9A9",
+        accent: "#c026a3", // berry (was the old brand red)
+        "accent-dark": "#8a1673", // berryDark
+        "red-pink": "#ff6f91", // strawberry
+        "red-600-9": "rgba(192, 38, 163, 0.09)", // berry tint (was red)
+        "red-600-45": "rgba(192, 38, 163, 0.45)",
+        "red-pale": "#fbe3f4", // berry-pale; use accent-dark text on it
+        "red-muted": "#c76fb5", // muted berry, decorative only
+        "grey-700": "#4a2f3b",
+        "modal-bg": "#ead8cc",
+        "input-bg": "#ecdcd2",
+        berry: "#c026a3",
+        "berry-dark": "#8a1673",
+        "berry-pale": "#fbe3f4",
+        "berry-wash": "#fcf2f9", // selected rows, spot-reply bubbles, points pills (old red-50)
+        espresso: "#3a1526",
+        "espresso-light": "#5c2a3d",
+        strawberry: "#ff6f91",
+        pistachio: "#8bc34a",
+        mango: "#ffb020",
+        cream: "#fff8f0",
+        "cream-soft": "#fff1e6",
+        "cream-deep": "#ffe6d5",
+        // Warm neutrals replacing Tailwind's cool gray scale (bg-gray-100,
+        // border-gray-200, text-gray-500 … keep working, tinted towards espresso).
+        // On white: 400 2.9:1 (decorative/placeholder only), 500 5.4:1,
+        // 600 8.6:1, 700 11.9:1, 900 16:1.
+        gray: {
+          50: "#fff8f0", // cream: the loyalty screens use bg-gray-50 as their background
+          100: "#f8f0ea", // berry text on it 4.6:1
+          200: "#ead8cc",
+          300: "#dcc8bc",
+          400: "#a8929c",
+          500: "#7a6470",
+          600: "#5c4651",
+          700: "#4a2f3b",
+          800: "#42202f",
+          900: "#3a1526",
+        },
         text: {
-          primary: "#212121",
-          secondary: "#616161",
-          tertiary: "#9E9E9E",
-          subtitle: "#616161",
-          "button-gray": "#404040",
+          primary: "#3a1526", // espresso
+          secondary: "#5c2a3d", // espressoLight
+          tertiary: "#7a6470", // warm grey, 5.1:1 on cream
+          subtitle: "#5c2a3d",
+          "button-gray": "#4a2f3b",
         },
         background: {
           primary: "#FFFFFF",
-          secondary: "#F5F5F5",
-          tertiary: "#EEEEEE",
-          gray: "#F3F3F3",
-          grayDark: "#374151",
-          lightGray: "#D9D9D9",
-          placeholder: "#DBDBDB",
+          secondary: "#fff8f0", // cream (screen background)
+          tertiary: "#fff1e6", // creamSoft
+          gray: "#fff8f0", // cream (CustomSafeAreaView / TabScreenWrapper screens)
+          grayDark: "#4a2f3b",
+          lightGray: "#ead8cc",
+          placeholder: "#ecdcd2",
         },
         brand: {
-          primary: "#1A4196",
-          logo: "#595666",
+          primary: "#c026a3",
+          logo: "#5c2a3d",
         },
         tabBar: {
           background: "#FFFFFF",
-          border: "#E5E5E5",
+          border: "#f1e4dc",
         },
         button: {
-          primary: "#EC2828",
-          primaryDisabled: "#EC282880",
-          secondary: "#748FB54D",
-          disabled: "#F3F3F3",
-          border: "#E0E0E0",
-          placeholder: "#9E9E9E",
+          primary: "#c026a3",
+          primaryDisabled: "#c026a380",
+          secondary: "#fbe3f4", // berry-pale; pair with accent-dark text
+          disabled: "#f8f0ea",
+          border: "#ead8cc",
+          placeholder: "#9a8590",
         },
         icon: {
-          background: "#DFDFDF",
-          placeholder: "#C1C1C1",
-          tab: "#D9D9D9",
-          color: "#9E9E9E",
+          background: "#ecdcd2",
+          placeholder: "#dcc8bc",
+          tab: "#ead8cc",
+          color: "#7a6470",
         },
         status: {
           success: "#4CAF50",
@@ -71,11 +100,11 @@ module.exports = {
           down: "#B02B2B",
         },
         border: {
-          light: "#EEEEEE",
-          medium: "#E0E0E0",
-          dark: "#BDBDBD",
+          light: "#f1e4dc",
+          medium: "#ead8cc",
+          dark: "#cdb5a8",
         },
-        mainBg: "#F2F2F2",
+        mainBg: "#fff8f0", // cream
         user: {
           primary: "#2D67BE",
         },
@@ -150,6 +179,11 @@ module.exports = {
           shadowRadius: 4,
           elevation: 4,
         },
+        // Used across the app but never defined, so that text fell back to the
+        // system font. iOS picks the Urbanist file by fontWeight (all files share
+        // one family name), so each class sets both.
+        ".font-urbanist-bold": { fontFamily: "Urbanist", fontWeight: "700" },
+        ".font-urbanist-semibold": { fontFamily: "Urbanist-SemiBold", fontWeight: "600" },
       });
     },
   ],

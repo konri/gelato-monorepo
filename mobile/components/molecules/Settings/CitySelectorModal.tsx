@@ -10,6 +10,7 @@ import { updatePreferredCity } from '@repo/api-client';
 import type { City } from '@repo/api-client';
 import { emitCityChanged } from '@/shared/api-client/src/loyaltyEvents';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
+import { THEME } from '@/constants/palette';
 
 interface CitySelectorModalProps {
   visible: boolean;
@@ -60,7 +61,7 @@ export const CitySelectorModal = ({
       <View className="w-full py-2">
         {loading && (!cities || cities.length === 0) ? (
           <View className="py-8 items-center">
-            <ActivityIndicator color="#EC2828" />
+            <ActivityIndicator color={THEME.primary} />
           </View>
         ) : (
           (cities ?? []).map((c) => {
@@ -75,15 +76,15 @@ export const CitySelectorModal = ({
               >
                 <Typography
                   variant={selected ? 'body-base-bold' : 'body-base-regular'}
-                  className={selected ? 'text-red-500' : 'text-text-primary'}
+                  className={selected ? 'text-accent' : 'text-text-primary'}
                 >
                   {label}
                 </Typography>
                 {(selected || saving === c.name) &&
                   (saving === c.name ? (
-                    <ActivityIndicator color="#EC2828" />
+                    <ActivityIndicator color={THEME.primary} />
                   ) : (
-                    <Ionicons name="checkmark" size={22} color="#EC2828" />
+                    <Ionicons name="checkmark" size={22} color={THEME.primary} />
                   ))}
               </Pressable>
             );

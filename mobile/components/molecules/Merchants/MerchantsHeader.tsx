@@ -9,6 +9,7 @@ import { SortButton } from '@/components/atoms/SortButton';
 import { MerchantSortModal } from './MerchantSortModal';
 import { MerchantFiltersModal } from './MerchantFiltersModal';
 import { MerchantsHeaderProps } from './types';
+import { THEME } from '@/constants/palette';
 
 export const MerchantsHeader = ({ 
   city, 
@@ -26,7 +27,7 @@ export const MerchantsHeader = ({
       <View className="flex-row items-center justify-between">
         <RoundedCard className="pr-6">
           <View className="flex-row items-center">
-            <Ionicons name="navigate" size={20} color="#212121" />
+            <Ionicons name="navigate" size={20} color={THEME.text} />
             <Typography variant="body-base-semibold" className="ml-2 text-text-primary">
               {city || t('Merchants.nearYou')}
             </Typography>
@@ -34,12 +35,12 @@ export const MerchantsHeader = ({
         </RoundedCard>
         <RoundedCard className="ml-2">
           <Pressable className="flex-row items-center" onPress={() => setIsFiltersVisible(true)}>
-            <Ionicons name="options-outline" size={24} color="#212121" />
+            <Ionicons name="options-outline" size={24} color={THEME.text} />
             <Typography variant="body-small-semibold" className="ml-1 text-text-primary">
               {t('Merchants.filters')}
             </Typography>
             {activeFiltersCount > 0 && (
-              <View className="ml-2 bg-red-500 rounded-full w-6 h-6 items-center justify-center">
+              <View className="ml-2 bg-accent rounded-full w-6 h-6 items-center justify-center">
                 <Typography variant="body-small-semibold" className="text-white">
                   {activeFiltersCount}
                 </Typography>

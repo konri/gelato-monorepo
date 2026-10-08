@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import RenderHtml from 'react-native-render-html';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { THEME } from '@/constants/palette';
 
 const TYPE_LABEL_KEY: Record<string, string> = {
   SORBET: 'Tastes.type.sorbet',
@@ -55,17 +56,17 @@ export default function TasteDetailScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-white items-center justify-center">
-        <ActivityIndicator size="large" color="#EC2828" />
+      <View className="flex-1 bg-mainBg items-center justify-center">
+        <ActivityIndicator size="large" color={THEME.primary} />
       </View>
     );
   }
 
   if (!taste) {
     return (
-      <View className="flex-1 bg-white items-center justify-center px-6" style={{ paddingTop: insets.top }}>
+      <View className="flex-1 bg-mainBg items-center justify-center px-6" style={{ paddingTop: insets.top }}>
         <Pressable onPress={() => router.back()} className="absolute left-4" style={{ top: insets.top + 8 }}>
-          <Ionicons name="arrow-back" size={24} color="#212121" />
+          <Ionicons name="arrow-back" size={24} color={THEME.text} />
         </Pressable>
         <Text className="font-urbanist text-text-secondary">{t('Common.error')}</Text>
       </View>
@@ -78,7 +79,7 @@ export default function TasteDetailScreen() {
   const typeLabel = TYPE_LABEL_KEY[taste.type] ? t(TYPE_LABEL_KEY[taste.type]) : taste.type;
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-mainBg">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 120 }}
@@ -86,8 +87,8 @@ export default function TasteDetailScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor="#EC2828"
-            colors={['#EC2828']}
+            tintColor={THEME.primary}
+            colors={[THEME.primary]}
           />
         }
       >
@@ -99,7 +100,7 @@ export default function TasteDetailScreen() {
             style={{ top: insets.top + 8 }}
             hitSlop={8}
           >
-            <Ionicons name="arrow-back" size={22} color="#212121" />
+            <Ionicons name="arrow-back" size={22} color={THEME.text} />
           </Pressable>
         </View>
 
@@ -123,7 +124,7 @@ export default function TasteDetailScreen() {
 
           {/* Energy */}
           {taste.kcalPerPortion != null || taste.kcalPer100g != null ? (
-            <View className="bg-background-secondary rounded-2xl p-4 mt-6">
+            <View className="bg-white border border-gray-200 rounded-2xl p-4 mt-6">
               <Text className="font-urbanist-bold text-text-primary mb-3">{t('Tastes.energy')}</Text>
               <View className="flex-row">
                 {taste.kcalPerPortion != null ? (
@@ -160,12 +161,12 @@ export default function TasteDetailScreen() {
 
           {/* Allergens */}
           {taste.allergens.length > 0 ? (
-            <View className="rounded-2xl p-4 mt-4 border border-accent/30 bg-accent/5">
-              <Text className="font-urbanist-bold text-accent mb-2">⚠️ {t('Tastes.allergens')}</Text>
+            <View className="rounded-2xl p-4 mt-4 border border-amber-300 bg-amber-50">
+              <Text className="font-urbanist-bold text-amber-800 mb-2">⚠️ {t('Tastes.allergens')}</Text>
               <View className="flex-row flex-wrap">
                 {taste.allergens.map((a) => (
-                  <View key={a} className="bg-white rounded-full px-3 py-1 mr-2 mb-2 border border-accent/20">
-                    <Text className="text-xs font-urbanist text-accent-dark">
+                  <View key={a} className="bg-white rounded-full px-3 py-1 mr-2 mb-2 border border-amber-200">
+                    <Text className="text-xs font-urbanist text-amber-900">
                       {t(`Tastes.allergen.${a}`, { defaultValue: a })}
                     </Text>
                   </View>
@@ -176,14 +177,14 @@ export default function TasteDetailScreen() {
 
           {/* Ingredients (rich HTML) */}
           {ingredientsHtml ? (
-            <View className="bg-background-secondary rounded-2xl p-4 mt-4">
+            <View className="bg-white border border-gray-200 rounded-2xl p-4 mt-4">
               <Text className="font-urbanist-bold text-text-primary mb-2">
                 {t('Tastes.ingredients')}
               </Text>
               <RenderHtml
                 contentWidth={width - 80}
                 source={{ html: ingredientsHtml }}
-                baseStyle={{ color: '#616161', fontSize: 14, lineHeight: 22 }}
+                baseStyle={{ color: THEME.textSecondary, fontSize: 14, lineHeight: 22 }}
               />
             </View>
           ) : null}

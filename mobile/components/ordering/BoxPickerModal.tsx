@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useOverlayOpen } from '@/hooks/useOverlayOpen';
+import { THEME } from '@/constants/palette';
 
 const zl = (n: number) => `${n.toFixed(2).replace(/\.00$/, '')} zł`;
 
@@ -74,7 +75,7 @@ export const BoxPickerModal = ({
               </Text>
             </View>
             <Pressable onPress={onClose} hitSlop={8}>
-              <Ionicons name="close" size={24} color="#212121" />
+              <Ionicons name="close" size={24} color={THEME.text} />
             </Pressable>
           </View>
 
@@ -89,7 +90,7 @@ export const BoxPickerModal = ({
 
           {loading ? (
             <View className="py-16 items-center">
-              <ActivityIndicator size="large" color="#EC2828" />
+              <ActivityIndicator size="large" color={THEME.primary} />
             </View>
           ) : (
             <ScrollView contentContainerStyle={{ padding: 16 }}>

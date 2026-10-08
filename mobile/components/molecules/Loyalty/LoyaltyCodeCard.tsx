@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { LayoutChangeEvent, Pressable, Text, View } from 'react-native';
 import { CodeFormatToggle } from './CodeFormatToggle';
 import { LoyaltyCode, spelledCode, useBarcodeAvailable } from './LoyaltyCode';
+import { THEME } from '@/constants/palette';
 
 type Props = {
   /** `GL-XXXXXXXX`; null while unknown (legacy JSON QR with `userId`). */
@@ -55,7 +56,7 @@ export function LoyaltyCodeCard({ code, userId, qrSize, onBigger }: Props) {
           </Text>
           <Text
             className="font-urbanist"
-            style={{ fontSize: 16, lineHeight: 20, color: '#4B5563' }}
+            style={{ fontSize: 16, lineHeight: 20, color: THEME.textSecondary }}
             maxFontSizeMultiplier={1.3}
           >
             {t('Loyalty.oneCard')}
@@ -112,7 +113,7 @@ export function LoyaltyCodeCard({ code, userId, qrSize, onBigger }: Props) {
       >
         <Text
           className="mr-2 font-urbanist"
-          style={{ fontSize: 16, lineHeight: 20, color: '#4B5563' }}
+          style={{ fontSize: 16, lineHeight: 20, color: THEME.textSecondary }}
           maxFontSizeMultiplier={1.3}
         >
           {t('LoyaltyCode.cardNumber')}
@@ -121,7 +122,7 @@ export function LoyaltyCodeCard({ code, userId, qrSize, onBigger }: Props) {
             line and the card fits above the fold at 130 % text size. */}
         <Text
           selectable
-          style={{ fontSize: 28, lineHeight: 36, fontFamily: 'SpaceMono', letterSpacing: 0.5, color: '#111827' }}
+          style={{ fontSize: 28, lineHeight: 36, fontFamily: 'SpaceMono', letterSpacing: 0.5, color: THEME.text }}
           maxFontSizeMultiplier={1}
         >
           {code || '—'}

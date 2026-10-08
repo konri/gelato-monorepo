@@ -10,12 +10,13 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Image, Pressable, ScrollView, View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 // Icon + tint per notification type (matches the notification center list).
 function iconFor(type: string): { name: keyof typeof Ionicons.glyphMap; color: string; bg: string } {
   switch (type) {
     case 'order':
-      return { name: 'receipt', color: '#EC2828', bg: '#FEECEC' };
+      return { name: 'receipt', color: THEME.primaryDark, bg: THEME.primaryPale };
     case 'NEWS':
       return { name: 'newspaper', color: '#2563EB', bg: '#DBEAFE' };
     case 'POINTS_EARNED':
@@ -27,11 +28,12 @@ function iconFor(type: string): { name: keyof typeof Ionicons.glyphMap; color: s
     case 'REWARD_REFUNDED':
       return { name: 'arrow-undo', color: '#92400E', bg: '#FEF3C7' };
     case 'REWARD_EXPIRING':
-      return { name: 'alarm', color: '#B01E1E', bg: '#FEE2E2' };
+      // Urgency stays a semantic red.
+      return { name: 'alarm', color: '#B91C1C', bg: '#FEE2E2' };
     case 'REWARD_EXCHANGED':
-      return { name: 'gift', color: '#B01E1E', bg: '#FEE2E2' };
+      return { name: 'gift', color: THEME.primaryDark, bg: THEME.primaryPale };
     default:
-      return { name: 'notifications', color: '#6B7280', bg: '#F3F4F6' };
+      return { name: 'notifications', color: THEME.textTertiary, bg: THEME.neutralFill };
   }
 }
 
@@ -77,11 +79,11 @@ export default function NotificationDetailScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         {loading ? (
           <View className="py-10 items-center">
-            <ActivityIndicator color="#EC2828" />
+            <ActivityIndicator color={THEME.primary} />
           </View>
         ) : !item || !localized ? (
           <View className="py-16 items-center">
-            <Ionicons name="notifications-off-outline" size={40} color="#9CA3AF" />
+            <Ionicons name="notifications-off-outline" size={40} color={THEME.placeholder} />
             <Typography variant="body-base-regular" className="mt-3 text-center text-gray-500">
               {t('Notifications.empty')}
             </Typography>
@@ -112,7 +114,7 @@ export default function NotificationDetailScreen() {
               />
             ) : null}
 
-            <Typography variant="body-very-small-medium" className="mt-4 text-gray-400">
+            <Typography variant="body-very-small-medium" className="mt-4 text-gray-500">
               {fmt(item.createdAt)}
             </Typography>
 
@@ -120,7 +122,7 @@ export default function NotificationDetailScreen() {
               <Pressable
                 onPress={() => router.push(orderHref as never)}
                 className="mt-5 flex-row items-center justify-center rounded-xl py-3.5"
-                style={{ backgroundColor: '#EC2828' }}
+                style={{ backgroundColor: THEME.primary }}
               >
                 <Ionicons name="receipt-outline" size={18} color="#fff" />
                 <Typography variant="body-base-semibold" className="ml-2 text-white">
@@ -167,7 +169,7 @@ export default function NotificationDetailScreen() {
                 }}
                 accessibilityRole="button"
                 className="mt-5 flex-row items-center justify-center rounded-xl"
-                style={{ backgroundColor: '#B01E1E', minHeight: 56 }}
+                style={{ backgroundColor: THEME.primaryDark, minHeight: 56 }}
               >
                 <Ionicons name="gift-outline" size={20} color="#fff" />
                 <Typography variant="body-base-semibold" className="ml-2 text-white">

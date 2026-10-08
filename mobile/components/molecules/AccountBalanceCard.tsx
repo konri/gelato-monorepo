@@ -139,7 +139,7 @@ export function AccountBalanceCard({
           className="bg-white rounded-2xl py-4 items-center shadow-sm"
           style={{ borderWidth: 1, borderColor: '#FCD34D' }}
         >
-          <Text className="text-red-600 text-base font-urbanist-bold">
+          <Text className="text-accent text-base font-urbanist-bold">
             {t('Home.redeemPoints')}
           </Text>
         </Pressable>

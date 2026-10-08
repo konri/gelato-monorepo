@@ -19,6 +19,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 const matchesCity = (city: City, selected: string) => {
   const local = typeof city.nameLocal === 'object' && city.nameLocal ? city.nameLocal : {};
@@ -76,8 +77,8 @@ export const OrderNow = () => {
 
   if (spotsLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#EC2828" />
+      <View className="flex-1 items-center justify-center bg-mainBg">
+        <ActivityIndicator size="large" color={THEME.primary} />
       </View>
     );
   }
@@ -112,7 +113,7 @@ const SpotPicker = ({
   }, [onRefresh]);
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-mainBg">
       <View className="px-6 pt-4 pb-2">
         <Text className="text-sm font-urbanist text-text-secondary">{t('Ordering.chooseSpot')}</Text>
       </View>
@@ -121,11 +122,11 @@ const SpotPicker = ({
           sections={[{ data: [] as Spot[] }]}
           keyExtractor={(item) => item.id}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#EC2828" colors={['#EC2828']} />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={THEME.primary} colors={[THEME.primary]} />
           }
           renderItem={() => null}
           ListEmptyComponent={
-            <View className="mx-6 mt-4 bg-background-secondary rounded-2xl p-8 items-center">
+            <View className="mx-6 mt-4 bg-white border border-gray-200 rounded-2xl p-8 items-center">
               <Text className="text-5xl mb-3">🛵</Text>
               <Text className="font-urbanist text-text-secondary text-center">
                 {t('Ordering.noSpots')}
@@ -138,7 +139,7 @@ const SpotPicker = ({
           sections={[{ data: spots }]}
           keyExtractor={(item) => item.id}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#EC2828" colors={['#EC2828']} />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={THEME.primary} colors={[THEME.primary]} />
           }
           contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: TAB_BAR_TOTAL_HEIGHT + 8 }}
           renderItem={({ item: spot }) => (
@@ -161,7 +162,7 @@ const SpotPicker = ({
                 </Text>
                 <View className="flex-row items-center flex-wrap mt-2">
                   {spot.deliveryEnabled ? (
-                    <View className="bg-red-50 rounded-full px-3 py-1 mr-2 mb-1">
+                    <View className="bg-berry-wash rounded-full px-3 py-1 mr-2 mb-1">
                       <Text className="text-xs font-urbanist-semibold text-accent">
                         {t('Ordering.delivery')}
                       </Text>
@@ -225,7 +226,7 @@ const SpotMenu = ({ spot, onBack }: { spot: Spot; onBack: () => void }) => {
   const loading = tastesLoading || productsLoading;
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-mainBg">
       {/* Spot header */}
       <Pressable className="px-6 pt-3 pb-2" onPress={onBack}>
         <Text className="text-sm font-urbanist-bold text-accent">‹ {t('Ordering.orderNow')}</Text>
@@ -248,10 +249,10 @@ const SpotMenu = ({ spot, onBack }: { spot: Spot; onBack: () => void }) => {
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#EC2828" />
+          <ActivityIndicator color={THEME.primary} />
         </View>
       ) : sections.length === 0 ? (
-        <View className="mx-6 mt-4 bg-background-secondary rounded-2xl p-8 items-center">
+        <View className="mx-6 mt-4 bg-white border border-gray-200 rounded-2xl p-8 items-center">
           <Text className="text-5xl mb-3">🍦</Text>
           <Text className="font-urbanist text-text-secondary text-center">
             {t('Ordering.noItems')}
@@ -263,7 +264,7 @@ const SpotMenu = ({ spot, onBack }: { spot: Spot; onBack: () => void }) => {
           keyExtractor={(item) => `${item.kind}:${item.id}`}
           stickySectionHeadersEnabled={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#EC2828" colors={['#EC2828']} />
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={THEME.primary} colors={[THEME.primary]} />
           }
           contentContainerStyle={{ paddingBottom: TAB_BAR_TOTAL_HEIGHT + 96 }}
           renderSectionHeader={({ section }) => (

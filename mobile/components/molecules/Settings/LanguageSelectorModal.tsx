@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Modal } from '@/components/atoms/Modal';
 import { Typography } from '@/components/atoms/Typography';
 import { pushLanguageToServer } from '@/utils/languageSync';
+import { THEME } from '@/constants/palette';
 
 interface LanguageSelectorModalProps {
   visible: boolean;
@@ -43,11 +44,11 @@ export const LanguageSelectorModal = ({ visible, onClose }: LanguageSelectorModa
             >
               <Typography
                 variant={selected ? 'body-base-bold' : 'body-base-regular'}
-                className={selected ? 'text-red-500' : 'text-text-primary'}
+                className={selected ? 'text-accent' : 'text-text-primary'}
               >
                 {label}
               </Typography>
-              {selected && <Ionicons name="checkmark" size={22} color="#EC2828" />}
+              {selected && <Ionicons name="checkmark" size={22} color={THEME.primary} />}
             </Pressable>
           );
         })}

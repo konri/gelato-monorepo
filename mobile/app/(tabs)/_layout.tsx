@@ -3,6 +3,7 @@ import { useAuthState } from "@/hooks/useAuthState";
 import { useNotificationRegistration } from "@/hooks/useNotificationRegistration";
 import { usePointsSubscription } from "@/hooks/usePointsSubscription";
 import { Redirect } from "expo-router";
+import { THEME } from "@/constants/palette";
 import { ActivityIndicator, View } from "react-native";
 
 export default function TabsLayout() {
@@ -15,8 +16,8 @@ export default function TabsLayout() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
-        <ActivityIndicator size="large" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: THEME.background }}>
+        <ActivityIndicator size="large" color={THEME.primary} />
       </View>
     );
   }

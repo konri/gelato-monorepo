@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
+import { THEME } from '@/constants/palette';
 
 interface SortModalProps {
   sortType: 'nearest' | 'alphabetical';
@@ -21,7 +22,7 @@ export const SortModal = ({ sortType, onSortChange }: SortModalProps) => {
         <Typography variant="body-base-regular" className="text-text-primary">
           {t('Sections.nearestToYou')}
         </Typography>
-        {sortType === 'nearest' && <Ionicons name="checkmark" size={24} color="#EA3A1D" />}
+        {sortType === 'nearest' && <Ionicons name="checkmark" size={24} color={THEME.primary} />}
       </Pressable>
 
       <Pressable
@@ -31,7 +32,7 @@ export const SortModal = ({ sortType, onSortChange }: SortModalProps) => {
         <Typography variant="body-base-regular" className="text-text-primary">
           {t('Merchants.alphabetical')}
         </Typography>
-        {sortType === 'alphabetical' && <Ionicons name="checkmark" size={24} color="#EA3A1D" />}
+        {sortType === 'alphabetical' && <Ionicons name="checkmark" size={24} color={THEME.primary} />}
       </Pressable>
     </View>
   );
