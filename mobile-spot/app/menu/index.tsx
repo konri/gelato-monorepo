@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -34,6 +35,7 @@ function MenuScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [editing, setEditing] = useState<MenuItem | null>(null);
   const [creating, setCreating] = useState(false);
+  const hasTastes = sections.some((section) => section.items.some((item) => item.kind === 'taste'));
 
   useFocusEffect(
     useCallback(() => {
@@ -99,7 +101,7 @@ function MenuScreen() {
             </View>
           ) : sections.length === 0 ? (
             <View className="items-center px-8 py-16">
-              <Ionicons name="ice-cream-outline" size={48} color="#9CA3AF" />
+              <Ionicons name="restaurant-outline" size={48} color="#9CA3AF" />
               <Typography variant="body-base-regular" className="mt-4 text-center text-gray-500">
                 {t('SpotMenu.empty')}
               </Typography>
@@ -108,7 +110,7 @@ function MenuScreen() {
             sections.map((section) => (
               <View key={section.type} className="mb-6">
                 <Typography variant="body-small-bold" className="mb-2" style={{ color: '#EC2828', letterSpacing: 1 }}>
-                  {t(`Spot.category.${section.type}`, { defaultValue: section.type })}
+                  {t(`Ordering.category.${section.type}`, { defaultValue: section.type })}
                 </Typography>
                 <View className="gap-2">
                   {section.items.map((item) => (
@@ -132,6 +134,8 @@ function MenuScreen() {
         <MenuItemModal
           spotId={spotId}
           item={editing}
+          defaultKind={hasTastes ? 'taste' : 'product'}
+          hasTastes={hasTastes}
           onClose={() => {
             setCreating(false);
             setEditing(null);
@@ -165,9 +169,9 @@ function MenuRow({
     <View className="flex-row items-center rounded-2xl bg-white p-3 shadow-sm">
       <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-gray-100">
         {item.imageUrl ? (
-          <Ionicons name="fast-food-outline" size={22} color="#9CA3AF" />
+          <Image source={{ uri: item.imageUrl }} style={{ width: 56, height: 56 }} accessibilityIgnoresInvertColors />
         ) : (
-          <Ionicons name={item.kind === 'taste' ? 'ice-cream-outline' : 'cafe-outline'} size={22} color="#9CA3AF" />
+          <Ionicons name={item.kind === 'taste' ? 'ice-cream-outline' : 'pricetag-outline'} size={22} color="#9CA3AF" />
         )}
       </View>
       <View className="ml-3 flex-1">

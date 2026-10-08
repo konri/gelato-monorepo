@@ -197,7 +197,7 @@ function SpotOrdersScreen() {
         ) : noActive ? (
           <View className="items-center px-8 py-16">
             <View className="h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm">
-              <Ionicons name="ice-cream-outline" size={40} color="#EC2828" />
+              <Ionicons name="receipt-outline" size={40} color="#EC2828" />
             </View>
             <Typography variant="body-lg-bold" className="mt-5 text-center text-text-primary">
               {t('Spot.noOrdersTitle')}

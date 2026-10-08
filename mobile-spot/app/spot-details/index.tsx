@@ -131,6 +131,16 @@ function SpotDetailsScreen() {
     void load();
   }, [load]);
 
+  // After an image change only the spot (logo, cover, gallery) is re-read:
+  // load() would also reset the form and drop unsaved edits such as hours.
+  const refreshImages = useCallback(async () => {
+    if (!spotId) return;
+    const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
+    const res = await getSpotDetails(spotId, { token });
+    if (spotStore.getActiveSpotId() !== spotId) return;
+    if (res.data) setSpot(res.data);
+  }, [spotId]);
+
   const set = (k: keyof typeof form) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const save = async () => {
@@ -189,7 +199,7 @@ function SpotDetailsScreen() {
     setSaving(true);
     try {
       await uploadSpotImage(spot.id, res.assets[0].uri, type);
-      await load();
+      await refreshImages();
       toast.success(t('SpotDetails.saved'));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t('SpotDetails.saveError'));
@@ -206,7 +216,7 @@ function SpotDetailsScreen() {
       const next = (spot.photos ?? []).filter((p) => p !== url);
       const res = await setSpotPhotos(spot.id, next, { token });
       if (res.error) toast.error(t('SpotDetails.saveError'));
-      else await load();
+      else await refreshImages();
     } finally {
       setSaving(false);
     }
@@ -346,8 +356,11 @@ function SpotDetailsScreen() {
           )}
 
           {/* Opening hours */}
-          <Typography variant="body-base-bold" className="mb-2 mt-4 text-text-primary">
+          <Typography variant="body-base-bold" className="mt-4 text-text-primary">
             {t('SpotDetails.openingHours')}
+          </Typography>
+          <Typography variant="body-small-regular" className="mb-2 text-gray-500">
+            {t('SpotDetails.openingHoursHint')}
           </Typography>
           <View className="mb-4 gap-2">
             {WEEKDAYS.map((day) => (

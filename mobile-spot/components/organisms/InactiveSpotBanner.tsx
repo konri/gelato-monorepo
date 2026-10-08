@@ -1,17 +1,19 @@
 import { Typography } from '@/components/atoms/Typography';
 import { useActiveSpot } from '@/hooks/useActiveSpot';
+import { useRole } from '@/hooks/useRole';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 /**
  * Banner when the active spot is not active (a draft or a deactivated spot):
- * customers can't see it yet. Setup (menu, hours, photos, templates) works;
- * points and news start after activation.
+ * customers can't see it yet. Those who can set it up get where to do it;
+ * an employee, who can't, gets what to expect instead.
  */
 export function InactiveSpotBanner() {
   const { t } = useTranslation();
   const { activeSpot } = useActiveSpot();
+  const canSetUp = useRole().can.editMenu;
   // The brand banner already explains a paused brand.
   if (!activeSpot || activeSpot.isActive || !activeSpot.brandActive) return null;
   return (
@@ -26,7 +28,7 @@ export function InactiveSpotBanner() {
           {t('Brand.spotInactiveBanner')}
         </Typography>
         <Typography variant="body-base-regular" style={{ color: '#1E3A8A' }}>
-          {t('Brand.spotInactiveHint')}
+          {canSetUp ? t('Brand.spotInactiveHint') : t('Brand.spotInactiveHintStaff')}
         </Typography>
       </View>
     </View>

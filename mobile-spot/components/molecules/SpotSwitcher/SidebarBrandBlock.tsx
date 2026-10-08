@@ -31,7 +31,7 @@ export function SidebarBrandBlock() {
               justifyContent: 'center',
             }}
           >
-            <Ionicons name="ice-cream" size={20} color="#fff" />
+            <Ionicons name="storefront" size={20} color="#fff" />
           </View>
         )}
         <View style={{ marginLeft: 10, flex: 1 }}>
