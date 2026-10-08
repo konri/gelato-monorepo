@@ -172,7 +172,7 @@ function MoreScreen() {
           {/* Operations group */}
           <View className="mt-4 gap-3">
             <MenuRow
-              icon="ice-cream-outline"
+              icon="restaurant-outline"
               label={t('SpotTabs.menu')}
               onPress={() => router.push('/menu')}
             />

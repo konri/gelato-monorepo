@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -50,21 +51,28 @@ async function uploadImage(kind: 'taste' | 'product', id: string, uri: string) {
 export function MenuItemModal({
   spotId,
   item,
+  defaultKind = 'product',
+  hasTastes = false,
   onClose,
   onSaved,
 }: {
   spotId: string;
   item: MenuItem | null;
+  /** Kind of a new item: taste once the menu has tastes, else product (A4: no ice-cream default for a bakery or café). */
+  defaultKind?: 'taste' | 'product';
+  /** The menu already has tastes: only then can a product be a pack of tastes. */
+  hasTastes?: boolean;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const { t } = useTranslation();
   const isEdit = !!item;
 
-  // Kind defaults to taste (per spec). On edit it's locked to the item's kind.
-  const [kind, setKind] = useState<'taste' | 'product'>(item?.kind ?? 'taste');
+  // On edit the kind is locked to the item's kind.
+  const initialKind = item?.kind ?? defaultKind;
+  const [kind, setKind] = useState<'taste' | 'product'>(initialKind);
   const [name, setName] = useState(item?.title ?? '');
-  const [type, setType] = useState(item?.type ?? 'GELATO');
+  const [type, setType] = useState(item?.type ?? (initialKind === 'taste' ? 'GELATO' : 'OTHER'));
   const [description, setDescription] = useState(item?.description ?? '');
   const [ingredients, setIngredients] = useState('');
   const [allergens, setAllergens] = useState((item?.allergens ?? []).join(', '));
@@ -185,7 +193,7 @@ export function MenuItemModal({
                   <Chip active={kind === 'taste'} onPress={() => { setKind('taste'); setType('GELATO'); }}>
                     {t('SpotMenu.tasteKind')}
                   </Chip>
-                  <Chip active={kind === 'product'} onPress={() => { setKind('product'); setType('COFFEE'); }}>
+                  <Chip active={kind === 'product'} onPress={() => { setKind('product'); setType('OTHER'); }}>
                     {t('SpotMenu.productKind')}
                   </Chip>
                 </View>
@@ -202,7 +210,7 @@ export function MenuItemModal({
               <View className="flex-row flex-wrap gap-2">
                 {types.map((ty) => (
                   <Chip key={ty} active={type === ty} onPress={() => setType(ty)}>
-                    {t(`Spot.category.${ty}`, { defaultValue: ty })}
+                    {t(`Ordering.category.${ty}`, { defaultValue: ty })}
                   </Chip>
                 ))}
               </View>
@@ -233,8 +241,8 @@ export function MenuItemModal({
               <TextInput className={inputCls} value={description} onChangeText={setDescription} multiline numberOfLines={3} />
             </View>
 
-            {/* Ice cream pack (box) — products only */}
-            {kind === 'product' && (
+            {/* Ice cream pack (box): products only, and only once there are tastes to pick. */}
+            {kind === 'product' && (hasTastes || isBox) && (
               <View className="rounded-xl border border-gray-200 p-3">
                 <Pressable
                   onPress={() => setIsBox((v) => !v)}
@@ -318,9 +326,17 @@ export function MenuItemModal({
                 onPress={pickImage}
                 className="flex-row items-center justify-center rounded-xl border border-dashed border-gray-300 py-4"
               >
-                <Ionicons name={imageUri ? 'checkmark-circle' : 'image-outline'} size={20} color={imageUri ? '#16A34A' : '#6B7280'} />
+                {imageUri || item?.imageUrl ? (
+                  <Image
+                    source={{ uri: imageUri ?? item?.imageUrl ?? undefined }}
+                    style={{ width: 56, height: 56, borderRadius: 12 }}
+                    accessibilityLabel={t('SpotMenu.photo')}
+                  />
+                ) : (
+                  <Ionicons name="image-outline" size={20} color="#6B7280" />
+                )}
                 <Typography variant="body-small-semibold" className="ml-2 text-gray-600">
-                  {imageUri ? '✓' : t('SpotMenu.photo')}
+                  {imageUri || item?.imageUrl ? t('SpotMenu.photoChange') : t('SpotMenu.photo')}
                 </Typography>
               </Pressable>
             </View>

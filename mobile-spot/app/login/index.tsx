@@ -339,6 +339,10 @@ export default function SpotLoginScreen() {
               autoCapitalize="none"
               autoCorrect={false}
             />
+            {/* Same rule as the server (PASSWORD_WEAK), shown before the first attempt. */}
+            <Typography variant="body-small-regular" className="-mt-2 ml-1 text-gray-500">
+              {t('Spot.passwordRules')}
+            </Typography>
             <Pressable
               onPress={doReset}
               disabled={loading}
