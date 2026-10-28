@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Platform, Pressable, View } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { KeyboardAwareScrollView, KeyboardAwareTextInput } from '@/components/KeyboardAwareScrollView';
 import { CustomSafeAreaView } from '@/components/CustomSafeAreaView';
 import { HeaderWithBackButton } from '@/components/HeaderWithBackButton';
 import { Typography } from '@/components/atoms/Typography';
@@ -146,9 +147,8 @@ export default function EditProfileScreen() {
     <CustomSafeAreaView>
       <HeaderWithBackButton title={t('Settings.editProfile')} variant="card" />
 
-      <ScrollView
+      <KeyboardAwareScrollView
         className="px-6"
-        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
       >
@@ -173,7 +173,7 @@ export default function EditProfileScreen() {
         <Typography variant="body-small-semibold" className={labelClass}>
           {t('Settings.firstName')}
         </Typography>
-        <TextInput
+        <KeyboardAwareTextInput
           className={inputClass}
           style={{ fontFamily: 'Urbanist' }}
           value={firstNameValue}
@@ -185,7 +185,7 @@ export default function EditProfileScreen() {
         <Typography variant="body-small-semibold" className={labelClass}>
           {t('Settings.surname')}
         </Typography>
-        <TextInput
+        <KeyboardAwareTextInput
           className={inputClass}
           style={{ fontFamily: 'Urbanist' }}
           value={surnameValue}
@@ -197,7 +197,7 @@ export default function EditProfileScreen() {
         <Typography variant="body-small-semibold" className={labelClass}>
           {t('Settings.phone')}
         </Typography>
-        <TextInput
+        <KeyboardAwareTextInput
           className={inputClass}
           style={{ fontFamily: 'Urbanist' }}
           value={phoneValue}
@@ -241,6 +241,8 @@ export default function EditProfileScreen() {
               value={birthDate ?? maximumDate}
               mode="date"
               display="spinner"
+              themeVariant="light"
+              textColor={THEME.text}
               maximumDate={maximumDate}
               minimumDate={minimumDate}
               onChange={handlePickerChange}
@@ -273,7 +275,7 @@ export default function EditProfileScreen() {
             disabled={saving}
           />
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </CustomSafeAreaView>
   );
 }

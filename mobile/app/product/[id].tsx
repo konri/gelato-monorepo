@@ -70,7 +70,9 @@ export default function ProductDetailScreen() {
 
           <View className="bg-button-secondary self-start rounded-full px-3 py-1 mt-3">
             <Text className="text-xs font-urbanist-bold text-text-primary">
-              {t(`Ordering.category.${product.type}`, { defaultValue: product.type })}
+              {product.menuCategory
+                ? localized(product.menuCategory.nameLocal as LocalizedText, product.type)
+                : t(`Ordering.category.${product.type}`, { defaultValue: product.type })}
             </Text>
           </View>
 

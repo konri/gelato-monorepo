@@ -1,5 +1,6 @@
+import { KeyboardAwareTextInput } from '@/components/KeyboardAwareScrollView';
 import React, { RefObject } from 'react';
-import { View, TextInput } from 'react-native';
+import { TextInput, View } from 'react-native';
 
 interface CodeInputProps {
   code: string[];
@@ -12,7 +13,7 @@ interface CodeInputProps {
 export const CodeInput = ({ code, inputRefs, isLoading, onCodeChange, onKeyPress }: CodeInputProps) => (
   <View className="flex-row justify-center space-x-3">
     {code.map((digit, index) => (
-      <TextInput
+      <KeyboardAwareTextInput
         key={index}
         ref={(ref) => {
           if (ref && inputRefs.current) inputRefs.current[index] = ref;

@@ -29,6 +29,8 @@ export const SPOT_PRODUCTS_QUERY = gql`
       name
       description
       type
+      categoryId
+      menuCategory { id nameLocal }
       imageUrl
       price
       loyaltyPoints
@@ -127,6 +129,7 @@ export const CREATE_PRODUCT_MUTATION = gql`
     $name: String!
     $nameLocal: String!
     $type: ProductType!
+    $categoryId: ID
     $price: Float!
     $description: String
     $imageUrl: String
@@ -143,6 +146,7 @@ export const CREATE_PRODUCT_MUTATION = gql`
       name: $name
       nameLocal: $nameLocal
       type: $type
+      categoryId: $categoryId
       price: $price
       description: $description
       imageUrl: $imageUrl
@@ -165,6 +169,7 @@ export const UPDATE_PRODUCT_MUTATION = gql`
     $name: String
     $nameLocal: String
     $type: ProductType
+    $categoryId: ID
     $price: Float
     $description: String
     $maxTastes: Int
@@ -179,6 +184,7 @@ export const UPDATE_PRODUCT_MUTATION = gql`
       name: $name
       nameLocal: $nameLocal
       type: $type
+      categoryId: $categoryId
       price: $price
       description: $description
       maxTastes: $maxTastes
@@ -199,8 +205,77 @@ export const UPDATE_PRODUCT_AVAILABILITY_MUTATION = gql`
   }
 `;
 
+export const SPOT_MENU_CATEGORIES_QUERY = gql`
+  query SpotMenuCategories($spotId: ID!) {
+    spotMenuCategories(spotId: $spotId) {
+      id
+      nameLocal
+    }
+  }
+`;
+
+export const CREATE_MENU_CATEGORY_MUTATION = gql`
+  mutation CreateMenuCategory($spotId: ID!, $nameLocal: String!) {
+    createMenuCategory(spotId: $spotId, nameLocal: $nameLocal) {
+      id
+      nameLocal
+    }
+  }
+`;
+
 export const DELETE_PRODUCT_MUTATION = gql`
   mutation DeleteProduct($id: ID!) {
     deleteProduct(id: $id)
+  }
+`;
+
+export const BRAND_MENU_SOURCES_QUERY = gql`
+  query BrandMenuSources($spotId: ID!) {
+    brandMenuSources(spotId: $spotId) {
+      id
+      name
+      address
+      isActive
+      cityName
+      cityNameLocal
+      tasteCount
+      productCount
+    }
+  }
+`;
+
+export const MENU_TO_COPY_QUERY = gql`
+  query MenuToCopy($targetSpotId: ID!, $sourceSpotId: ID!) {
+    menuToCopy(targetSpotId: $targetSpotId, sourceSpotId: $sourceSpotId) {
+      tastes {
+        id
+        title
+        type
+        price
+        isAvailable
+      }
+      products {
+        id
+        name
+        type
+        price
+        isAvailable
+        menuCategory { id nameLocal }
+      }
+    }
+  }
+`;
+
+export const COPY_SPOT_MENU_MUTATION = gql`
+  mutation CopySpotMenu($targetSpotId: ID!, $sourceSpotId: ID!, $tasteIds: [ID!]!, $productIds: [ID!]!) {
+    copySpotMenu(
+      targetSpotId: $targetSpotId
+      sourceSpotId: $sourceSpotId
+      tasteIds: $tasteIds
+      productIds: $productIds
+    ) {
+      copiedTastes
+      copiedProducts
+    }
   }
 `;

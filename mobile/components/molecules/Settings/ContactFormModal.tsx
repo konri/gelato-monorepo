@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Alert, TextInput, View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { KeyboardAwareTextInput } from '@/components/KeyboardAwareScrollView';
 import { Modal } from '@/components/atoms/Modal';
 import { Button } from '@/components/atoms/Button';
 import { Typography } from '@/components/atoms/Typography';
@@ -81,7 +82,7 @@ export const ContactFormModal = ({ visible, onClose }: ContactFormModalProps) =>
           <Typography variant="body-small-semibold" className="text-gray-700 mb-1 ml-1">
             {t('Settings.contactEmail')}
           </Typography>
-          <TextInput
+          <KeyboardAwareTextInput
             className={inputClass}
             style={{ fontFamily: 'Urbanist' }}
             value={email}
@@ -97,7 +98,7 @@ export const ContactFormModal = ({ visible, onClose }: ContactFormModalProps) =>
           <Typography variant="body-small-semibold" className="text-gray-700 mb-1 ml-1">
             {t('Settings.contactSubject')}
           </Typography>
-          <TextInput
+          <KeyboardAwareTextInput
             className={inputClass}
             style={{ fontFamily: 'Urbanist' }}
             value={title}
@@ -110,7 +111,7 @@ export const ContactFormModal = ({ visible, onClose }: ContactFormModalProps) =>
           <Typography variant="body-small-semibold" className="text-gray-700 mb-1 ml-1">
             {t('Settings.contactMessage')}
           </Typography>
-          <TextInput
+          <KeyboardAwareTextInput
             className={inputClass}
             style={{ fontFamily: 'Urbanist', minHeight: 100, textAlignVertical: 'top' }}
             value={message}

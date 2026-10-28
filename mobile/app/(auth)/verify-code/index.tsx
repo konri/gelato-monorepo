@@ -1,11 +1,12 @@
 import { Typography } from "@/components/atoms/Typography";
+import { KeyboardAwareScrollView } from "@/components/KeyboardAwareScrollView";
 import { AuthHeader } from "@/components/molecules/AuthHeader";
 import { CodeInput } from "@/components/molecules/CodeInput";
 import { ResendCodeButton } from "@/components/molecules/ResendCodeButton";
 import { useVerifyCode } from "@/hooks/useVerifyCode";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 
 export default function VerifyCodeScreen() {
   const { t } = useTranslation();
@@ -24,7 +25,7 @@ export default function VerifyCodeScreen() {
   } = useVerifyCode();
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       className="flex-1"
       contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 8 }}
       showsVerticalScrollIndicator={false}
@@ -76,6 +77,6 @@ export default function VerifyCodeScreen() {
           </View>
         </View>
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }

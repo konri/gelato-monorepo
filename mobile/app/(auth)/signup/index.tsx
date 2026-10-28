@@ -1,6 +1,7 @@
+import { Button } from "@/components/atoms/Button";
 import { TextButton } from "@/components/atoms/TextButton";
 import { Typography } from "@/components/atoms/Typography";
-import { Button } from "@/components/atoms/Button";
+import { KeyboardAwareScrollView } from "@/components/KeyboardAwareScrollView";
 import { AuthHeader } from "@/components/molecules/AuthHeader";
 import { SignupForm } from "@/components/molecules/SignupForm";
 import { SocialMediaButtons } from "@/components/molecules/SocialMediaButtons";
@@ -9,7 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 
 export default function SignUpScreen() {
   const { t } = useTranslation();
@@ -23,7 +24,7 @@ export default function SignUpScreen() {
     useSignUp();
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       className="flex-1"
       contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 8 }}
       showsVerticalScrollIndicator={false}
@@ -83,6 +84,6 @@ export default function SignUpScreen() {
           </View>
         </View>
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }

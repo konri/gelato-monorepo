@@ -14,21 +14,36 @@ import { useCallback, useEffect, useState } from 'react';
 import { spotStore } from '@/stores/spotStore';
 import { useActiveSpotId } from './useActiveSpot';
 
-// Section order mirrors the client app's TYPE_ORDER.
+// Built-in sections. Custom sections and "Other" are ordered after these.
 const TYPE_ORDER = [
   'SORBET',
   'MILK',
   'GELATO',
   'VEGAN',
   'TASTE',
+  'ICE_CREAM_BOX',
   'COFFEE',
   'BEVERAGE',
   'DESSERT',
+  'SANDWICH',
+  'BREAD',
+  'PASTRY',
   'MERCHANDISE',
-  'OTHER',
 ];
 
-export type MenuSection = { type: string; items: MenuItem[] };
+export type MenuSection = {
+  type: string;
+  titleLocal?: { pl?: string; en?: string; ua?: string } | null;
+  items: MenuItem[];
+};
+
+function sectionRank(key: string): number {
+  const index = TYPE_ORDER.indexOf(key);
+  if (index !== -1) return index;
+  if (key.startsWith('cat:')) return 50;
+  if (key === 'OTHER') return 60;
+  return 70;
+}
 
 function toItems(tastes: MenuTaste[], products: MenuProduct[]): MenuItem[] {
   return [
@@ -50,6 +65,8 @@ function toItems(tastes: MenuTaste[], products: MenuProduct[]): MenuItem[] {
       title: p.name,
       description: p.description,
       type: p.type,
+      categoryId: p.categoryId,
+      categoryNameLocal: p.menuCategory?.nameLocal ?? null,
       imageUrl: p.imageUrl,
       price: p.price,
       loyaltyPoints: p.loyaltyPoints ?? 0,
@@ -64,19 +81,21 @@ function toItems(tastes: MenuTaste[], products: MenuProduct[]): MenuItem[] {
 
 function groupByType(items: MenuItem[]): MenuSection[] {
   const byType: Record<string, MenuItem[]> = {};
-  for (const it of items) (byType[it.type] ??= []).push(it);
-  const sections: MenuSection[] = [];
-  const seen = new Set<string>();
-  for (const type of TYPE_ORDER) {
-    if (byType[type]?.length) {
-      sections.push({ type, items: byType[type] });
-      seen.add(type);
-    }
+  const titles: Record<string, MenuSection['titleLocal']> = {};
+  for (const it of items) {
+    const key = it.categoryId ? `cat:${it.categoryId}` : it.type;
+    (byType[key] ??= []).push(it);
+    if (it.categoryNameLocal) titles[key] = it.categoryNameLocal;
   }
-  Object.keys(byType)
-    .filter((k) => !seen.has(k))
-    .forEach((k) => sections.push({ type: k, items: byType[k] }));
-  return sections;
+  return Object.keys(byType)
+    .sort((a, b) => {
+      const rank = sectionRank(a) - sectionRank(b);
+      if (rank !== 0) return rank;
+      const an = titles[a]?.pl || titles[a]?.en || a;
+      const bn = titles[b]?.pl || titles[b]?.en || b;
+      return an.localeCompare(bn, 'pl');
+    })
+    .map((type) => ({ type, titleLocal: titles[type] ?? null, items: byType[type] }));
 }
 
 export function useSpotMenu() {
@@ -137,13 +156,15 @@ export function useSpotMenu() {
   }, []);
 
   const removeItem = useCallback(
-    async (item: MenuItem) => {
+    async (item: MenuItem): Promise<string | null> => {
       const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
       const res =
         item.kind === 'taste'
-          ? await apiDeleteTaste(item.id, { token })
-          : await apiDeleteProduct(item.id, { token });
-      if (!res.error) await load();
+          ? await apiDeleteTaste(item.id, { token, silent: true })
+          : await apiDeleteProduct(item.id, { token, silent: true });
+      if (res.error) return res.error.message || '';
+      await load();
+      return null;
     },
     [load],
   );

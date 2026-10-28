@@ -343,6 +343,10 @@
       "BEVERAGE": "Beverages",
       "DESSERT": "Desserts",
       "MERCHANDISE": "Merchandise",
+      "ICE_CREAM_BOX": "Ice cream boxes",
+      "SANDWICH": "Sandwiches",
+      "BREAD": "Bread",
+      "PASTRY": "Pastries",
       "OTHER": "Other"
     },
     "not_found": "Location not found.",

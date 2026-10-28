@@ -1,3 +1,4 @@
+import { KeyboardAwareScrollView, KeyboardAwareTextInput } from '@/components/KeyboardAwareScrollView';
 import { useCart } from '@/hooks/useCart';
 import { useDeliveryCheck } from '@/hooks/useOrdering';
 import { useSpotDetail } from '@/hooks/useTastes';
@@ -20,9 +21,7 @@ import {
   ActivityIndicator,
   Image,
   Pressable,
-  ScrollView,
   Text,
-  TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -119,11 +118,11 @@ export default function AddressScreen() {
         </Text>
       </View>
 
-      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16 }}>
+      <KeyboardAwareScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
         {/* Search input */}
         <View className="flex-row items-center bg-white border border-gray-200 rounded-2xl px-4 py-3">
           <Ionicons name="search" size={20} color={THEME.placeholder} />
-          <TextInput
+          <KeyboardAwareTextInput
             className="flex-1 ml-2 text-base text-text-primary"
             style={{ fontFamily: 'Urbanist' }}
             placeholder={t('Address.searchPlaceholder')}
@@ -238,7 +237,7 @@ export default function AddressScreen() {
             </View>
           </View>
         ) : null}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Continue */}
       <View

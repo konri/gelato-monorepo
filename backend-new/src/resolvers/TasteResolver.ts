@@ -29,12 +29,12 @@ export class TasteResolver {
   ): Promise<TasteType[]> {
     const user = req.user;
 
-    const where: any = { spotId };
+    // Removed tastes stay hidden. `includeUnavailable` only reveals sold-out
+    // items so staff can turn them back on.
+    const where: any = { spotId, isActive: true };
 
-    // Only show available tastes to non-staff
     if (!includeUnavailable || !user) {
       where.isAvailable = true;
-      where.isActive = true;
     }
 
     return prisma.taste.findMany({
@@ -229,7 +229,9 @@ export class TasteResolver {
   }
 
   /**
-   * Delete taste (SUPER_ADMIN, SPOTS_ADMIN, SPOT_ADMIN)
+   * Remove a taste from the menu (SUPER_ADMIN, SPOTS_ADMIN, SPOT_ADMIN).
+   * Soft-delete: past orders keep the row so their line items still resolve a
+   * name. A hard delete fails while any order references the taste.
    */
   @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN])
   @Mutation(() => Boolean)
@@ -239,7 +241,6 @@ export class TasteResolver {
   ): Promise<boolean> {
     const user = req.user!;
 
-    // Get taste to check spot
     const taste = await prisma.taste.findUnique({
       where: { id },
       select: { spotId: true },
@@ -249,7 +250,6 @@ export class TasteResolver {
       throw new Error('Taste not found');
     }
 
-    // Check permission
     if (user.roles.includes(Role.SPOT_ADMIN) && !user.roles.includes(Role.SUPER_ADMIN)) {
       const hasPermission = await canManageSpot(user.id, taste.spotId, prisma);
       if (!hasPermission) {
@@ -257,11 +257,12 @@ export class TasteResolver {
       }
     }
 
-    await prisma.taste.delete({
+    await prisma.taste.update({
       where: { id },
+      data: { isActive: false, isAvailable: false },
     });
 
-    console.log(`✅ Taste deleted: ${id}`);
+    console.log(`✅ Taste removed from menu: ${id}`);
 
     return true;
   }

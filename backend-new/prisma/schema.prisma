@@ -78,6 +78,10 @@ enum ProductType {
   BEVERAGE // Other beverages
   DESSERT // Other desserts
   MERCHANDISE // Branded items
+  ICE_CREAM_BOX // Pack the customer fills with tastes
+  SANDWICH
+  BREAD
+  PASTRY
   OTHER
 }
 
@@ -282,6 +286,7 @@ model Spot {
   // Relations
   tastes              Taste[]
   products            Product[]
+  menuCategories      MenuCategory[]
   orders              Order[]
   spotAdmins          SpotAdminProfile[]
   employees           EmployeeProfile[]
@@ -386,6 +391,9 @@ model Product {
   description      String?
   descriptionLocal Json?
   type             ProductType @default(OTHER)
+  // Spot-defined section. When set, the menu groups by this name instead of `type`.
+  menuCategory     MenuCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId       String?
   imageUrl         String?
   price            Float
   loyaltyPoints    Int         @default(0) // Loyalty points earned per unit (paid orders)
@@ -407,6 +415,22 @@ model Product {
   updatedAt DateTime @updatedAt
 
   orderItems OrderItem[]
+
+  @@index([categoryId])
+}
+
+// A section the spot named itself (e.g. "Croissants"), with a label per language.
+model MenuCategory {
+  id        String   @id @default(uuid())
+  spot      Spot     @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  spotId    String
+  nameLocal Json // { pl, en, ua }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+
+  @@index([spotId])
 }
 
 // ============================================================================

@@ -1,3 +1,4 @@
+import { KeyboardAwareScrollView, KeyboardAwareTextInput } from '@/components/KeyboardAwareScrollView';
 import { useCart } from '@/hooks/useCart';
 import { buildTimeSlots, TimeSlot } from '@/hooks/useOrdering';
 import { useSpotDetail } from '@/hooks/useTastes';
@@ -10,9 +11,7 @@ import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -132,7 +131,7 @@ export default function OrderDetailsScreen() {
         </Text>
       </View>
 
-      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16 }}>
+      <KeyboardAwareScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
         {isPickup ? (
           /* Collect-at-spot summary */
           <Section title={t('Checkout.pickupLocation')}>
@@ -349,7 +348,7 @@ export default function OrderDetailsScreen() {
             multiline
           />
         </Section>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Continue to payment */}
       <View className="border-t border-gray-200 px-6 pt-3" style={{ paddingBottom: insets.bottom + 12 }}>
@@ -427,9 +426,9 @@ const TypeChip = ({
 const Field = ({
   className,
   ...props
-}: React.ComponentProps<typeof TextInput> & { className?: string }) => (
+}: React.ComponentProps<typeof KeyboardAwareTextInput> & { className?: string }) => (
   <View className={`bg-white border border-gray-200 rounded-xl px-4 py-3 ${className ?? ''}`}>
-    <TextInput
+    <KeyboardAwareTextInput
       style={{ fontFamily: 'Urbanist', fontSize: 15 }}
       placeholderTextColor={THEME.placeholder}
       className="text-text-primary"

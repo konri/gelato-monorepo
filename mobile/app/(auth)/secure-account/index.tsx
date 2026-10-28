@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { HeaderWithBackButton } from '@/components/HeaderWithBackButton';
+import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 import { SecureAccountForm } from '@/components/molecules/SecureAccountForm';
 import { useSecureAccount } from '@/hooks/useSecureAccount';
 
@@ -12,7 +13,11 @@ export default function SecureAccountScreen() {
   return (
     <>
       <HeaderWithBackButton title={t('SecureAccount.headerTitle')} variant="card" />
-      <View className="flex-1 px-6 py-2">
+      <KeyboardAwareScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 8 }}
+        showsVerticalScrollIndicator={false}
+      >
         <View className="gap-8">
           <View>
             <Text className="text-[32px] font-bold text-gray-900 mb-2 font-urbanist leading-51.2">
@@ -25,7 +30,7 @@ export default function SecureAccountScreen() {
 
           <SecureAccountForm countryCode={countryCode} />
         </View>
-      </View>
+      </KeyboardAwareScrollView>
     </>
   );
 }

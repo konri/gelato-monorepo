@@ -9,14 +9,24 @@ import {
   DELETE_TASTE_MUTATION,
   CREATE_PRODUCT_MUTATION,
   UPDATE_PRODUCT_MUTATION,
+  SPOT_MENU_CATEGORIES_QUERY,
+  CREATE_MENU_CATEGORY_MUTATION,
   UPDATE_PRODUCT_AVAILABILITY_MUTATION,
   DELETE_PRODUCT_MUTATION,
+  BRAND_MENU_SOURCES_QUERY,
+  MENU_TO_COPY_QUERY,
+  COPY_SPOT_MENU_MUTATION,
 } from './query';
 import {
   MenuTaste,
   MenuProduct,
+  MenuCategory,
   ManagedTastesResponse,
   ManagedProductsResponse,
+  MenuCategoriesResponse,
+  MenuSourceSpot,
+  MenuCopyPreview,
+  CopySpotMenuResult,
 } from './types';
 
 export * from './types';
@@ -60,6 +70,21 @@ export const updateTasteAvailability = (id: string, isAvailable: boolean, o: Apo
 export const deleteTaste = (id: string, o: ApolloServerConfig = {}) =>
   run(DELETE_TASTE_MUTATION, { id }, o);
 
+export const getSpotMenuCategories = async (
+  spotId: string,
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<MenuCategory[]>> => {
+  const res = await executeGraphQLQuery<MenuCategoriesResponse>(SPOT_MENU_CATEGORIES_QUERY, {
+    ...options,
+    variables: { spotId },
+    fetchPolicy: 'network-only',
+  });
+  return { ...res, data: res.data ? res.data.spotMenuCategories : null };
+};
+
+export const createMenuCategory = (vars: Record<string, unknown>, o: ApolloServerConfig = {}) =>
+  run(CREATE_MENU_CATEGORY_MUTATION, vars, o);
+
 export const createProduct = (vars: Record<string, unknown>, o: ApolloServerConfig = {}) =>
   run(CREATE_PRODUCT_MUTATION, vars, o);
 export const updateProduct = (vars: Record<string, unknown>, o: ApolloServerConfig = {}) =>
@@ -68,3 +93,39 @@ export const updateProductAvailability = (id: string, isAvailable: boolean, o: A
   run(UPDATE_PRODUCT_AVAILABILITY_MUTATION, { id, isAvailable }, o);
 export const deleteProduct = (id: string, o: ApolloServerConfig = {}) =>
   run(DELETE_PRODUCT_MUTATION, { id }, o);
+
+export const getBrandMenuSources = async (
+  spotId: string,
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<MenuSourceSpot[]>> => {
+  const res = await executeGraphQLQuery<{ brandMenuSources: MenuSourceSpot[] }>(BRAND_MENU_SOURCES_QUERY, {
+    ...options,
+    variables: { spotId },
+    fetchPolicy: 'network-only',
+  });
+  return { ...res, data: res.data ? res.data.brandMenuSources : null };
+};
+
+export const getMenuToCopy = async (
+  targetSpotId: string,
+  sourceSpotId: string,
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<MenuCopyPreview>> => {
+  const res = await executeGraphQLQuery<{ menuToCopy: MenuCopyPreview }>(MENU_TO_COPY_QUERY, {
+    ...options,
+    variables: { targetSpotId, sourceSpotId },
+    fetchPolicy: 'network-only',
+  });
+  return { ...res, data: res.data ? res.data.menuToCopy : null };
+};
+
+export const copySpotMenu = async (
+  vars: { targetSpotId: string; sourceSpotId: string; tasteIds: string[]; productIds: string[] },
+  options: ApolloServerConfig = {},
+): Promise<GraphQLResult<CopySpotMenuResult>> => {
+  const res = await executeGraphQLQuery<{ copySpotMenu: CopySpotMenuResult }>(COPY_SPOT_MENU_MUTATION, {
+    ...options,
+    variables: vars,
+  });
+  return { ...res, data: res.data ? res.data.copySpotMenu : null };
+};

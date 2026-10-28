@@ -5,8 +5,28 @@ import { ProductType as PrismaProductType } from '@prisma/client';
 // Register the Prisma enum with TypeGraphQL (shared name across the schema)
 registerEnumType(PrismaProductType, {
   name: 'ProductType',
-  description: 'Product category (COFFEE, BEVERAGE, DESSERT, MERCHANDISE, OTHER, TASTE)',
+  description:
+    'Product category (COFFEE, BEVERAGE, DESSERT, MERCHANDISE, ICE_CREAM_BOX, SANDWICH, BREAD, PASTRY, OTHER, TASTE)',
 });
+
+/** A spot-defined menu section, labelled in pl / en / ua. */
+@ObjectType('MenuCategory')
+export class MenuCategoryGraphQLType {
+  @Field(() => ID)
+  id!: string;
+
+  @Field(() => ID)
+  spotId!: string;
+
+  @Field(() => GraphQLJSON)
+  nameLocal!: any; // { pl, en, ua }
+
+  @Field()
+  createdAt!: Date;
+
+  @Field()
+  updatedAt!: Date;
+}
 
 /**
  * Product (non-taste spot item, e.g. coffee) GraphQL Type
@@ -33,6 +53,12 @@ export class ProductGraphQLType {
 
   @Field(() => PrismaProductType)
   type!: PrismaProductType;
+
+  @Field(() => ID, { nullable: true })
+  categoryId?: string | null;
+
+  @Field(() => MenuCategoryGraphQLType, { nullable: true })
+  menuCategory?: MenuCategoryGraphQLType | null;
 
   @Field({ nullable: true })
   imageUrl?: string;

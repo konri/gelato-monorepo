@@ -6,12 +6,15 @@ import {
   updateTaste,
   createProduct,
   updateProduct,
+  createMenuCategory,
+  getSpotMenuCategories,
+  type MenuCategory,
   type MenuItem,
 } from '@repo/api-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -24,7 +27,33 @@ import {
 } from 'react-native';
 
 const TASTE_TYPES = ['GELATO', 'SORBET', 'MILK', 'VEGAN', 'OTHER'];
-const PRODUCT_TYPES = ['COFFEE', 'BEVERAGE', 'DESSERT', 'MERCHANDISE', 'OTHER'];
+const PRODUCT_TYPES = [
+  'COFFEE',
+  'BEVERAGE',
+  'DESSERT',
+  'ICE_CREAM_BOX',
+  'SANDWICH',
+  'BREAD',
+  'PASTRY',
+  'MERCHANDISE',
+  'OTHER',
+];
+
+function categoryLabel(nameLocal: MenuCategory['nameLocal'] | string | null | undefined, language: string) {
+  let value: MenuCategory['nameLocal'] | null = null;
+  if (typeof nameLocal === 'string') {
+    try {
+      value = JSON.parse(nameLocal);
+    } catch {
+      return nameLocal;
+    }
+  } else if (nameLocal && typeof nameLocal === 'object') {
+    value = nameLocal;
+  }
+  if (!value) return '';
+  const code = language.split('-')[0] as 'pl' | 'en' | 'ua';
+  return value[code] || value.en || value.pl || value.ua || '';
+}
 
 const inputCls = 'rounded-xl border border-gray-300 px-4 py-3 text-base';
 
@@ -65,7 +94,7 @@ export function MenuItemModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isEdit = !!item;
 
   // On edit the kind is locked to the item's kind.
@@ -73,6 +102,12 @@ export function MenuItemModal({
   const [kind, setKind] = useState<'taste' | 'product'>(initialKind);
   const [name, setName] = useState(item?.title ?? '');
   const [type, setType] = useState(item?.type ?? (initialKind === 'taste' ? 'GELATO' : 'OTHER'));
+  const [categoryId, setCategoryId] = useState<string | null>(item?.categoryId ?? null);
+  const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [creatingCustom, setCreatingCustom] = useState(false);
+  const [customPl, setCustomPl] = useState('');
+  const [customEn, setCustomEn] = useState('');
+  const [customUa, setCustomUa] = useState('');
   const [description, setDescription] = useState(item?.description ?? '');
   const [ingredients, setIngredients] = useState('');
   const [allergens, setAllergens] = useState((item?.allergens ?? []).join(', '));
@@ -90,7 +125,46 @@ export function MenuItemModal({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const types = kind === 'taste' ? TASTE_TYPES : PRODUCT_TYPES;
+  const types =
+    kind === 'taste'
+      ? TASTE_TYPES
+      : PRODUCT_TYPES.filter((ty) => !(isEdit && !isBox && ty === 'ICE_CREAM_BOX'));
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const token = (await AsyncStorage.getItem('access_token')) ?? undefined;
+      const res = await getSpotMenuCategories(spotId, { token });
+      if (!cancelled && res.data) setCategories(res.data);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [spotId]);
+
+  const selectBuiltin = (ty: string) => {
+    setCreatingCustom(false);
+    setCategoryId(null);
+    setType(ty);
+    if (!isEdit) {
+      if (ty === 'ICE_CREAM_BOX') setIsBox(true);
+      else if (type === 'ICE_CREAM_BOX') setIsBox(false);
+    }
+  };
+
+  const selectCategory = (id: string) => {
+    setCreatingCustom(false);
+    setCategoryId(id);
+    setType('OTHER');
+    if (!isEdit && type === 'ICE_CREAM_BOX') setIsBox(false);
+  };
+
+  const startCustom = () => {
+    setCreatingCustom(true);
+    setCategoryId(null);
+    setType('OTHER');
+    if (!isEdit && type === 'ICE_CREAM_BOX') setIsBox(false);
+  };
 
   const pickImage = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -114,8 +188,35 @@ export function MenuItemModal({
       const pointsNum = loyaltyPoints ? parseInt(loyaltyPoints, 10) || 0 : 0;
       const kcalP = kcalPortion ? parseFloat(kcalPortion) : undefined;
       const kcal1 = kcal100g ? parseFloat(kcal100g) : undefined;
+      let resolvedType = type;
+      let resolvedCategoryId: string | null = kind === 'product' && !creatingCustom ? categoryId : null;
+      if (kind === 'product' && creatingCustom) {
+        const pl = customPl.trim();
+        const en = customEn.trim();
+        const ua = customUa.trim();
+        if (!pl || !en || !ua) {
+          setError(t('SpotMenu.customTypeRequired'));
+          setBusy(false);
+          return;
+        }
+        const created = await createMenuCategory(
+          { spotId, nameLocal: JSON.stringify({ pl, en, ua }) },
+          { token },
+        );
+        resolvedCategoryId = created.data?.createMenuCategory?.id ?? null;
+        if (!resolvedCategoryId) throw new Error('category');
+        resolvedType = 'OTHER';
+        const savedCategoryId = resolvedCategoryId;
+        setCategoryId(savedCategoryId);
+        setCreatingCustom(false);
+        setCategories((prev) =>
+          prev.some((category) => category.id === savedCategoryId)
+            ? prev
+            : [...prev, { id: savedCategoryId, nameLocal: { pl, en, ua } }],
+        );
+      }
       // Box fields apply only to products; ignored for tastes.
-      const box = kind === 'product' && isBox;
+      const box = kind === 'product' && (isBox || resolvedType === 'ICE_CREAM_BOX');
       const maxTastesNum = box && maxTastes ? parseInt(maxTastes, 10) || undefined : undefined;
       const weightNum = box && weightGrams ? parseInt(weightGrams, 10) || undefined : undefined;
 
@@ -141,12 +242,12 @@ export function MenuItemModal({
       } else {
         if (isEdit) {
           await updateProduct(
-            { id: item!.id, name, nameLocal: localized, type, price: priceNum, loyaltyPoints: pointsNum, description, maxTastes: maxTastesNum, weightGrams: weightNum, kcalPerPortion: kcalP, kcalPer100g: kcal1, allergens: allergenList },
+            { id: item!.id, name, nameLocal: localized, type: resolvedType, categoryId: resolvedCategoryId, price: priceNum, loyaltyPoints: pointsNum, description, maxTastes: maxTastesNum, weightGrams: weightNum, kcalPerPortion: kcalP, kcalPer100g: kcal1, allergens: allergenList },
             { token },
           );
         } else {
           const res = await createProduct(
-            { spotId, name, nameLocal: localized, type, price: priceNum, loyaltyPoints: pointsNum, description, isBox: box, maxTastes: maxTastesNum, weightGrams: weightNum, kcalPerPortion: kcalP, kcalPer100g: kcal1, allergens: allergenList },
+            { spotId, name, nameLocal: localized, type: resolvedType, categoryId: resolvedCategoryId, price: priceNum, loyaltyPoints: pointsNum, description, isBox: box, maxTastes: maxTastesNum, weightGrams: weightNum, kcalPerPortion: kcalP, kcalPer100g: kcal1, allergens: allergenList },
             { token },
           );
           savedId = res.data?.createProduct?.id;
@@ -190,10 +291,10 @@ export function MenuItemModal({
               <View>
                 <Label>{t('SpotMenu.kind')}</Label>
                 <View className="flex-row gap-2">
-                  <Chip active={kind === 'taste'} onPress={() => { setKind('taste'); setType('GELATO'); }}>
+                  <Chip active={kind === 'taste'} onPress={() => { setKind('taste'); setCreatingCustom(false); setCategoryId(null); setType('GELATO'); if (!isEdit) setIsBox(false); }}>
                     {t('SpotMenu.tasteKind')}
                   </Chip>
-                  <Chip active={kind === 'product'} onPress={() => { setKind('product'); setType('OTHER'); }}>
+                  <Chip active={kind === 'product'} onPress={() => { setKind('product'); selectBuiltin('OTHER'); }}>
                     {t('SpotMenu.productKind')}
                   </Chip>
                 </View>
@@ -209,11 +310,57 @@ export function MenuItemModal({
               <Label>{t('SpotMenu.type')}</Label>
               <View className="flex-row flex-wrap gap-2">
                 {types.map((ty) => (
-                  <Chip key={ty} active={type === ty} onPress={() => setType(ty)}>
+                  <Chip key={ty} active={!creatingCustom && !categoryId && type === ty} onPress={() => selectBuiltin(ty)}>
                     {t(`Ordering.category.${ty}`, { defaultValue: ty })}
                   </Chip>
                 ))}
+                {kind === 'product' &&
+                  categories.map((category) => (
+                    <Chip
+                      key={category.id}
+                      active={!creatingCustom && categoryId === category.id}
+                      onPress={() => selectCategory(category.id)}
+                    >
+                      {categoryLabel(category.nameLocal, i18n.language)}
+                    </Chip>
+                  ))}
+                {kind === 'product' && (
+                  <Chip active={creatingCustom} onPress={startCustom}>
+                    {`+ ${t('SpotMenu.customType')}`}
+                  </Chip>
+                )}
               </View>
+              {kind === 'product' && creatingCustom && (
+                <View className="mt-3 gap-2">
+                  <Typography variant="body-very-small-regular" className="text-gray-400">
+                    {t('SpotMenu.customTypeHint')}
+                  </Typography>
+                  <TextInput
+                    className={inputCls}
+                    value={customPl}
+                    onChangeText={setCustomPl}
+                    placeholder={t('SpotMenu.langPl')}
+                    placeholderTextColor="#9CA3AF"
+                    maxLength={40}
+                  />
+                  <TextInput
+                    className={inputCls}
+                    value={customEn}
+                    onChangeText={setCustomEn}
+                    placeholder={t('SpotMenu.langEn')}
+                    placeholderTextColor="#9CA3AF"
+                    maxLength={40}
+                  />
+                  <TextInput
+                    className={inputCls}
+                    value={customUa}
+                    onChangeText={setCustomUa}
+                    placeholder={t('SpotMenu.langUa')}
+                    placeholderTextColor="#9CA3AF"
+                    maxLength={40}
+                  />
+                </View>
+              )}
             </View>
 
             <View>
@@ -242,12 +389,12 @@ export function MenuItemModal({
             </View>
 
             {/* Ice cream pack (box): products only, and only once there are tastes to pick. */}
-            {kind === 'product' && (hasTastes || isBox) && (
+            {kind === 'product' && (hasTastes || isBox || type === 'ICE_CREAM_BOX') && (
               <View className="rounded-xl border border-gray-200 p-3">
                 <Pressable
                   onPress={() => setIsBox((v) => !v)}
                   className="flex-row items-center justify-between"
-                  disabled={isEdit}
+                  disabled={isEdit || type === 'ICE_CREAM_BOX'}
                 >
                   <View className="flex-1 pr-2">
                     <Typography variant="body-small-semibold" className="text-gray-700">
@@ -292,6 +439,11 @@ export function MenuItemModal({
                 {isEdit && (
                   <Typography variant="body-very-small-medium" className="mt-2 text-gray-400">
                     {t('SpotMenu.isBoxLocked')}
+                  </Typography>
+                )}
+                {!isEdit && type === 'ICE_CREAM_BOX' && !hasTastes && (
+                  <Typography variant="body-very-small-medium" className="mt-2 text-gray-400">
+                    {t('SpotMenu.isBoxNeedsTastes')}
                   </Typography>
                 )}
               </View>

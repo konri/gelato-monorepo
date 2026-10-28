@@ -1,7 +1,8 @@
+import { useScrollFocusedInputIntoView } from "@/components/KeyboardAwareScrollView";
+import { THEME } from "@/constants/palette";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Pressable, Text, TextInput, TextInputProps, View } from "react-native";
-import { THEME } from "@/constants/palette";
 
 interface InputFieldProps extends TextInputProps {
   label: string;
@@ -32,6 +33,7 @@ export const InputField = ({
   ...textInputProps
 }: InputFieldProps) => {
   const [showPassword, setShowPassword] = useState(false);
+  const scrollFocusedInputIntoView = useScrollFocusedInputIntoView();
 
   const handleTextChange = (text: string) => {
     // Call onChangeText and use returned value if it exists (for formatting)
@@ -85,6 +87,10 @@ export const InputField = ({
           onChangeText={handleTextChange}
           secureTextEntry={isPassword && !showPassword}
           {...textInputProps}
+          onFocus={(event) => {
+            textInputProps.onFocus?.(event);
+            scrollFocusedInputIntoView();
+          }}
         />
         {isPassword && (
           <Pressable onPress={() => setShowPassword(!showPassword)}>

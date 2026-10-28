@@ -134,7 +134,28 @@ export type MenuItem = {
   product?: Product;
 };
 
-const TYPE_ORDER = ['SORBET', 'MILK', 'GELATO', 'VEGAN', 'COFFEE', 'BEVERAGE', 'DESSERT', 'MERCHANDISE', 'OTHER'];
+const TYPE_ORDER = [
+  'SORBET',
+  'MILK',
+  'GELATO',
+  'VEGAN',
+  'ICE_CREAM_BOX',
+  'COFFEE',
+  'BEVERAGE',
+  'DESSERT',
+  'SANDWICH',
+  'BREAD',
+  'PASTRY',
+  'MERCHANDISE',
+];
+
+const sectionRank = (key: string) => {
+  const index = TYPE_ORDER.indexOf(key);
+  if (index !== -1) return index;
+  if (key.startsWith('cat:')) return 50;
+  if (key === 'OTHER') return 60;
+  return 70;
+};
 
 export const tasteToMenuItem = (t: Taste): MenuItem => ({
   kind: 'taste',
@@ -161,25 +182,38 @@ export const productToMenuItem = (p: Product): MenuItem => ({
   product: p,
 });
 
+export type MenuSection = {
+  type: string;
+  titleLocal?: { pl?: string; en?: string; ua?: string } | string | null;
+  data: MenuItem[];
+};
+
 // Build SectionList sections from tastes + products, grouped by type.
-export const buildMenuSections = (
-  tastes: Taste[],
-  products: Product[],
-): { type: string; data: MenuItem[] }[] => {
+// A custom menu category (spot-defined, with translations) is its own section.
+export const buildMenuSections = (tastes: Taste[], products: Product[]): MenuSection[] => {
   const items = [...tastes.map(tasteToMenuItem), ...products.map(productToMenuItem)];
   const byType = new Map<string, MenuItem[]>();
+  const titles = new Map<string, MenuSection['titleLocal']>();
   for (const item of items) {
-    if (!byType.has(item.type)) byType.set(item.type, []);
-    byType.get(item.type)!.push(item);
+    const category = item.product?.menuCategory;
+    const key = category?.id ? `cat:${category.id}` : item.type;
+    if (!byType.has(key)) byType.set(key, []);
+    byType.get(key)!.push(item);
+    if (category?.nameLocal) titles.set(key, category.nameLocal);
   }
   return Array.from(byType.entries())
     .sort((a, b) => {
-      const ai = TYPE_ORDER.indexOf(a[0]);
-      const bi = TYPE_ORDER.indexOf(b[0]);
-      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+      const rank = sectionRank(a[0]) - sectionRank(b[0]);
+      if (rank !== 0) return rank;
+      const an = titles.get(a[0]);
+      const bn = titles.get(b[0]);
+      const aLabel = (an && typeof an === 'object' && an.pl) || a[0];
+      const bLabel = (bn && typeof bn === 'object' && bn.pl) || b[0];
+      return String(aLabel).localeCompare(String(bLabel), 'pl');
     })
     .map(([type, data]) => ({
       type,
+      titleLocal: titles.get(type),
       data: data.sort((x, y) => x.title.localeCompare(y.title)),
     }));
 };

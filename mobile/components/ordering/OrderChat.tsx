@@ -3,11 +3,12 @@ import { Typography } from '@/components/atoms/Typography';
 import { getOrderMessages, postOrderMessage, type OrderMessage } from '@repo/api-client';
 import { safeGetItem } from '@/shared/api-client/src/utils/safeAsyncStorage';
 import { refreshEmitter } from '@/hooks/useRefreshEmitter';
-import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, TextInput, View } from 'react-native';
+import { KeyboardAwareTextInput } from '@/components/KeyboardAwareScrollView';
 import { THEME } from '@/constants/palette';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 
 // Chat thread on an order (client ↔ spot ↔ courier). Self-contained: loads +
 // polls its own messages, renders a flat timeline, and posts. `highlightId`
@@ -113,7 +114,7 @@ export function OrderChat({
       {!readOnly && (
         <View className="mt-2 flex-row items-center">
           <View className="flex-1 bg-gray-100 rounded-full px-4 py-2 mr-3">
-            <TextInput
+            <KeyboardAwareTextInput
               placeholder={t('OrderChat.placeholder')}
               value={text}
               onChangeText={setText}

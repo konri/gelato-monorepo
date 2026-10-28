@@ -25,9 +25,15 @@ export const config = {
     ? (process.env.EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_PROD || 'https://loodly-be-production.up.railway.app/graphql')
     : forDevice(process.env.EXPO_PUBLIC_BACKEND_GRAPHQL_API_URL_DEV || 'http://localhost:4000/graphql'),
 
-  // Google Sign-In Configuration
-  GOOGLE_WEB_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '',
-  GOOGLE_IOS_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '',
+  // Google Sign-In Configuration. EAS and `start:prod` set these; local
+  // `yarn start` does not, and configure() throws when webClientId is empty
+  // while offlineAccess is on.
+  GOOGLE_WEB_CLIENT_ID:
+    process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
+    '268509902642-tiajg536hrhbl6rk2i8e7c1u6r5fq6jd.apps.googleusercontent.com',
+  GOOGLE_IOS_CLIENT_ID:
+    process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ||
+    '268509902642-fs458nip621upn9ops28edfdjvqi5ml8.apps.googleusercontent.com',
 
   // Google Maps API Key (same key as app.json android.config.googleMaps)
   GOOGLE_MAPS_API_KEY:

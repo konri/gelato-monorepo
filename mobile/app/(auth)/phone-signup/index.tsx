@@ -1,17 +1,18 @@
 import { Button } from '@/components/atoms/Button';
 import { InputField } from '@/components/InputField';
+import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 import { AuthHeader } from '@/components/molecules/AuthHeader';
 import { usePhoneSignUp } from '@/hooks/usePhoneSignUp';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 
 export default function PhoneSignUpScreen() {
   const { t } = useTranslation();
   const { phone, handlePhoneChange, isLoading, handleSendCode } = usePhoneSignUp();
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       className="flex-1"
       contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 8 }}
       showsVerticalScrollIndicator={false}
@@ -38,6 +39,6 @@ export default function PhoneSignUpScreen() {
           />
         </View>
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:prod": "bash ./scripts/build-prod.sh",
     "lint": "eslint .",
     "preview": "vite preview",
     "check:graphql": "node scripts/check-graphql.ts",

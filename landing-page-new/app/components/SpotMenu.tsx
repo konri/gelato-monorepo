@@ -31,7 +31,7 @@ const priceFmt = (price: number, locale: Locale) =>
 export function SpotMenu({ spotId, spotName }: { spotId: string; spotName: string }) {
   const { t, locale } = useI18n();
   const cart = useCart();
-  const [sections, setSections] = useState<{ type: string; items: MenuItem[] }[]>([]);
+  const [sections, setSections] = useState<{ type: string; titleLocal?: LocalizedName | null; items: MenuItem[] }[]>([]);
   const [loading, setLoading] = useState(true);
   const [detailItem, setDetailItem] = useState<MenuItem | null>(null);
   const [boxItem, setBoxItem] = useState<MenuItem | null>(null);
@@ -127,7 +127,9 @@ export function SpotMenu({ spotId, spotName }: { spotId: string; spotName: strin
       {sections.map((section) => (
         <div key={section.type}>
           <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-berry">
-            {t(`spot.category.${section.type}`)}
+            {section.titleLocal
+              ? localized(section.titleLocal, t(`spot.category.${section.type}`), locale)
+              : t(`spot.category.${section.type}`)}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             {section.items.map((item) => (

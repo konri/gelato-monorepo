@@ -1,4 +1,5 @@
 import { Typography } from "@/components/atoms/Typography";
+import { KeyboardAwareScrollView } from "@/components/KeyboardAwareScrollView";
 import { AuthHeader } from "@/components/molecules/AuthHeader";
 import { CodeInput } from "@/components/molecules/CodeInput";
 import { ResendCodeButton } from "@/components/molecules/ResendCodeButton";
@@ -6,7 +7,7 @@ import { ResetPasswordForm } from "@/components/molecules/ResetPasswordForm";
 import { useVerifyResetCode } from "@/hooks/useVerifyResetCode";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 export default function VerifyResetCodeScreen() {
   const { t } = useTranslation();
@@ -24,7 +25,7 @@ export default function VerifyResetCodeScreen() {
   } = useVerifyResetCode();
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       className="flex-1"
       contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 8 }}
       showsVerticalScrollIndicator={false}
@@ -78,6 +79,6 @@ export default function VerifyResetCodeScreen() {
           </View>
         </View>
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }

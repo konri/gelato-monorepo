@@ -8,12 +8,23 @@ const TYPE_ORDER = [
   "GELATO",
   "VEGAN",
   "TASTE",
+  "ICE_CREAM_BOX",
   "COFFEE",
   "BEVERAGE",
   "DESSERT",
+  "SANDWICH",
+  "BREAD",
+  "PASTRY",
   "MERCHANDISE",
-  "OTHER",
 ];
+
+function sectionRank(key: string): number {
+  const index = TYPE_ORDER.indexOf(key);
+  if (index !== -1) return index;
+  if (key.startsWith("cat:")) return 50;
+  if (key === "OTHER") return 60;
+  return 70;
+}
 
 /**
  * Merge a spot's tastes and products into unified menu items grouped by type,
@@ -22,64 +33,67 @@ const TYPE_ORDER = [
 export function buildMenuSections(
   tastes: Taste[],
   products: Product[],
-): { type: string; items: MenuItem[] }[] {
-  const items: MenuItem[] = [
+): { type: string; titleLocal?: LocalizedName | null; items: MenuItem[] }[] {
+  const rows: { item: MenuItem; key: string; titleLocal?: LocalizedName | null }[] = [
     ...tastes
       .filter((t) => t.isAvailable)
-      .map<MenuItem>((t) => ({
-        kind: "taste",
-        id: t.id,
-        spotId: t.spotId,
-        title: t.title,
-        titleLocal: t.titleLocal,
-        subtitle: t.subtitle,
-        description: t.description,
-        type: t.type,
-        imageUrl: t.imageUrl,
-        price: t.price,
-        allergens: t.allergens,
-        kcalPerPortion: t.kcalPerPortion,
+      .map((t) => ({
+        key: t.type,
+        titleLocal: null,
+        item: {
+          kind: "taste" as const,
+          id: t.id,
+          spotId: t.spotId,
+          title: t.title,
+          titleLocal: t.titleLocal,
+          subtitle: t.subtitle,
+          description: t.description,
+          type: t.type,
+          imageUrl: t.imageUrl,
+          price: t.price,
+          allergens: t.allergens,
+          kcalPerPortion: t.kcalPerPortion,
+        },
       })),
     ...products
       .filter((p) => p.isAvailable)
-      .map<MenuItem>((p) => ({
-        kind: "product",
-        id: p.id,
-        spotId: p.spotId,
-        title: p.name,
-        titleLocal: p.nameLocal,
-        description: p.description,
-        type: p.type,
-        imageUrl: p.imageUrl,
-        price: p.price,
-        allergens: p.allergens,
-        isBox: p.isBox,
-        maxTastes: p.maxTastes,
+      .map((p) => ({
+        key: p.menuCategory?.id ? `cat:${p.menuCategory.id}` : p.type,
+        titleLocal: p.menuCategory?.nameLocal ?? null,
+        item: {
+          kind: "product" as const,
+          id: p.id,
+          spotId: p.spotId,
+          title: p.name,
+          titleLocal: p.nameLocal,
+          description: p.description,
+          type: p.type,
+          imageUrl: p.imageUrl,
+          price: p.price,
+          allergens: p.allergens,
+          isBox: p.isBox,
+          maxTastes: p.maxTastes,
+        },
       })),
   ];
 
-  const byType = new Map<string, MenuItem[]>();
-  for (const item of items) {
-    const arr = byType.get(item.type) ?? [];
-    arr.push(item);
-    byType.set(item.type, arr);
+  const byType = new Map<string, { titleLocal?: LocalizedName | null; items: MenuItem[] }>();
+  for (const row of rows) {
+    const section = byType.get(row.key) ?? { titleLocal: row.titleLocal, items: [] };
+    section.items.push(row.item);
+    if (row.titleLocal) section.titleLocal = row.titleLocal;
+    byType.set(row.key, section);
   }
 
-  const sections: { type: string; items: MenuItem[] }[] = [];
-  const seen = new Set<string>();
-  for (const type of TYPE_ORDER) {
-    const arr = byType.get(type);
-    if (arr && arr.length) {
-      sections.push({ type, items: arr });
-      seen.add(type);
-    }
-  }
-  // Any types not in TYPE_ORDER go last.
-  Array.from(byType.keys())
-    .filter((k) => !seen.has(k))
-    .forEach((k) => sections.push({ type: k, items: byType.get(k)! }));
-
-  return sections;
+  return Array.from(byType.entries())
+    .sort((a, b) => {
+      const rank = sectionRank(a[0]) - sectionRank(b[0]);
+      if (rank !== 0) return rank;
+      const aLabel = a[1].titleLocal?.pl || a[1].titleLocal?.en || a[0];
+      const bLabel = b[1].titleLocal?.pl || b[1].titleLocal?.en || b[0];
+      return aLabel.localeCompare(bLabel, "pl");
+    })
+    .map(([type, section]) => ({ type, titleLocal: section.titleLocal, items: section.items }));
 }
 
 const DAY_KEYS = [

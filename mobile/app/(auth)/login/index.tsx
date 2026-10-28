@@ -1,5 +1,6 @@
 import { TextButton } from "@/components/atoms/TextButton";
 import { Typography } from "@/components/atoms/Typography";
+import { KeyboardAwareScrollView } from "@/components/KeyboardAwareScrollView";
 import { AuthHeader } from "@/components/molecules/AuthHeader";
 import { LoginForm } from "@/components/molecules/LoginForm";
 import { SocialMediaButtons } from "@/components/molecules/SocialMediaButtons";
@@ -9,7 +10,7 @@ import Constants from "expo-constants";
 import { router } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 
 export default function LoginScreen() {
   const { t } = useTranslation();
@@ -22,7 +23,7 @@ export default function LoginScreen() {
   } = useLogin();
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       className="flex-1"
       contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 8 }}
       showsVerticalScrollIndicator={false}
@@ -90,6 +91,6 @@ export default function LoginScreen() {
           </Typography>
         </View>
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }

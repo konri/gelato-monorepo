@@ -19,10 +19,13 @@ import {
 import MapView, { Circle, Marker } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { THEME, berryAlpha } from '@/constants/palette';
+import { TAB_BAR_HEIGHT } from '@/constants/tabBarStyles';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.8;
 const CARD_SPACING = 12;
+/** Gap between map overlays and the top of the floating tab bar. */
+const OVERLAY_GAP = 20;
 
 const matchesCity = (city: City, selected: string) => {
   const local = typeof city.nameLocal === 'object' && city.nameLocal ? city.nameLocal : {};
@@ -105,6 +108,8 @@ export default function SpotsScreen() {
   );
 
   const activeSpot = spotList[activeIndex] ?? null;
+  // Tab bar is absolute (and native tabs float over the map), so pin cards above it.
+  const overlayBottom = insets.bottom + TAB_BAR_HEIGHT + OVERLAY_GAP;
 
   return (
     <View className="flex-1 bg-mainBg">
@@ -155,13 +160,14 @@ export default function SpotsScreen() {
 
       {/* Bottom carousel */}
       {loading ? (
-        <View className="absolute bottom-10 left-0 right-0 items-center">
+        <View className="absolute left-0 right-0 items-center" style={{ bottom: overlayBottom }}>
           <ActivityIndicator size="large" color={THEME.primary} />
         </View>
       ) : spotList.length === 0 ? (
         <View
-          className="absolute bottom-10 left-6 right-6 bg-white rounded-2xl p-6 items-center"
+          className="absolute left-6 right-6 bg-white rounded-2xl p-6 items-center"
           style={{
+            bottom: overlayBottom,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.12,
@@ -183,7 +189,7 @@ export default function SpotsScreen() {
           decelerationRate="fast"
           onMomentumScrollEnd={onCarouselScroll}
           contentContainerStyle={{ paddingHorizontal: 24 }}
-          style={{ position: 'absolute', bottom: insets.bottom + 90, left: 0, right: 0 }}
+          style={{ position: 'absolute', bottom: overlayBottom, left: 0, right: 0 }}
           ItemSeparatorComponent={() => <View style={{ width: CARD_SPACING }} />}
           renderItem={({ item }) => (
             <SpotCarouselCard spot={item} width={CARD_WIDTH} fav={fav} />

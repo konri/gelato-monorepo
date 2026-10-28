@@ -20,7 +20,8 @@ npm run dev
 
 ## Checks
 ```bash
-npm run build                      # tsc -b + vite build
+npm run build:prod                 # production API, Spot URL and Maps key, then tsc -b + vite build
+npm run build                      # tsc -b + vite build (uses whatever VITE_* is already set)
 npm run lint
 npm run check:graphql              # every document vs ../loodly-be/schema.gql
 npm run check:graphql -- <path/to/schema.gql>

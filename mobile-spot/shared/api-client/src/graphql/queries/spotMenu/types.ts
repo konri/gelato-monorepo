@@ -15,12 +15,19 @@ export type MenuTaste = {
   isAvailable: boolean;
 };
 
+export type MenuCategory = {
+  id: string;
+  nameLocal: { pl?: string; en?: string; ua?: string };
+};
+
 export type MenuProduct = {
   id: string;
   spotId: string;
   name: string;
   description?: string | null;
   type: string;
+  categoryId?: string | null;
+  menuCategory?: MenuCategory | null;
   imageUrl?: string | null;
   price: number;
   loyaltyPoints: number;
@@ -40,6 +47,8 @@ export type MenuItem = {
   title: string;
   description?: string | null;
   type: string;
+  categoryId?: string | null;
+  categoryNameLocal?: { pl?: string; en?: string; ua?: string } | null;
   imageUrl?: string | null;
   price: number;
   loyaltyPoints: number;
@@ -53,3 +62,42 @@ export type MenuItem = {
 
 export type ManagedTastesResponse = { spotTastes: MenuTaste[] };
 export type ManagedProductsResponse = { spotProducts: MenuProduct[] };
+export type MenuCategoriesResponse = { spotMenuCategories: MenuCategory[] };
+
+export type MenuSourceSpot = {
+  id: string;
+  name: string;
+  address: string;
+  isActive: boolean;
+  cityName: string;
+  cityNameLocal?: { pl?: string; en?: string; ua?: string } | null;
+  tasteCount: number;
+  productCount: number;
+};
+
+export type CopyTaste = {
+  id: string;
+  title: string;
+  type: string;
+  price: number;
+  isAvailable: boolean;
+};
+
+export type CopyProduct = {
+  id: string;
+  name: string;
+  type: string;
+  price: number;
+  isAvailable: boolean;
+  menuCategory?: { id: string; nameLocal: MenuCategory['nameLocal'] } | null;
+};
+
+export type MenuCopyPreview = {
+  tastes: CopyTaste[];
+  products: CopyProduct[];
+};
+
+export type CopySpotMenuResult = {
+  copiedTastes: number;
+  copiedProducts: number;
+};

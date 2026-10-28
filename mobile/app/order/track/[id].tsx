@@ -1,3 +1,4 @@
+import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 import { STATUS_STYLE, trackingSteps, trackingStepIndex, isTerminal } from '@/components/ordering/orderStatus';
 import { OrderReviewSection } from '@/components/ordering/OrderReviewSection';
 import { OrderChat } from '@/components/ordering/OrderChat';
@@ -14,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
   Linking,
   Modal,
   Pressable,
@@ -104,7 +106,7 @@ export default function OrderTrackingScreen() {
         </Text>
       </View>
 
-      <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 24 }}>
+      <KeyboardAwareScrollView ref={scrollRef} contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 24 }}>
         {/* Status banner */}
         <View className={`rounded-2xl px-4 py-3 ${style.bg} flex-row items-center`}>
           <View className="w-2.5 h-2.5 rounded-full mr-2" style={{ backgroundColor: style.dot }} />
@@ -315,7 +317,7 @@ export default function OrderTrackingScreen() {
             {t('Complaint.report')}
           </Text>
         </Pressable>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {complaintOpen && order ? (
         <ComplaintModal orderId={order.id} orderNumber={order.orderNumber} onClose={() => setComplaintOpen(false)} />
@@ -353,7 +355,7 @@ const ComplaintModal = ({
 
   return (
     <Modal transparent animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 justify-end bg-black/40">
+      <KeyboardAvoidingView className="flex-1 justify-end bg-black/40" behavior="padding">
         <View className="rounded-t-3xl bg-white p-6">
           <View className="flex-row items-center justify-between mb-2">
             <Text className="font-urbanist-bold text-lg text-text-primary">{t('Complaint.title')}</Text>
@@ -408,7 +410,7 @@ const ComplaintModal = ({
             </View>
           )}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };

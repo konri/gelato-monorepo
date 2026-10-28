@@ -11,6 +11,8 @@ export const SPOT_PRODUCTS_QUERY = gql`
       description
       descriptionLocal
       type
+      categoryId
+      menuCategory { id nameLocal }
       imageUrl
       price
       isBox
@@ -34,6 +36,8 @@ export const PRODUCT_DETAIL_QUERY = gql`
       description
       descriptionLocal
       type
+      categoryId
+      menuCategory { id nameLocal }
       imageUrl
       price
       isBox

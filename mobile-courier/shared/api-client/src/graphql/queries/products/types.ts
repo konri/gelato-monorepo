@@ -6,7 +6,16 @@ export type ProductCategory =
   | 'BEVERAGE'
   | 'DESSERT'
   | 'MERCHANDISE'
+  | 'ICE_CREAM_BOX'
+  | 'SANDWICH'
+  | 'BREAD'
+  | 'PASTRY'
   | 'OTHER';
+
+export type ProductMenuCategory = {
+  id: string;
+  nameLocal: LocalizedText;
+};
 
 export type Product = {
   id: string;
@@ -16,6 +25,8 @@ export type Product = {
   description?: string | null;
   descriptionLocal?: LocalizedText;
   type: ProductCategory;
+  categoryId?: string | null;
+  menuCategory?: ProductMenuCategory | null;
   imageUrl?: string | null;
   price: number;
   isBox: boolean;

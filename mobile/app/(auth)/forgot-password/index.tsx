@@ -1,14 +1,15 @@
+import { KeyboardAwareScrollView } from "@/components/KeyboardAwareScrollView";
 import { AuthHeader } from "@/components/molecules/AuthHeader";
 import { ForgotPasswordForm } from "@/components/molecules/ForgotPasswordForm";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
 
 export default function ForgotPasswordScreen() {
   const { t } = useTranslation();
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       className="flex-1"
       contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 8 }}
       showsVerticalScrollIndicator={false}
@@ -21,6 +22,6 @@ export default function ForgotPasswordScreen() {
 
         <ForgotPasswordForm />
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }

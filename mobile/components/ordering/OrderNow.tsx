@@ -194,8 +194,22 @@ const SpotPicker = ({
 
 /* ---------- Spot menu (tastes + products by type) ---------- */
 
+function sectionLabel(
+  section: { type: string; titleLocal?: { pl?: string; en?: string; ua?: string } | string | null },
+  translate: (key: string, opts?: { defaultValue?: string }) => string,
+  language: string,
+) {
+  const local = section.titleLocal;
+  if (local && typeof local === 'object') {
+    const code = language.split('-')[0] as 'pl' | 'en' | 'ua';
+    const name = local[code] || local.en || local.pl || local.ua;
+    if (name) return name;
+  }
+  return translate(`Ordering.category.${section.type}`, { defaultValue: section.type });
+}
+
 const SpotMenu = ({ spot, onBack }: { spot: Spot; onBack: () => void }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const cart = useCart();
   const { data: tastes, loading: tastesLoading, refetch: refetchTastes } = useSpotTastes(spot.id);
   const { data: products, loading: productsLoading, refetch: refetchProducts } = useSpotProducts(spot.id);
@@ -269,7 +283,7 @@ const SpotMenu = ({ spot, onBack }: { spot: Spot; onBack: () => void }) => {
           contentContainerStyle={{ paddingBottom: TAB_BAR_TOTAL_HEIGHT + 96 }}
           renderSectionHeader={({ section }) => (
             <Text className="px-6 pt-4 pb-2 text-base font-urbanist-bold text-text-primary">
-              {t(`Ordering.category.${section.type}`, { defaultValue: section.type })}
+              {sectionLabel(section, t, i18n.language)}
             </Text>
           )}
           renderItem={({ item }) => <MenuRow item={item} />}

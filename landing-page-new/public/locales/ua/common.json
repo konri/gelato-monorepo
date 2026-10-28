@@ -343,6 +343,10 @@
       "BEVERAGE": "Напої",
       "DESSERT": "Десерти",
       "MERCHANDISE": "Товари",
+      "ICE_CREAM_BOX": "Коробки морозива",
+      "SANDWICH": "Сендвічі",
+      "BREAD": "Хліб",
+      "PASTRY": "Випічка",
       "OTHER": "Інше"
     },
     "not_found": "Заклад не знайдено.",

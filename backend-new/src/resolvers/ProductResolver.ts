@@ -1,7 +1,35 @@
 import { Resolver, Query, Mutation, Arg, Ctx, Authorized, ID, Int, Float } from 'type-graphql';
 import { Role, ProductType as PrismaProductType } from '@prisma/client';
 import { Context } from '../types/Context';
-import { ProductGraphQLType } from '../types/ProductType';
+import { MenuCategoryGraphQLType, ProductGraphQLType } from '../types/ProductType';
+
+const PRODUCT_INCLUDE = { menuCategory: true } as const;
+
+function parseCategoryNames(raw: string): { pl: string; en: string; ua: string } {
+  let parsed: any;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error('Category name must be JSON with pl, en and ua');
+  }
+  const names = {
+    pl: String(parsed?.pl ?? '').trim(),
+    en: String(parsed?.en ?? '').trim(),
+    ua: String(parsed?.ua ?? '').trim(),
+  };
+  if (!names.pl || !names.en || !names.ua) {
+    throw new Error('Category name is required in Polish, English and Ukrainian');
+  }
+  if (Object.values(names).some((name) => name.length > 40)) {
+    throw new Error('Category name must be 40 characters or fewer');
+  }
+  return names;
+}
+
+async function assertCategoryOnSpot(ctx: Context, spotId: string, categoryId: string): Promise<void> {
+  const category = await ctx.prisma.menuCategory.findFirst({ where: { id: categoryId, spotId } });
+  if (!category) throw new Error('Category not found');
+}
 
 // Is the user a member of the spot (admin OR employee)? Uses the real
 // SpotAdminProfile / EmployeeProfile relations.
@@ -49,13 +77,15 @@ export class ProductResolver {
     @Arg('includeUnavailable', { defaultValue: false }) includeUnavailable: boolean,
     @Ctx() { prisma }: Context
   ): Promise<ProductGraphQLType[]> {
-    const where: any = { spotId };
+    // Removed products stay hidden. `includeUnavailable` only reveals sold-out
+    // items so staff can turn them back on.
+    const where: any = { spotId, isActive: true };
     if (!includeUnavailable) {
       where.isAvailable = true;
-      where.isActive = true;
     }
     return prisma.product.findMany({
       where,
+      include: PRODUCT_INCLUDE,
       orderBy: [{ type: 'asc' }, { name: 'asc' }],
     }) as Promise<ProductGraphQLType[]>;
   }
@@ -68,7 +98,10 @@ export class ProductResolver {
     @Arg('id', () => ID) id: string,
     @Ctx() { prisma }: Context
   ): Promise<ProductGraphQLType | null> {
-    return prisma.product.findUnique({ where: { id } }) as Promise<ProductGraphQLType | null>;
+    return prisma.product.findUnique({
+      where: { id },
+      include: PRODUCT_INCLUDE,
+    }) as Promise<ProductGraphQLType | null>;
   }
 
   /**
@@ -81,6 +114,7 @@ export class ProductResolver {
     @Arg('name') name: string,
     @Arg('nameLocal') nameLocal: string,
     @Arg('type', () => PrismaProductType) type: PrismaProductType,
+    @Arg('categoryId', () => ID, { nullable: true }) categoryId: string | null | undefined,
     @Arg('price', () => Float) price: number,
     @Arg('description', () => String, { nullable: true }) description: string | undefined,
     @Arg('descriptionLocal', () => String, { nullable: true }) descriptionLocal: string | undefined,
@@ -95,17 +129,27 @@ export class ProductResolver {
     @Ctx() ctx: Context
   ): Promise<ProductGraphQLType> {
     await assertCanManageSpot(ctx, spotId);
+    let resolvedType = type;
+    let resolvedCategoryId: string | null = categoryId ?? null;
+    // A box is its own section; a custom section replaces the built-in type.
+    if (resolvedType === PrismaProductType.ICE_CREAM_BOX) {
+      resolvedCategoryId = null;
+    } else if (resolvedCategoryId) {
+      await assertCategoryOnSpot(ctx, spotId, resolvedCategoryId);
+      resolvedType = PrismaProductType.OTHER;
+    }
     const product = await ctx.prisma.product.create({
       data: {
         spotId,
         name,
         nameLocal: JSON.parse(nameLocal),
-        type,
+        type: resolvedType,
+        categoryId: resolvedCategoryId,
         price,
         description,
         descriptionLocal: descriptionLocal ? JSON.parse(descriptionLocal) : undefined,
         imageUrl,
-        isBox,
+        isBox: resolvedType === PrismaProductType.ICE_CREAM_BOX || isBox,
         maxTastes: maxTastes ?? null,
         weightGrams: weightGrams ?? null,
         kcalPerPortion: kcalPerPortion ?? null,
@@ -115,6 +159,7 @@ export class ProductResolver {
         isAvailable: true,
         isActive: true,
       },
+      include: PRODUCT_INCLUDE,
     });
     console.log(`✅ Product created: ${product.name} at spot ${spotId}`);
     return product as ProductGraphQLType;
@@ -130,6 +175,7 @@ export class ProductResolver {
     @Arg('name', () => String, { nullable: true }) name: string | undefined,
     @Arg('nameLocal', () => String, { nullable: true }) nameLocal: string | undefined,
     @Arg('type', () => PrismaProductType, { nullable: true }) type: PrismaProductType | undefined,
+    @Arg('categoryId', () => ID, { nullable: true }) categoryId: string | null | undefined,
     @Arg('price', () => Float, { nullable: true }) price: number | undefined,
     @Arg('description', () => String, { nullable: true }) description: string | undefined,
     @Arg('descriptionLocal', () => String, { nullable: true }) descriptionLocal: string | undefined,
@@ -149,7 +195,28 @@ export class ProductResolver {
     const data: any = {};
     if (name !== undefined) data.name = name;
     if (nameLocal !== undefined) data.nameLocal = JSON.parse(nameLocal);
-    if (type !== undefined) data.type = type;
+    if (type !== undefined || categoryId !== undefined) {
+      const nextType = type ?? existing.type;
+      // A built-in type (other than OTHER) replaces a custom section, even when
+      // the client omits categoryId.
+      const nextCategoryId =
+        type !== undefined && type !== PrismaProductType.OTHER && categoryId == null
+          ? null
+          : categoryId !== undefined
+            ? categoryId
+            : existing.categoryId;
+      if (nextType === PrismaProductType.ICE_CREAM_BOX) {
+        data.type = PrismaProductType.ICE_CREAM_BOX;
+        data.categoryId = null;
+      } else if (nextCategoryId) {
+        await assertCategoryOnSpot(ctx, existing.spotId, nextCategoryId);
+        data.type = PrismaProductType.OTHER;
+        data.categoryId = nextCategoryId;
+      } else {
+        data.type = nextType;
+        data.categoryId = null;
+      }
+    }
     if (price !== undefined) data.price = price;
     if (description !== undefined) data.description = description;
     if (descriptionLocal !== undefined) data.descriptionLocal = JSON.parse(descriptionLocal);
@@ -161,7 +228,7 @@ export class ProductResolver {
     if (allergens !== undefined) data.allergens = allergens;
     if (loyaltyPoints !== undefined) data.loyaltyPoints = loyaltyPoints;
 
-    const product = await ctx.prisma.product.update({ where: { id }, data });
+    const product = await ctx.prisma.product.update({ where: { id }, data, include: PRODUCT_INCLUDE });
     console.log(`✅ Product updated: ${product.name} (${product.id})`);
     return product as ProductGraphQLType;
   }
@@ -186,7 +253,9 @@ export class ProductResolver {
   }
 
   /**
-   * Delete a product (SPOT_ADMIN).
+   * Remove a product from the menu (SPOT_ADMIN). Soft-delete: past orders keep
+   * the row so their line items still resolve a name. A hard delete fails
+   * while any order references the product.
    */
   @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN])
   @Mutation(() => Boolean)
@@ -197,8 +266,38 @@ export class ProductResolver {
     const existing = await ctx.prisma.product.findUnique({ where: { id } });
     if (!existing) throw new Error('Product not found');
     await assertCanManageSpot(ctx, existing.spotId);
-    await ctx.prisma.product.delete({ where: { id } });
-    console.log(`✅ Product deleted: ${id}`);
+    await ctx.prisma.product.update({
+      where: { id },
+      data: { isActive: false, isAvailable: false },
+    });
+    console.log(`✅ Product removed from menu: ${id}`);
     return true;
+  }
+
+  /** Custom menu sections for a spot, oldest first. */
+  @Query(() => [MenuCategoryGraphQLType])
+  async spotMenuCategories(
+    @Arg('spotId', () => ID) spotId: string,
+    @Ctx() { prisma }: Context,
+  ): Promise<MenuCategoryGraphQLType[]> {
+    return prisma.menuCategory.findMany({
+      where: { spotId },
+      orderBy: { createdAt: 'asc' },
+    }) as Promise<MenuCategoryGraphQLType[]>;
+  }
+
+  /** Create a reusable menu section. Names are required in pl, en and ua. */
+  @Authorized([Role.SUPER_ADMIN, Role.SPOTS_ADMIN, Role.SPOT_ADMIN])
+  @Mutation(() => MenuCategoryGraphQLType)
+  async createMenuCategory(
+    @Arg('spotId', () => ID) spotId: string,
+    @Arg('nameLocal') nameLocal: string,
+    @Ctx() ctx: Context,
+  ): Promise<MenuCategoryGraphQLType> {
+    await assertCanManageSpot(ctx, spotId);
+    const category = await ctx.prisma.menuCategory.create({
+      data: { spotId, nameLocal: parseCategoryNames(nameLocal) },
+    });
+    return category as MenuCategoryGraphQLType;
   }
 }

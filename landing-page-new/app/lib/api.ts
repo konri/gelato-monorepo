@@ -217,7 +217,7 @@ const TASTE_FIELDS = `
 `;
 
 const PRODUCT_FIELDS = `
-  id spotId name nameLocal description type imageUrl price isBox maxTastes allergens isAvailable
+  id spotId name nameLocal description type categoryId menuCategory { id nameLocal } imageUrl price isBox maxTastes allergens isAvailable
 `;
 
 export async function fetchSpotTastes(spotId: string): Promise<Taste[]> {

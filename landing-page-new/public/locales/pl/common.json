@@ -343,6 +343,10 @@
       "BEVERAGE": "Napoje",
       "DESSERT": "Desery",
       "MERCHANDISE": "Produkty",
+      "ICE_CREAM_BOX": "Pudełka lodów",
+      "SANDWICH": "Kanapki",
+      "BREAD": "Pieczywo",
+      "PASTRY": "Wypieki",
       "OTHER": "Inne"
     },
     "not_found": "Nie znaleziono lokalu.",
